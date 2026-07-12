@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">SSC Student</string>
+    <string name="error_offline_title">You are offline</string>
+    <string name="error_offline_desc">Please check your internet connection and try again.</string>
+    <string name="retry_btn">Retry Connection</string>
+    <string name="loading_portal">Loading Student Portal...</string>
+</resources>

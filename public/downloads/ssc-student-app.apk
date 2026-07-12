@@ -1,0 +1,2 @@
+SSC Student Android Mobile App package placeholder.
+When this app is built in Android Studio, compiling the Kotlin project inside the `student-mobile-app` directory produces the final `app-release.apk`, which should be placed here to replace this file.

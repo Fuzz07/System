@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="indigo_600">#4F46E5</color>
+    <color name="indigo_700">#4338CA</color>
+    <color name="navy_900">#1E1B4B</color>
+    <color name="slate_50">#F8FAFC</color>
+    <color name="slate_500">#64748B</color>
+    <color name="slate_800">#1E293B</color>
+    <color name="white">#FFFFFFFF</color>
+    <string name="app_name">SSC Student</string>
+    <string name="error_offline_desc">Please check your internet connection and try again.</string>
+    <string name="error_offline_title">You are offline</string>
+    <string name="loading_portal">Loading Student Portal...</string>
+    <string name="retry_btn">Retry Connection</string>
+    <style name="Theme.SSCStudentApp" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        
+        <item name="colorPrimary">@color/indigo_600</item>
+        <item name="colorPrimaryVariant">@color/indigo_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        
+        <item name="colorSecondary">@color/indigo_600</item>
+        <item name="colorSecondaryVariant">@color/indigo_700</item>
+        <item name="colorOnSecondary">@color/white</item>
+        
+        <item name="android:statusBarColor">@color/indigo_600</item>
+    </style>
+    <style name="Theme.SSCStudentApp.NoActionBar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/indigo_600</item>
+        <item name="colorPrimaryVariant">@color/indigo_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:statusBarColor">@color/indigo_600</item>
+    </style>
+</resources>
