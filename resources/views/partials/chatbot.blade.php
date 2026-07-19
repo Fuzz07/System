@@ -593,19 +593,20 @@
   @media (max-width: 480px) {
     .chatbot-container {
       bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 12px);
-      left: 50%;
+      left: 16px;
       right: auto;
-      transform: translateX(-50%);
+      transform: none;
+      width: calc(100% - 32px);
+      max-width: 440px;
     }
 
     /* When open on mobile, the window floats above the bottom nav instead of full-screen */
     .chatbot-window.active {
-      position: fixed;
-      bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 12px);
-      left: 16px;
-      right: 16px;
-      width: auto;
-      max-width: calc(100% - 32px);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
       height: calc(72vh);
       max-height: calc(100vh - (var(--nav-height, 64px) + var(--safe-bottom, 0px) + 32px));
       border-radius: 24px;
@@ -722,11 +723,6 @@
     });
 
     function openChatbot() {
-      // On mobile: move chatbot window outside the translated container context
-      if (isMobile()) {
-        container.style.transform = 'none'; // Remove transform so fixed positioning works
-        container.classList.add('chatbot-open');
-      }
       chatWindow.classList.add('active');
       toggleIcon.className = 'bi bi-chevron-down';
       setTimeout(() => chatbotInput.focus(), 100);
@@ -735,10 +731,6 @@
     function closeChatbot() {
       chatWindow.classList.remove('active');
       toggleIcon.className = 'bi bi-robot';
-      if (isMobile()) {
-        container.classList.remove('chatbot-open');
-        container.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
-      }
     }
 
     closeBtn.addEventListener('click', (e) => {
