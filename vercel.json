@@ -9,7 +9,9 @@
     },
     "build": {
         "env": {
-            "APP_ENV": "production"
+            "APP_ENV": "production",
+            "APP_DEBUG": "true",
+            "VERCEL": "1"
         }
     },
     "routes": [
