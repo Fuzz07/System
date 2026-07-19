@@ -1108,7 +1108,7 @@
             <a href="#home" class="nav-link">Home</a>
             <a href="#features" class="nav-link">Features</a>
             <a href="#officers" class="nav-link">Officers</a>
-            <a href="#portals" class="nav-link">Portals</a>
+           
             <a href="{{ route('login', 'student') }}" class="nav-cta">
                 <i class="bi bi-box-arrow-in-right"></i> Student Login
             </a>
@@ -1350,64 +1350,7 @@
         </div>
     </section>
 
-    <!-- ─── PORTALS SECTION ─── -->
-    <section class="portals-section" id="portals">
-        <div style="max-width:1200px; margin: 0 auto;">
-            <div class="section-header fade-up">
-                <span class="section-eyebrow">Portal Access</span>
-                <h2 class="section-title">One System, Every Role</h2>
-                <p class="section-subtitle">Each portal is tailored to the specific responsibilities and access levels
-                    of every stakeholder in the SSC.</p>
-            </div>
-            <div class="portals-grid">
-                <a href="{{ route('login', 'student') }}" class="portal-card fade-up" id="student-portal-card"
-                    style="transition-delay: 0s">
-                    <div class="portal-icon" style="background: rgba(227,79,38,0.1); color: var(--primary);">
-                        <i class="bi bi-mortarboard-fill"></i>
-                    </div>
-                    <div class="portal-title">Student Portal</div>
-                    <div class="portal-desc">View proposals, vote, give feedback, and follow SSC updates.</div>
-                    <div class="portal-arrow">Enter <i class="bi bi-arrow-right"></i></div>
-                </a>
-                <a href="{{ route('login', 'officer') }}" class="portal-card fade-up" id="officer-portal-card"
-                    style="transition-delay: 0.07s">
-                    <div class="portal-icon" style="background: rgba(14,165,233,0.1); color: #0ea5e9;">
-                        <i class="bi bi-person-badge-fill"></i>
-                    </div>
-                    <div class="portal-title">Officer Portal</div>
-                    <div class="portal-desc">Submit proposals, manage expenses, and post official announcements.</div>
-                    <div class="portal-arrow">Enter <i class="bi bi-arrow-right"></i></div>
-                </a>
-                <a href="{{ route('login', 'treasurer') }}" class="portal-card fade-up" id="treasurer-portal-card"
-                    style="transition-delay: 0.14s">
-                    <div class="portal-icon" style="background: rgba(217,119,6,0.1); color: #d97706;">
-                        <i class="bi bi-safe2-fill"></i>
-                    </div>
-                    <div class="portal-title">Treasurer Portal</div>
-                    <div class="portal-desc">Release approved budgets, track disbursements and financial records.</div>
-                    <div class="portal-arrow">Enter <i class="bi bi-arrow-right"></i></div>
-                </a>
-                <a href="{{ route('login', 'dean') }}" class="portal-card fade-up" id="dean-portal-card"
-                    style="transition-delay: 0.21s">
-                    <div class="portal-icon" style="background: rgba(139,92,246,0.1); color: #8b5cf6;">
-                        <i class="bi bi-person-workspace"></i>
-                    </div>
-                    <div class="portal-title">Dean Portal</div>
-                    <div class="portal-desc">Review and approve department candidacies and election results.</div>
-                    <div class="portal-arrow">Enter <i class="bi bi-arrow-right"></i></div>
-                </a>
-                <a href="{{ route('login', 'admin') }}" class="portal-card fade-up" id="admin-portal-card"
-                    style="transition-delay: 0.28s">
-                    <div class="portal-icon" style="background: rgba(236,72,153,0.1); color: #ec4899;">
-                        <i class="bi bi-shield-lock-fill"></i>
-                    </div>
-                    <div class="portal-title">Admin Portal</div>
-                    <div class="portal-desc">Full system control — users, settings, logs, and budget oversight.</div>
-                    <div class="portal-arrow">Enter <i class="bi bi-arrow-right"></i></div>
-                </a>
-            </div>
-        </div>
-    </section>
+  
 
     <!-- ─── CTA SECTION ─── -->
     <section class="cta-section">
