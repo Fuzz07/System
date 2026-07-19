@@ -1,40 +1,44 @@
 <?php
-// ── TEMPORARY DIAGNOSTIC — REMOVE AFTER DEBUGGING ──
-header('Content-Type: text/plain; charset=utf-8');
+// ── Catch ALL errors including PHP fatal errors ──
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ob_start();
 
-echo "=== Vercel PHP Diagnostic ===\n\n";
-echo "PHP Version : " . PHP_VERSION . "\n";
-echo "__FILE__    : " . __FILE__ . "\n";
-echo "getcwd()    : " . getcwd() . "\n\n";
-
-// Filesystem checks
-echo "--- Filesystem ---\n";
-echo "/tmp writable       : " . (is_writable('/tmp') ? 'YES' : 'NO') . "\n";
-echo "/var/task exists    : " . (is_dir('/var/task') ? 'YES' : 'NO') . "\n";
-echo "/var/task/user exist: " . (is_dir('/var/task/user') ? 'YES' : 'NO') . "\n\n";
-
-// Check if vendor exists
-$vendor = __DIR__ . '/../vendor/autoload.php';
-echo "vendor/autoload.php : " . (file_exists($vendor) ? 'EXISTS' : 'MISSING!') . "\n";
-
-// Check bootstrap/app.php
-$bootstrap = __DIR__ . '/../bootstrap/app.php';
-echo "bootstrap/app.php   : " . (file_exists($bootstrap) ? 'EXISTS' : 'MISSING!') . "\n\n";
-
-// Env vars
-echo "--- Environment Variables ---\n";
-$vars = ['APP_KEY','APP_ENV','APP_DEBUG','APP_NAME','VERCEL','VERCEL_ENV',
-         'DB_CONNECTION','DB_HOST','DB_PORT','DB_DATABASE',
-         'SESSION_DRIVER','CACHE_STORE','LOG_CHANNEL'];
-foreach ($vars as $v) {
-    $val = getenv($v);
-    if ($val === false) {
-        echo "$v = (NOT SET)\n";
-    } elseif (strlen($val) > 60) {
-        echo "$v = " . substr($val, 0, 60) . "...\n";
+// Shutdown handler catches PHP fatal errors that try/catch can't
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR])) {
+        ob_end_clean();
+        if (! headers_sent()) {
+            header('Content-Type: text/plain; charset=utf-8');
+            http_response_code(500);
+        }
+        echo "=== PHP FATAL ERROR (Shutdown) ===\n";
+        echo "Type   : " . $err['type'] . "\n";
+        echo "Message: " . $err['message'] . "\n";
+        echo "File   : " . $err['file'] . ":" . $err['line'] . "\n";
     } else {
-        echo "$v = $val\n";
+        ob_end_flush();
+    }
+});
+
+try {
+    // Forward to Laravel's public/index.php entry point
+    require __DIR__ . '/../public/index.php';
+} catch (\Throwable $e) {
+    ob_end_clean();
+    if (! headers_sent()) {
+        header('Content-Type: text/plain; charset=utf-8');
+        http_response_code(500);
+    }
+    echo "=== THROWABLE CAUGHT IN api/index.php ===\n";
+    echo get_class($e) . ": " . $e->getMessage() . "\n";
+    echo "File: " . $e->getFile() . ":" . $e->getLine() . "\n\n";
+    echo "Trace:\n" . $e->getTraceAsString() . "\n";
+    if ($prev = $e->getPrevious()) {
+        echo "\n--- Previous Exception ---\n";
+        echo get_class($prev) . ": " . $prev->getMessage() . "\n";
+        echo "File: " . $prev->getFile() . ":" . $prev->getLine() . "\n";
+        echo $prev->getTraceAsString() . "\n";
     }
 }
-
-echo "\n=== End Diagnostic ===\n";
