@@ -189,7 +189,7 @@
   .chatbot-window {
     position: absolute;
     bottom: 85px;
-    right: 1000px;
+    left: 1000px;
     width: 390px;
     height: 600px;
     background: var(--chatbot-bg);
