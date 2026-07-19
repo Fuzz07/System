@@ -67,7 +67,7 @@
         <div class="card">
             <div class="card-header-custom d-flex justify-content-between align-items-center">
                 <span class="card-title mb-0">Database Overview</span>
-                <a href="{{ route('admin.settings.export') }}" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem;"><i class="bi bi-download"></i> Export Data</a>
+                <a href="{{ route('admin.settings.export') }}" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem;"><i class="bi bi-download"></i> Export SQL Backup</a>
             </div>
         <div class="card-body-custom">
             <table class="table-custom"><thead><tr><th>Table</th><th>Records</th></tr></thead><tbody>

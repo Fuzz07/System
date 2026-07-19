@@ -79,14 +79,77 @@ class SettingsController extends Controller
 
     public function export()
     {
-        $tables = ['users','budgets','proposals','expenses','announcements','feedback','activity_logs','liquidations', 'proposal_comments', 'school_years'];
-        $data = [];
-        foreach ($tables as $t) {
-            $data[$t] = DB::table($t)->get();
+        $database = DB::getDatabaseName();
+        $tables = collect(DB::select('SHOW TABLES'))->map(function ($row) {
+            return array_values((array) $row)[0];
+        })->all();
+
+        $sql = "-- SSC Database Backup\n";
+        $sql .= sprintf("-- Database: %s\n", $database);
+        $sql .= sprintf("-- Generated: %s\n\n", now()->toDateTimeString());
+        $sql .= "SET FOREIGN_KEY_CHECKS = 0;\n\n";
+
+        foreach ($tables as $table) {
+            $create = DB::selectOne("SHOW CREATE TABLE `{$table}`");
+            $createSql = $create->{'Create Table'} ?? $create->{'Create View'} ?? null;
+            if (!$createSql) {
+                continue;
+            }
+
+            $sql .= "DROP TABLE IF EXISTS `{$table}`;\n";
+            $sql .= $createSql . ";\n\n";
+
+            $rows = DB::table($table)->get();
+            if ($rows->isEmpty()) {
+                continue;
+            }
+
+            $columns = implode(', ', array_map(fn ($col) => "`{$col}`", array_keys((array) $rows->first())));
+            foreach ($rows as $row) {
+                $values = array_map(function ($value) {
+                    return $this->escapeSqlValue($value);
+                }, array_values((array) $row));
+                $sql .= sprintf("INSERT INTO `%s` (%s) VALUES (%s);\n", $table, $columns, implode(', ', $values));
+            }
+            $sql .= "\n";
         }
-        
-        SscHelper::logActivity(Auth::id(), 'DATA_EXPORT', 'Exported all system data');
-        
-        return response()->json($data)->header('Content-Disposition', 'attachment; filename="ssc_system_backup_' . date('Y_m_d_His') . '.json"');
+
+        $sql .= "SET FOREIGN_KEY_CHECKS = 1;\n";
+
+        SscHelper::logActivity(Auth::id(), 'DATA_EXPORT', 'Exported raw SQL database backup');
+
+        return response($sql, 200, [
+            'Content-Type' => 'application/sql; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="ssc_database_backup_' . date('Y_m_d_His') . '.sql"',
+        ]);
+    }
+
+    private function escapeSqlValue($value)
+    {
+        if ($value === null) {
+            return 'NULL';
+        }
+
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        return "'" . str_replace([
+            "\\",
+            "\0",
+            "\n",
+            "\r",
+            "\x1a",
+            "'",
+            '"',
+        ], [
+            "\\\\",
+            "\\0",
+            "\\n",
+            "\\r",
+            "\\Z",
+            "\\'",
+            '\\"',
+        ], (string) $value) . "'";
     }
 }
