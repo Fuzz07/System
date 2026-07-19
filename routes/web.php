@@ -6,6 +6,18 @@ use App\Http\Controllers\Officer;
 use App\Http\Controllers\Student;
 use Illuminate\Support\Facades\Route;
 
+// ─── Temporary Migration Route ───
+Route::get('/run-migrations', function () {
+    try {
+        $output = '';
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output .= \Illuminate\Support\Facades\Artisan::output();
+        return response($output, 200, ['Content-Type' => 'text/plain']);
+    } catch (\Throwable $e) {
+        return response($e->getMessage() . "\n" . $e->getTraceAsString(), 500, ['Content-Type' => 'text/plain']);
+    }
+});
+
 // ─── Public / Landing ───
 Route::get('/', function () {
     return view('welcome');
