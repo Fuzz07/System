@@ -3,7 +3,7 @@ PWA INSTALL BANNER — Shared Partial Component
 Can be included anywhere. Supports standard top-banner style or floating bottom-card style.
 Usage: 
   @include('partials.pwa-installer', ['floating' => true])
-
+═══════════════════════════════════════ --}}
 
 @php
     $floating = $floating ?? false;
@@ -479,4 +479,4 @@ Usage:
         }
     </script>
 @endonce
-═══════════════════════════════════════ --}}
+
