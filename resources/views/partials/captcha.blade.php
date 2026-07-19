@@ -44,9 +44,15 @@
           captchaSpinner.classList.remove('d-none');
           
           setTimeout(async () => {
-            try {
               const response = await fetch("{{ route('captcha.verify') }}");
-              const data = await response.json();
+              const text = await response.text();
+              let data;
+              try {
+                data = JSON.parse(text);
+              } catch (jsonErr) {
+                console.error("JSON Parse Error. Raw response:", text);
+                throw new Error("Server Error: " + (text.substring(0, 150) || "Empty response"));
+              }
               
               captchaSpinner.classList.add('d-none');
               
@@ -69,7 +75,7 @@
               robotCheckbox.checked = false;
               robotCheckbox.style.opacity = '1';
               robotCheckbox.disabled = false;
-              captchaFeedback.textContent = 'Network error occurred. Please try again.';
+              captchaFeedback.textContent = error.message || 'Network error occurred. Please try again.';
               captchaFeedback.classList.remove('d-none');
             }
           }, 1200);
