@@ -17,12 +17,21 @@ Route::get('/', function () {
 Route::get('/login/auth/{portal}', [AuthController::class, 'showLogin'])->name('login.portal');
 Route::post('/login/auth/{portal}', [AuthController::class, 'login'])->name('login.submit.portal');
 
+// Explicit student login routes at /login/student
+Route::get('/login/student', [AuthController::class, 'showLogin'])->name('login.student');
+Route::post('/login/student', [AuthController::class, 'login'])->name('login.student.submit');
+
 // Backwards-compatible redirect from old /login paths to new /login/auth/*
 Route::get('/login/{portal?}', function ($portal = null) {
     if ($portal) {
+        // If the portal is 'student', redirect to the explicit /login/student path
+        if ($portal === 'student') {
+            return redirect('/login/student');
+        }
         return redirect('/login/auth/' . $portal);
     }
-    return redirect('/login/auth/student');
+    // Default to student login
+    return redirect('/login/student');
 })->name('login');
 
 // Keep the legacy submit route for compatibility
