@@ -1134,6 +1134,9 @@
                     <a href="{{ route('login', 'student') }}" class="btn-primary-hero" id="hero-student-login">
                         <i class="bi bi-mortarboard-fill"></i> Access Student Portal
                     </a>
+                    <a href="/app-debug.apk" class="btn-outline-hero" style="border-color: var(--primary-light); color: var(--primary-light);">
+                        <i class="bi bi-android2"></i> Install Android App
+                    </a>
                     <a href="#features" class="btn-outline-hero">
                         Explore Features <i class="bi bi-arrow-down"></i>
                     </a>
