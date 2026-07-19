@@ -53,6 +53,7 @@ class AuthController extends Controller
         }
 
         // ── CAPTCHA Verification ─────────────────────────────────────────────
+        error_log("CAPTCHA LOGIN CHECK: InputToken=" . $request->input('captcha_verified_token') . " SessionToken=" . session('captcha_token') . " SessionID=" . session()->getId());
         if ($request->input('captcha_verified_token') !== session('captcha_token') || !session('captcha_token')) {
             session()->forget('captcha_token');
             RateLimiter::hit($throttleKey, self::DECAY_SECONDS);

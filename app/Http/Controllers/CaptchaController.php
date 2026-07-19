@@ -12,6 +12,8 @@ class CaptchaController extends Controller
         // Generate dynamic captcha token and store in session
         $token = Str::random(32);
         session(['captcha_token' => $token]);
+        
+        error_log("CAPTCHA GENERATED: Token=" . $token . " SessionID=" . session()->getId());
 
         return response()->json([
             'success' => true,
