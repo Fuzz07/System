@@ -6,6 +6,16 @@ use App\Http\Controllers\Officer;
 use App\Http\Controllers\Student;
 use Illuminate\Support\Facades\Route;
 
+// ─── Temporary Cache Clear Route ───
+Route::get('/clear-cache', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        return response("Cache and rate limits cleared successfully!", 200, ['Content-Type' => 'text/plain']);
+    } catch (\Throwable $e) {
+        return response($e->getMessage(), 500, ['Content-Type' => 'text/plain']);
+    }
+});
+
 // ─── Public / Landing ───
 Route::get('/', function () {
     return view('welcome');
