@@ -14,7 +14,7 @@
     <div class="chatbot-header" id="chatbotHeader">
       <div class="header-top-row">
         <div class="header-logo" style="display: flex; align-items: center; gap: 8px;">
-          <img src="{{ asset('assets/images/ssc_logo.png') }}" alt="SSC Logo" style="width: 24px; height: 24px; object-fit: contain;">
+          <img src="{{ asset('assets/images/ssc_logo.png') }}" alt="SSC Logo" style="width: 30px; height: 30px; object-fit: contain;">
           <span class="logo-text">SSC Help</span>
         </div>
         <div class="header-avatars">
