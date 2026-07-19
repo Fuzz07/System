@@ -20,7 +20,7 @@ class ProposalController extends Controller
         if ($search) {
             $query->where('project_title', 'like', "%$search%");
         }
-        if ($status && in_array($status, ['Pending', 'Approved', 'Rejected'])) {
+        if ($status && in_array($status, ['Pending', 'Approved', 'Rejected'], true)) {
             $query->where('status', $status);
         }
         $proposals = $query->orderByDesc('created_at')->get();
@@ -30,6 +30,10 @@ class ProposalController extends Controller
 
     public function review(Request $request, Proposal $proposal)
     {
+        if ($proposal->status !== 'Pending') {
+            abort(403, 'This proposal has already been reviewed.');
+        }
+
         $request->validate([
             'action'          => 'required|in:approve,reject',
             'approved_budget' => 'nullable|numeric|min:0',
@@ -49,7 +53,6 @@ class ProposalController extends Controller
         $logAction = $action === 'approve' ? 'PROPOSAL_APPROVE' : 'PROPOSAL_REJECT';
         SscHelper::logActivity(Auth::id(), $logAction, ucfirst($action) . "d proposal: {$proposal->project_title}");
 
-        // Auto-post announcement if approved and completed
         if ($action === 'approve' && $proposal->project_status === 'Completed') {
             Announcement::create([
                 'title'      => "Project Completed: {$proposal->project_title}",

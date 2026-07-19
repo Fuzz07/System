@@ -107,28 +107,43 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'role:student'])
         return view('student.candidacy');
     })->name('candidacy');
     Route::post('/candidacy', function (\Illuminate\Http\Request $request) {
+        $student = \Illuminate\Support\Facades\Auth::user();
+        $department = $student->department;
+
+        if (blank($department)) {
+            return back()->with('danger', 'Your account has no assigned department. Please contact the administrator.');
+        }
+
+        $allowedPositions = [
+            $department . ' Representative',
+            'SSC President',
+            'SSC Vice President',
+            'SSC Secretary',
+            'SSC Treasurer',
+        ];
+
         $request->validate([
-            'position' => 'required|string|max:100',
-            'platform' => 'required|string|min:20',
-            'department' => 'required|string|max:100',
+            'position' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::in($allowedPositions)],
+            'platform' => 'required|string|min:20|max:3000',
         ]);
+
         $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();
         if (!$activeSy || !$activeSy->candidacy_open) {
             return back()->with('danger', 'Candidacy filing is currently closed.');
         }
-        $exists = Auth::user()->candidacies()->where('school_year', $activeSy->label)->exists();
+        $exists = $student->candidacies()->where('school_year', $activeSy->label)->exists();
         if ($exists) {
             return back()->with('danger', 'You have already submitted an application for this school year.');
         }
         \App\Models\Candidacy::create([
-            'user_id' => Auth::id(),
-            'department' => $request->department,
+            'user_id' => $student->id,
+            'department' => $department,
             'position' => $request->position,
             'platform' => $request->platform,
             'status' => 'pending',
             'school_year' => $activeSy->label,
         ]);
-        \App\Helpers\SscHelper::logActivity(Auth::id(), 'CANDIDACY_APPLY', "Submitted candidacy application for {$request->position}");
+        \App\Helpers\SscHelper::logActivity($student->id, 'CANDIDACY_APPLY', "Submitted candidacy application for {$request->position}");
         return redirect()->route('student.candidacy')->with('success', 'Your candidacy application has been submitted successfully.');
     })->name('candidacy.store');
 
@@ -150,8 +165,8 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
     })->name('proposals');
 
     Route::get('/proposals/{proposal}', function (\App\Models\Proposal $proposal) {
-        if (!in_array($proposal->status, ['Approved', 'Pending'])) {
-            return redirect()->route('mobile.student.proposals')->with('danger', 'Project not available.');
+        if (!in_array($proposal->status, ['Approved', 'Pending'], true)) {
+            abort(404);
         }
         $proposal->load('officer');
         $comments = \App\Models\ProposalComment::with('user')
@@ -162,6 +177,10 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
     })->name('proposal.show');
 
     Route::post('/proposals/{proposal}/comment', function (\Illuminate\Http\Request $request, \App\Models\Proposal $proposal) {
+        if (!in_array($proposal->status, ['Approved', 'Pending'], true)) {
+            abort(404);
+        }
+
         $request->validate(['comment' => 'required|string|min:1|max:2000']);
         \App\Models\ProposalComment::create([
             'proposal_id' => $proposal->id,
@@ -208,33 +227,49 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
     })->name('candidacy');
 
     Route::post('/candidacy', function (\Illuminate\Http\Request $request) {
+        $student = \Illuminate\Support\Facades\Auth::user();
+        $department = $student->department;
+
+        if (blank($department)) {
+            return redirect()->route('mobile.student.candidacy')->with('danger', 'Your account has no assigned department. Please contact the administrator.');
+        }
+
+        $allowedPositions = [
+            $department . ' Representative',
+            'SSC President',
+            'SSC Vice President',
+            'SSC Secretary',
+            'SSC Treasurer',
+        ];
+
         $request->validate([
-            'position'   => 'required|string|max:100',
-            'platform'   => 'required|string|min:20|max:3000',
-            'department' => 'required|string|max:100',
+            'position' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::in($allowedPositions)],
+            'platform' => 'required|string|min:20|max:3000',
         ]);
+
         $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();
         if (!$activeSy || !$activeSy->candidacy_open) {
             return redirect()->route('mobile.student.candidacy')->with('danger', 'Candidacy filing is currently closed.');
         }
-        $exists = Auth::user()->candidacies()->where('school_year', $activeSy->label)->exists();
+        $exists = $student->candidacies()->where('school_year', $activeSy->label)->exists();
         if ($exists) {
             return redirect()->route('mobile.student.candidacy')->with('danger', 'You have already submitted an application.');
         }
         \App\Models\Candidacy::create([
-            'user_id' => Auth::id(),
-            'department' => $request->department,
+            'user_id' => $student->id,
+            'department' => $department,
             'position' => $request->position,
             'platform' => $request->platform,
             'status' => 'pending',
             'school_year' => $activeSy->label,
         ]);
-        \App\Helpers\SscHelper::logActivity(Auth::id(), 'CANDIDACY_APPLY', "Submitted mobile candidacy application for {$request->position}");
+        \App\Helpers\SscHelper::logActivity($student->id, 'CANDIDACY_APPLY', "Submitted mobile candidacy application for {$request->position}");
         return redirect()->route('mobile.student.candidacy')->with('success', 'Application submitted!');
     })->name('candidacy.store');
 
     Route::get('/voting', [Student\VotingController::class, 'indexMobile'])->name('voting');
     Route::post('/voting', [Student\VotingController::class, 'storeMobile'])->name('voting.store');
+    Route::get('/election-results', [Student\VotingController::class, 'resultsMobile'])->name('election.results');
 });
 
 // ─── Treasurer Routes ───

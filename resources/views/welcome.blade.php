@@ -10,6 +10,12 @@
     <meta name="keywords"
         content="SSC, Supreme Student Council, Transparency, Budget, Madridejos Community College, Student Government">
     <link rel="icon" type="image/png" href="{{ asset('assets/images/ssc_logo.png') }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ asset('assets/img/icon-192.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="SSC Student">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -339,6 +345,253 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             margin-top: 4px;
+        }
+
+        /* ─── SSC OVERVIEW SECTION ─── */
+        .overview-section {
+            padding: 100px 5%;
+            background: #f8fafc;
+        }
+
+        .overview-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+            gap: 32px;
+            align-items: center;
+        }
+
+        .overview-card {
+            background: #fff;
+            border-radius: 28px;
+            padding: 40px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+        }
+
+        .overview-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .overview-title {
+            font-size: clamp(2rem, 2.8vw, 3.2rem);
+            line-height: 1.05;
+            font-weight: 900;
+            color: var(--slate-900);
+            margin-bottom: 18px;
+        }
+
+        .overview-text {
+            font-size: 1rem;
+            line-height: 1.75;
+            color: var(--slate-600);
+            margin-bottom: 28px;
+        }
+
+        .overview-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .overview-list-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: var(--slate-600);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .overview-list-item-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            background: rgba(227, 79, 38, 0.12);
+            display: grid;
+            place-items: center;
+            color: var(--primary);
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .overview-image {
+            width: 100%;
+            border-radius: 28px;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            box-shadow: 0 22px 55px rgba(15, 23, 42, 0.08);
+        }
+
+        .overview-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+        }
+
+        .gallery-section {
+            padding: 60px 5% 100px;
+            background: #fff;
+        }
+
+        .gallery-header {
+            text-align: center;
+            margin-bottom: 42px;
+        }
+
+        .gallery-title {
+            font-size: clamp(2rem, 2.5vw, 2.8rem);
+            font-weight: 900;
+            color: var(--slate-900);
+            margin-bottom: 12px;
+        }
+
+        .gallery-subtitle {
+            font-size: 1rem;
+            color: var(--slate-500);
+            line-height: 1.75;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .gallery-card {
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #fff;
+        }
+
+        .image-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.78);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 24px;
+        }
+
+        .image-modal-overlay.active {
+            display: flex;
+        }
+
+        .image-modal-card {
+            width: 100%;
+            max-width: 960px;
+            border-radius: 28px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 28px 80px rgba(15, 23, 42, 0.24);
+            position: relative;
+        }
+
+        .image-modal-photo {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 78vh;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .image-modal-footer {
+            padding: 18px 24px 24px;
+            background: #fff;
+        }
+
+        .image-modal-caption {
+            font-size: 0.95rem;
+            color: var(--slate-600);
+            line-height: 1.7;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            border: none;
+            background: rgba(255,255,255,0.92);
+            color: var(--slate-900);
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+        }
+
+        .gallery-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 26px 65px rgba(15, 23, 42, 0.12);
+        }
+
+        .gallery-card img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.35s ease, filter 0.35s ease;
+        }
+
+        .gallery-card img:hover {
+            transform: scale(1.04);
+            filter: brightness(1.03);
+        }
+
+        .gallery-caption {
+            padding: 18px 20px 22px;
+            font-size: 0.93rem;
+            color: var(--slate-600);
+            line-height: 1.6;
+            background: #fff;
+        }
+
+        @media (max-width: 980px) {
+            .overview-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 680px) {
+            .overview-card {
+                padding: 28px;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .overview-card {
+                padding: 28px;
+            }
         }
 
         /* ─── PORTALS SECTION ─── */
@@ -852,6 +1105,7 @@
             </div>
         </a>
         <div class="nav-links">
+            <a href="#home" class="nav-link">Home</a>
             <a href="#features" class="nav-link">Features</a>
             <a href="#officers" class="nav-link">Officers</a>
             <a href="#portals" class="nav-link">Portals</a>
@@ -862,7 +1116,7 @@
     </nav>
 
     <!-- ─── HERO SECTION ─── -->
-    <section class="hero" id="hero">
+    <section class="hero" id="home">
         <div class="hero-inner">
             <div class="hero-content">
                 <div class="hero-badge">
@@ -906,6 +1160,81 @@
             </div>
         </div>
     </section>
+
+    <!-- ─── SSC OVERVIEW SECTION ─── -->
+    <section class="overview-section" id="overview">
+        <div class="overview-inner">
+            <div class="overview-card fade-up">
+                <div class="overview-eyebrow">
+                    <i class="bi bi-building"></i> Supreme Student Council
+                </div>
+                <h2 class="overview-title">Forge ahead with heart and honor — the SSC that advances open governance for MCC.</h2>
+                <p class="overview-text">
+                    This portal brings together students, officers, deans, and administrators in one modern system for budget transparency,
+                    project management, election oversight, and community feedback. It is built to support informed decision-making and
+                    encourage meaningful participation across the college.
+                </p>
+                <div class="overview-list">
+                    <div class="overview-list-item">
+                        <span class="overview-list-item-icon"><i class="bi bi-check-lg"></i></span>
+                        <span>Transparent budget and expense tracking across official school-year allocations.</span>
+                    </div>
+                    <div class="overview-list-item">
+                        <span class="overview-list-item-icon"><i class="bi bi-check-lg"></i></span>
+                        <span>Secure candidate filing and verified voting for student council officers.</span>
+                    </div>
+                    <div class="overview-list-item">
+                        <span class="overview-list-item-icon"><i class="bi bi-check-lg"></i></span>
+                        <span>Real-time announcements, proposals, and feedback channels that connect the student body.</span>
+                    </div>
+                    <div class="overview-list-item">
+                        <span class="overview-list-item-icon"><i class="bi bi-check-lg"></i></span>
+                        <span>Professional digital experience designed for the unique needs of MCC’s student governance.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="overview-image fade-up" style="animation-delay: 0.06s;">
+                <img src="{{ asset('assets/images/b5.jpg') }}" alt="Madridejos Community College SSC" />
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── SSC PHOTO GALLERY SECTION ─── -->
+    <section class="gallery-section" id="gallery">
+        <div class="gallery-header fade-up">
+            <div class="gallery-title">Student council moments captured in action</div>
+            <p class="gallery-subtitle">A visual overview of the Supreme Student Council’s activities, community engagement, and leadership presence at MCC.</p>
+        </div>
+        <div class="gallery-grid">
+            <div class="gallery-card fade-up" style="transition-delay: 0.04s;">
+                <img src="{{ asset('assets/images/b1.jpg') }}" alt="SSC event photo 1">
+                <div class="gallery-caption">Council leadership and faculty partners gathering for a collaborative planning session.</div>
+            </div>
+            <div class="gallery-card fade-up" style="transition-delay: 0.08s;">
+                <img src="{{ asset('assets/images/b2.jpg') }}" alt="SSC event photo 2">
+                <div class="gallery-caption">Student officers representing MCC at a campus event with pride and purpose.</div>
+            </div>
+            <div class="gallery-card fade-up" style="transition-delay: 0.12s;">
+                <img src="{{ asset('assets/images/b3.jpg') }}" alt="SSC event photo 3">
+                <div class="gallery-caption">The SSC team in action during an announcement or briefing session.</div>
+            </div>
+            <div class="gallery-card fade-up" style="transition-delay: 0.16s;">
+                <img src="{{ asset('assets/images/b4.jpg') }}" alt="SSC event photo 4">
+                <div class="gallery-caption">Community-driven engagement reflecting the council’s mission to serve MCC students.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── IMAGE MODAL ─── -->
+    <div class="image-modal-overlay" id="imageModal">
+        <div class="image-modal-card">
+            <button type="button" class="image-modal-close" id="imageModalClose" aria-label="Close image modal">×</button>
+            <img class="image-modal-photo" id="imageModalPhoto" src="" alt="SSC photo preview">
+            <div class="image-modal-footer">
+                <div class="image-modal-caption" id="imageModalCaption"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- ─── FEATURES SECTION ─── -->
     <section class="features-section" id="features">
@@ -1156,7 +1485,35 @@
         }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
         document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        const imageModal = document.getElementById('imageModal');
+        const imageModalPhoto = document.getElementById('imageModalPhoto');
+        const imageModalCaption = document.getElementById('imageModalCaption');
+        const imageModalClose = document.getElementById('imageModalClose');
+
+        document.querySelectorAll('.gallery-card img').forEach(img => {
+            img.addEventListener('click', () => {
+                imageModalPhoto.src = img.src;
+                imageModalPhoto.alt = img.alt;
+                imageModalCaption.textContent = img.closest('.gallery-card').querySelector('.gallery-caption').textContent;
+                imageModal.classList.add('active');
+            });
+        });
+
+        const closeImageModal = () => {
+            imageModal.classList.remove('active');
+            imageModalPhoto.src = '';
+            imageModalCaption.textContent = '';
+        };
+
+        imageModalClose.addEventListener('click', closeImageModal);
+        imageModal.addEventListener('click', (event) => {
+            if (event.target === imageModal) {
+                closeImageModal();
+            }
+        });
     </script>
+    @include('partials.pwa-installer', ['floating' => true])
 </body>
 
 </html>

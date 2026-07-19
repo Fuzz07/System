@@ -8,6 +8,7 @@ use App\Models\Budget;
 use App\Models\Expense;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ExpenseController extends Controller
 {
@@ -20,7 +21,7 @@ class ExpenseController extends Controller
         if ($search) {
             $query->where('expense_title', 'like', "%$search%");
         }
-        if ($status && in_array($status, ['Pending', 'Approved', 'Rejected'])) {
+        if ($status && in_array($status, ['Pending', 'Approved', 'Rejected'], true)) {
             $query->where('status', $status);
         }
         $expenses = $query->orderByDesc('created_at')->get();
@@ -30,33 +31,51 @@ class ExpenseController extends Controller
 
     public function review(Request $request, Expense $expense)
     {
+        if ($expense->status !== 'Pending') {
+            abort(403, 'This expense has already been reviewed.');
+        }
+
         $request->validate([
             'action'      => 'required|in:approve,reject',
             'admin_notes' => 'nullable|string',
         ]);
 
         $action = $request->action;
+        $errorMessage = null;
 
-        if ($action === 'approve') {
-            $budget = Budget::find($expense->budget_id);
-            if ($budget && $budget->remaining_balance >= $expense->amount) {
-                $budget->decrement('remaining_balance', $expense->amount);
-                $expense->update([
+        DB::transaction(function () use ($request, $expense, $action, &$errorMessage) {
+            $lockedExpense = Expense::whereKey($expense->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedExpense->status !== 'Pending') {
+                abort(403, 'This expense has already been reviewed.');
+            }
+
+            if ($action === 'approve') {
+                $budget = Budget::whereKey($lockedExpense->budget_id)->lockForUpdate()->first();
+                if (!$budget || $budget->status !== 'Approved' || $budget->remaining_balance < $lockedExpense->amount) {
+                    $errorMessage = 'Insufficient or unavailable budget balance.';
+                    return;
+                }
+
+                $budget->decrement('remaining_balance', $lockedExpense->amount);
+                $lockedExpense->update([
                     'status'      => 'Approved',
                     'approved_by' => Auth::id(),
                     'admin_notes' => $request->admin_notes,
                 ]);
-                SscHelper::logActivity(Auth::id(), 'EXPENSE_APPROVE', "Approved expense: {$expense->expense_title}");
+                SscHelper::logActivity(Auth::id(), 'EXPENSE_APPROVE', "Approved expense: {$lockedExpense->expense_title}");
             } else {
-                return redirect()->route('admin.expenses')->with('danger', 'Insufficient budget balance.');
+                $lockedExpense->update([
+                    'status'      => 'Rejected',
+                    'approved_by' => Auth::id(),
+                    'admin_notes' => $request->admin_notes,
+                ]);
+                SscHelper::logActivity(Auth::id(), 'EXPENSE_REJECT', "Rejected expense: {$lockedExpense->expense_title}");
             }
-        } else {
-            $expense->update([
-                'status'      => 'Rejected',
-                'approved_by' => Auth::id(),
-                'admin_notes' => $request->admin_notes,
-            ]);
-            SscHelper::logActivity(Auth::id(), 'EXPENSE_REJECT', "Rejected expense: {$expense->expense_title}");
+        });
+
+        if ($errorMessage) {
+            return redirect()->route('admin.expenses')->with('danger', $errorMessage);
         }
 
         return redirect()->route('admin.expenses')->with('success', "Expense {$action}d successfully.");

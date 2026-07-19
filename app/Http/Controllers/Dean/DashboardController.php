@@ -6,7 +6,6 @@ use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Candidacy;
 use App\Models\SchoolYear;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -69,13 +68,18 @@ class DashboardController extends Controller
 
     protected function authorizeDeanAccess(Candidacy $candidacy)
     {
+        $activeSy = SchoolYear::where('is_active', 1)->first();
+        if (!$activeSy || $candidacy->school_year !== $activeSy->label || $candidacy->status !== 'pending') {
+            abort(404);
+        }
+
         $dean = Auth::user();
         $dept = $dean->department;
         $candDept = $candidacy->department;
 
         $authorized = false;
         if ($dept === 'BSED/BEED') {
-            $authorized = in_array($candDept, ['BSED', 'BEED', 'BSED/BEED']);
+            $authorized = in_array($candDept, ['BSED', 'BEED', 'BSED/BEED'], true);
         } else {
             $authorized = ($dept === $candDept);
         }
@@ -87,7 +91,7 @@ class DashboardController extends Controller
 
     public function results()
     {
-        $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();
+        $activeSy = SchoolYear::where('is_active', 1)->first();
 
         if (!$activeSy) {
             return view('shared.election-results', [

@@ -10,18 +10,21 @@ use Illuminate\Support\Facades\Auth;
 
 class OfficerController extends Controller
 {
+    private const MANAGED_ROLES = ['officer', 'treasurer'];
+
     public function index(Request $request)
     {
         $search = $request->input('search', '');
         $roleFilter = $request->input('role_filter', '');
 
-        $query = User::whereIn('role', ['officer', 'treasurer']);
+        $query = User::whereIn('role', self::MANAGED_ROLES);
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('fullname', 'like', "%$search%")->orWhere('email', 'like', "%$search%");
+                $q->where('fullname', 'like', "%$search%")
+                    ->orWhere('email', 'like', "%$search%");
             });
         }
-        if ($roleFilter && in_array($roleFilter, ['officer', 'treasurer'])) {
+        if ($roleFilter && in_array($roleFilter, self::MANAGED_ROLES, true)) {
             $query->where('role', $roleFilter);
         }
         $users = $query->orderByDesc('created_at')->get();
@@ -66,6 +69,8 @@ class OfficerController extends Controller
 
     public function toggleStatus(User $user)
     {
+        $this->authorizeManagedOfficer($user);
+
         if ($user->id === Auth::id()) {
             return redirect()->route('admin.officers')->with('danger', 'Cannot modify your own account.');
         }
@@ -75,6 +80,8 @@ class OfficerController extends Controller
 
     public function changeRole(Request $request, User $user)
     {
+        $this->authorizeManagedOfficer($user);
+
         $request->validate(['new_role' => 'required|in:officer,treasurer,student']);
         if ($user->id !== Auth::id()) {
             $user->update(['role' => $request->new_role]);
@@ -84,11 +91,20 @@ class OfficerController extends Controller
 
     public function destroy(User $user)
     {
+        $this->authorizeManagedOfficer($user);
+
         if ($user->id === Auth::id()) {
             return redirect()->route('admin.officers')->with('danger', 'Cannot delete your own account.');
         }
         SscHelper::logActivity(Auth::id(), 'USER_DELETE', "Deleted user ID: {$user->id}");
         $user->delete();
         return redirect()->route('admin.officers')->with('success', 'User deleted.');
+    }
+
+    private function authorizeManagedOfficer(User $user): void
+    {
+        if (!in_array($user->role, self::MANAGED_ROLES, true)) {
+            abort(404);
+        }
     }
 }

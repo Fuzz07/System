@@ -92,8 +92,12 @@
                                                     <p class="text-muted small mb-0 text-truncate" style="max-width: 100%;">{{ $cand->platform }}</p>
                                                 </div>
 
-                                                <button type="button" class="btn btn-outline-primary btn-sm w-100 py-2 rounded-3" 
-                                                    onclick="openVotingModal({{ $cand->id }}, '{{ addslashes($cand->user->fullname) }}', '{{ $pos }}', '{{ addslashes($cand->platform) }}')">
+                                                <button type="button" class="btn btn-outline-primary btn-sm w-100 py-2 rounded-3"
+                                                    data-candidacy-id="{{ $cand->id }}"
+                                                    data-candidate-name="{{ e($cand->user->fullname) }}"
+                                                    data-position="{{ e($pos) }}"
+                                                    data-platform="{{ e($cand->platform) }}"
+                                                    onclick="openVotingModal(this)">
                                                     <i class="bi bi-box-arrow-in-up"></i> View Platform & Vote
                                                 </button>
                                             </div>
@@ -258,11 +262,16 @@
     const timerLabel         = document.getElementById('timerLabel');
     const timerHint          = document.getElementById('timerHint');
 
-    function openVotingModal(candidacyId, candName, position, platform) {
+    function openVotingModal(button) {
         if (countdownInterval) {
             clearInterval(countdownInterval);
             countdownInterval = null;
         }
+
+        const candidacyId = button.dataset.candidacyId;
+        const candName = button.dataset.candidateName;
+        const position = button.dataset.position;
+        const platform = button.dataset.platform;
 
         // Populate modal content
         modalCandName.textContent     = candName;

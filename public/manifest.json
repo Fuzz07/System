@@ -3,7 +3,7 @@
   "short_name": "SSC",
   "description": "Supreme Student Council Transparency and Budget Allocation System — Student Portal",
   "start_url": "/m/student/proposals",
-  "scope": "/m/student/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f172a",

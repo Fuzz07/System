@@ -20,5 +20,17 @@
 /storage/pail
 /vendor
 Homestead.json
+
 Homestead.yaml
 Thumbs.db
+
+# Android/Gradle build artifacts
+.gradle/
+**/build/
+*.class
+*.apk
+*.aar
+student-mobile-app/local.properties
+student-mobile-app/.idea/
+student-mobile-app/.gradle/
+

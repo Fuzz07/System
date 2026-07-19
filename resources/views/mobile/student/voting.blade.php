@@ -72,7 +72,11 @@
                                         {{ $cand->platform }}
                                     </p>
                                     <button type="button" class="install-banner-btn" style="width: 100%; border: 1px solid var(--primary); background: transparent; color: var(--primary); padding: 8px; font-size: 0.76rem; border-radius: 8px; font-weight: 700; cursor: pointer;"
-                                        onclick="openMobileVotingModal({{ $cand->id }}, '{{ addslashes($cand->user->fullname) }}', '{{ $pos }}', '{{ addslashes($cand->platform) }}')">
+                                        data-candidacy-id="{{ $cand->id }}"
+                                        data-candidate-name="{{ e($cand->user->fullname) }}"
+                                        data-position="{{ e($pos) }}"
+                                        data-platform="{{ e($cand->platform) }}"
+                                        onclick="openMobileVotingModal(this)">
                                         View & Vote
                                     </button>
                                 </div>
@@ -149,11 +153,16 @@
     const mobileTimerLabel       = document.getElementById('mobileTimerLabel');
     const mobileTimerHint        = document.getElementById('mobileTimerHint');
 
-    function openMobileVotingModal(candidacyId, candName, position, platform) {
+    function openMobileVotingModal(button) {
         if (mobileCountdownInterval) {
             clearInterval(mobileCountdownInterval);
             mobileCountdownInterval = null;
         }
+
+        const candidacyId = button.dataset.candidacyId;
+        const candName = button.dataset.candidateName;
+        const position = button.dataset.position;
+        const platform = button.dataset.platform;
 
         mobileModalCandName.textContent     = candName;
         mobileModalCandPos.textContent      = position;

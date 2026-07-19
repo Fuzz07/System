@@ -22,72 +22,7 @@
 
 <body>
 
-    {{-- ══════════════════════════════════════
-    PWA INSTALL BANNER — Always visible
-    Hides only if: already installed (standalone) or user dismissed
-    ═══════════════════════════════════════ --}}
-    <div class="install-banner" id="installBanner">
-        <div class="install-banner-left">
-            <div class="install-banner-icon">
-                <img src="{{ asset('assets/img/icon-192.png') }}" alt="SSC" width="40" height="40"
-                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <div class="install-banner-icon-fallback" style="display:none;">SSC</div>
-            </div>
-            <div class="install-banner-text">
-                <span class="install-banner-title">Install App</span>
-                <span class="install-banner-sub">Add SSC Student to your home screen</span>
-            </div>
-        </div>
-        <div class="install-banner-actions">
-            <button class="install-banner-btn" id="installBtn" onclick="handleInstall()">
-                <i class="bi bi-download"></i> Install
-            </button>
-            <button class="install-banner-dismiss" onclick="dismissBanner()" title="Dismiss">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-    </div>
-
-    {{-- iOS Install Instructions Modal --}}
-    <div class="ios-modal-overlay" id="iosModal" onclick="closeIosModal()">
-        <div class="ios-modal" onclick="event.stopPropagation()">
-            <div class="ios-modal-handle"></div>
-            <div style="text-align:center;padding:0 4px 4px;">
-                <div style="font-size:1.5rem;margin-bottom:8px;">📲</div>
-                <div style="font-size:1.1rem;font-weight:800;color:#0f172a;margin-bottom:6px;">Add to Home Screen</div>
-                <div style="font-size:0.82rem;color:#64748b;margin-bottom:20px;line-height:1.5;">Follow these steps to
-                    install the SSC Student app on your iPhone or iPad:</div>
-            </div>
-            <div class="ios-steps">
-                <div class="ios-step">
-                    <div class="ios-step-num">1</div>
-                    <div class="ios-step-body">
-                        <div class="ios-step-title">Tap the Share button</div>
-                        <div class="ios-step-sub">Find <span class="ios-icon-badge"><i
-                                    class="bi bi-box-arrow-up"></i></span> in Safari's bottom toolbar</div>
-                    </div>
-                </div>
-                <div class="ios-step">
-                    <div class="ios-step-num">2</div>
-                    <div class="ios-step-body">
-                        <div class="ios-step-title">Tap "Add to Home Screen"</div>
-                        <div class="ios-step-sub">Scroll down in the share sheet and tap <strong>"Add to Home
-                                Screen"</strong></div>
-                    </div>
-                </div>
-                <div class="ios-step">
-                    <div class="ios-step-num">3</div>
-                    <div class="ios-step-body">
-                        <div class="ios-step-title">Tap "Add" to confirm</div>
-                        <div class="ios-step-sub">The SSC Student app will appear on your home screen</div>
-                    </div>
-                </div>
-            </div>
-            <div style="padding-top:8px;">
-                <button onclick="closeIosModal()" class="ios-close-btn">Got it!</button>
-            </div>
-        </div>
-    </div>
+    @include('partials.pwa-installer', ['floating' => false])
 
     {{-- ══════ App Shell ══════ --}}
     <div class="mobile-app" id="mobileApp">
@@ -208,86 +143,6 @@
     @stack('modals')
 
     <script>
-        // ── Device Detection ──
-        const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-        const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-        const DISMISSED_KEY = 'ssc_install_dismissed';
-
-        // ── Show/hide banner on load ──
-        (function initBanner() {
-            const banner = document.getElementById('installBanner');
-            if (!banner) return;
-
-            // Hide if already running as installed app
-            if (isStandalone) {
-                banner.style.display = 'none';
-                return;
-            }
-
-            // Hide if user previously dismissed
-            if (localStorage.getItem(DISMISSED_KEY) === '1') {
-                banner.style.display = 'none';
-                return;
-            }
-
-            // Show banner — it's visible in HTML by default
-            banner.style.display = 'flex';
-        })();
-
-        // ── Capture Android/Chrome install prompt ──
-        let deferredPrompt = null;
-        window.addEventListener('beforeinstallprompt', e => {
-            e.preventDefault();
-            deferredPrompt = e;
-            // Already visible, nothing to show — just store the event
-        });
-
-        // ── Install button handler ──
-        function handleInstall() {
-            if (deferredPrompt) {
-                // Android Chrome / Edge — native install prompt
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then(choice => {
-                    if (choice.outcome === 'accepted') {
-                        dismissBanner();
-                    }
-                    deferredPrompt = null;
-                });
-            } else if (isIos) {
-                // iOS Safari — show step-by-step modal
-                openIosModal();
-            } else {
-                // Fallback for other browsers (e.g. desktop Firefox) — show iOS-style instructions
-                openIosModal();
-            }
-        }
-
-        // ── Dismiss banner permanently ──
-        function dismissBanner() {
-            localStorage.setItem(DISMISSED_KEY, '1');
-            const banner = document.getElementById('installBanner');
-            if (banner) {
-                banner.style.animation = 'bannerSlideOut 0.3s ease forwards';
-                setTimeout(() => banner.style.display = 'none', 300);
-            }
-        }
-
-        // ── iOS Modal ──
-        function openIosModal() {
-            const m = document.getElementById('iosModal');
-            m.style.display = 'flex';
-            requestAnimationFrame(() => m.classList.add('open'));
-        }
-
-        function closeIosModal() {
-            const m = document.getElementById('iosModal');
-            m.classList.remove('open');
-            setTimeout(() => m.style.display = 'none', 300);
-        }
-
-        // ── Hide banner when app is installed ──
-        window.addEventListener('appinstalled', dismissBanner);
-
         // ── Chatbot Toggle ──
         function toggleChatbot(e) {
             e.preventDefault();
@@ -298,11 +153,6 @@
         document.getElementById('chatbotSheet').addEventListener('click', function (e) {
             if (e.target === this) toggleChatbot(e);
         });
-
-        // ── Register Service Worker ──
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => { }));
-        }
     </script>
 
     @include('partials.logout-modal')

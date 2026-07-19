@@ -16,7 +16,8 @@ class BudgetController extends Controller
         $query = Budget::with(['creator', 'approver']);
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%$search%")->orWhere('department', 'like', "%$search%");
+                $q->where('title', 'like', "%$search%")
+                    ->orWhere('department', 'like', "%$search%");
             });
         }
         $budgets = $query->orderByDesc('created_at')->get();
@@ -49,6 +50,8 @@ class BudgetController extends Controller
 
     public function approve(Budget $budget)
     {
+        $this->ensurePending($budget);
+
         $budget->update(['status' => 'Approved', 'approved_by' => Auth::id()]);
         SscHelper::logActivity(Auth::id(), 'BUDGET_APPROVE', "Approved budget: {$budget->title}");
         return redirect()->route('admin.budgets')->with('success', 'Budget approved.');
@@ -56,6 +59,8 @@ class BudgetController extends Controller
 
     public function reject(Budget $budget)
     {
+        $this->ensurePending($budget);
+
         $budget->update(['status' => 'Rejected', 'approved_by' => Auth::id()]);
         SscHelper::logActivity(Auth::id(), 'BUDGET_REJECT', "Rejected budget: {$budget->title}");
         return redirect()->route('admin.budgets')->with('success', 'Budget rejected.');
@@ -63,8 +68,19 @@ class BudgetController extends Controller
 
     public function destroy(Budget $budget)
     {
+        if ($budget->expenses()->exists()) {
+            return redirect()->route('admin.budgets')->with('danger', 'Cannot delete a budget that already has expenses.');
+        }
+
         SscHelper::logActivity(Auth::id(), 'BUDGET_DELETE', "Deleted budget: {$budget->title}");
         $budget->delete();
         return redirect()->route('admin.budgets')->with('success', 'Budget deleted.');
+    }
+
+    private function ensurePending(Budget $budget): void
+    {
+        if ($budget->status !== 'Pending') {
+            abort(403, 'This budget has already been reviewed.');
+        }
     }
 }

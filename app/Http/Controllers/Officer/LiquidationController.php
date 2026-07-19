@@ -9,6 +9,7 @@ use App\Models\Proposal;
 use App\Support\UploadValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class LiquidationController extends Controller
 {
@@ -31,15 +32,22 @@ class LiquidationController extends Controller
     {
         $request->validate([
             'title'       => 'required|string|max:255',
-            'proposal_id' => 'nullable|exists:proposals,id',
+            'proposal_id' => ['required', Rule::exists('proposals', 'id')->where(function ($query) {
+                $query->where('officer_id', Auth::id())->where('status', 'Approved');
+            })],
             'liq_file'    => UploadValidation::requiredFile(),
             'notes'       => 'nullable|string',
         ]);
 
+        $proposal = Proposal::whereKey($request->proposal_id)
+            ->where('officer_id', Auth::id())
+            ->where('status', 'Approved')
+            ->firstOrFail();
+
         $filePath = $request->file('liq_file')->store('liquidation', 'public');
 
         Liquidation::create([
-            'proposal_id' => $request->proposal_id,
+            'proposal_id' => $proposal->id,
             'officer_id'  => Auth::id(),
             'title'       => $request->title,
             'file_path'   => $filePath,

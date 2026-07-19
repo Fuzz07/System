@@ -42,8 +42,8 @@ class ProposalController extends Controller
 
     public function update(Request $request, Proposal $proposal)
     {
-        if ($proposal->officer_id !== Auth::id() || $proposal->status !== 'Pending') {
-            return redirect()->route('officer.proposals')->with('danger', 'Cannot edit this proposal.');
+        if ((int) $proposal->officer_id !== (int) Auth::id() || $proposal->status !== 'Pending') {
+            abort(403, 'Cannot edit this proposal.');
         }
 
         $request->validate([
@@ -59,7 +59,9 @@ class ProposalController extends Controller
 
     public function complete(Request $request, Proposal $proposal)
     {
-        if ($proposal->officer_id !== Auth::id()) abort(403);
+        if ((int) $proposal->officer_id !== (int) Auth::id() || $proposal->status !== 'Approved' || $proposal->project_status !== 'Ongoing') {
+            abort(403, 'Cannot complete this proposal.');
+        }
 
         $request->validate([
             'receipt' => UploadValidation::requiredFile(),

@@ -20,6 +20,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 
@@ -28,13 +30,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
-    
-    // File upload callback variables
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
-    private val FILE_CHOOSER_RESULT_CODE = 101
+    private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
 
-    // Default portal URL. For Android Emulators, 10.0.2.2 maps to the host's localhost (127.0.0.1:8000).
-    private val portalUrl = "http://10.0.2.2:8000/login/student"
+    // Default portal URL. For Android emulators, debug uses local host mapping while release uses the production endpoint.
+    private val portalUrl = BuildConfig.PORTAL_URL
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,6 +121,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Setup file chooser launcher
+        fileChooserLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                filePathCallback?.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data))
+            } else {
+                filePathCallback?.onReceiveValue(null)
+            }
+            filePathCallback = null
+        }
+
         // Setup WebChromeClient
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
@@ -141,14 +151,14 @@ class MainActivity : AppCompatActivity() {
                 this@MainActivity.filePathCallback = filePathCallback
 
                 val intent = fileChooserParams?.createIntent()
-                try {
-                    startActivityForResult(intent!!, FILE_CHOOSER_RESULT_CODE)
+                return try {
+                    fileChooserLauncher.launch(intent)
+                    true
                 } catch (e: Exception) {
                     this@MainActivity.filePathCallback = null
                     Toast.makeText(this@MainActivity, "Cannot open file chooser", Toast.LENGTH_LONG).show()
-                    return false
+                    false
                 }
-                return true
             }
         }
 
@@ -179,15 +189,6 @@ class MainActivity : AppCompatActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
-    // Handle activity result for file picker
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == FILE_CHOOSER_RESULT_CODE) {
-            if (filePathCallback == null) return
-            filePathCallback!!.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data))
-            filePathCallback = null
-        }
-    }
 
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
