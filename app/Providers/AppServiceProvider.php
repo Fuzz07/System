@@ -24,6 +24,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (config('app.env') === 'production' || isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL']) || getenv('VERCEL') !== false) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         View::composer('partials.sidebar-admin', function ($view) {
             $view->with([
                 'pendingProposals' => Proposal::where('status', 'Pending')->count(),
