@@ -108,7 +108,7 @@
   /* Chatbot Label */
   .chatbot-label {
     position: absolute;
-    right: 80px;
+    right: 10px;
     top: 50%;
     transform: translateY(-50%);
     background: var(--chatbot-primary-dark);
