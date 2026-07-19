@@ -4,24 +4,21 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-// ── Detect serverless / read-only filesystem environment ──
-// On Vercel, files live under /var/task/ and storage is read-only.
-// We detect this by checking the file path — no env var needed.
-$isVercel = str_contains(__FILE__, '/var/task/')
-         || str_contains(__FILE__, DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'task' . DIRECTORY_SEPARATOR);
+// ── Detect Vercel serverless environment ──
+// Files live under /var/task/ on Vercel — reliable path-based detection,
+// no need for VERCEL env var (which requires "Expose System Env Vars" to be ON).
+$isVercel = str_contains(__FILE__, '/var/task/');
 
-// Fallback: also check env vars in case Vercel exposes them (requires
-// "Expose System Environment Variables" to be ON in Project Settings)
+// Also accept env var detection as a fallback (if Expose System Env Vars IS enabled)
 if (! $isVercel) {
-    $isVercel = isset($_SERVER['VERCEL'])
-             || isset($_ENV['VERCEL'])
-             || (getenv('VERCEL') !== false);
+    $isVercel = (getenv('VERCEL') !== false)
+             || isset($_SERVER['VERCEL'])
+             || isset($_ENV['VERCEL']);
 }
 
-// ── Writable-storage setup ──
-// If we're on Vercel (or any read-only filesystem), create writable
-// directories under /tmp BEFORE Application::configure() is called,
-// so that ViewServiceProvider picks up the correct compiled-views path.
+// ── Create writable /tmp/storage dirs BEFORE Application::configure() ──
+// Must happen before configure() so ViewServiceProvider picks up the correct
+// compiled-views path when it registers its bindings.
 if ($isVercel) {
     $tmpStorage = '/tmp/storage';
     foreach ([
@@ -53,48 +50,52 @@ $app = Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        // ── Safe fallback renderer ──
-        // Prevents the infinite recursion caused by the exception handler
-        // itself trying to render a Blade view when Blade/storage fails.
-        // Returns plain text so there is ALWAYS a response body on errors.
-        // On non-Vercel environments this only activates when storage is unwritable.
-        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
-            // Only override if storage is not writable (Vercel, etc.)
-            // or if the error is the view-binding circular failure itself.
-            $storageOk = is_writable(storage_path('framework/views'));
-            $isBindingErr = $e instanceof \Illuminate\Contracts\Container\BindingResolutionException
-                         && str_contains($e->getMessage(), '[view]');
+    ->withExceptions(function (Exceptions $exceptions) use ($isVercel): void {
+        // ── Critical: Vercel-safe exception renderer ──
+        //
+        // On Vercel, the default Laravel error handler calls response() helper
+        // which needs ResponseFactory → ViewFactory → 'view' binding.
+        // If 'view' isn't bound yet (circular bootstrap issue), this causes an
+        // infinite loop ending in a fatal crash with no response body.
+        //
+        // Fix: on Vercel, ALWAYS return an Illuminate\Http\Response directly
+        // (bypassing the service container entirely) so a response is always sent.
+        //
+        // On non-Vercel (local dev), return null to let Laravel use its
+        // beautiful default error pages normally.
+        if ($isVercel) {
+            $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+                $status = ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface)
+                    ? $e->getStatusCode()
+                    : 500;
 
-            if ($storageOk && ! $isBindingErr) {
-                return null; // Let Laravel's default handler work normally
-            }
+                // Use new \Illuminate\Http\Response() DIRECTLY — NOT response() helper.
+                // response() needs ResponseFactory → ViewFactory → 'view' (may not be bound).
+                // Direct instantiation bypasses the service container entirely.
+                if (config('app.debug')) {
+                    $body = implode("\n\n", [
+                        '=== Vercel Laravel Error (Debug Mode) ===',
+                        'Exception : ' . get_class($e),
+                        'Message   : ' . $e->getMessage(),
+                        'File      : ' . $e->getFile() . ':' . $e->getLine(),
+                        'Storage   : ' . storage_path(),
+                        'Writable  : ' . (is_writable(storage_path('framework/views')) ? 'YES' : 'NO'),
+                        'Trace     :' . "\n" . $e->getTraceAsString(),
+                    ]);
+                } else {
+                    $body = 'HTTP ' . $status . ' – An error occurred. Please try again.';
+                }
 
-            $status = ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface)
-                ? $e->getStatusCode()
-                : 500;
-
-            if (config('app.debug')) {
-                return response(
-                    implode("\n\n", [
-                        '=== ERROR (Vercel Debug Mode) ===',
-                        get_class($e) . ': ' . $e->getMessage(),
-                        'File: ' . $e->getFile() . ':' . $e->getLine(),
-                        'Storage writable: ' . ($storageOk ? 'YES' : 'NO'),
-                        'Storage path: ' . storage_path(),
-                        'Trace:',
-                        $e->getTraceAsString(),
-                    ]),
+                return new \Illuminate\Http\Response(
+                    $body,
                     $status,
                     ['Content-Type' => 'text/plain; charset=utf-8']
                 );
-            }
-
-            return response('HTTP ' . $status . ' – Server Error. Please try again.', $status);
-        });
+            });
+        }
     })->create();
 
-// Apply storage path AFTER create() as well (belt-and-suspenders)
+// Apply storage path AFTER create() as well (belt-and-suspenders).
 if ($isVercel) {
     $app->useStoragePath('/tmp/storage');
 }
