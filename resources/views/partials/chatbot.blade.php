@@ -90,7 +90,7 @@
   /* Chatbot Container */
   .chatbot-container {
     position: fixed;
-    bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 16px);
+    bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 50px);
     right: 16px;
     z-index: 10000;
     font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
