@@ -52,10 +52,8 @@ class AuthController extends Controller
             ])->withInput()->with('lockout_seconds', $secondsLeft);
         }
 
-        // ── CAPTCHA Verification ─────────────────────────────────────────────
-        error_log("CAPTCHA LOGIN CHECK: InputToken=" . $request->input('captcha_verified_token') . " SessionToken=" . session('captcha_token') . " SessionID=" . session()->getId());
-        if ($request->input('captcha_verified_token') !== session('captcha_token') || !session('captcha_token')) {
-            session()->forget('captcha_token');
+        // ── CAPTCHA Verification (stateless HMAC token) ──────────────────────
+        if (! CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
             RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
             return back()->withErrors(['email' => 'Security check failed. Please verify that you are not a robot.'])->withInput();
         }
@@ -125,8 +123,7 @@ class AuthController extends Controller
             'password.min'   => 'Password must be at least 8 characters.',
         ]);
 
-        if ($request->input('captcha_verified_token') !== session('captcha_token') || !session('captcha_token')) {
-            session()->forget('captcha_token');
+        if (! CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
             return back()->withErrors(['email' => 'Security check failed. Please verify that you are not a robot.'])->withInput();
         }
 

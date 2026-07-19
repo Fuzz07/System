@@ -37,11 +37,13 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "PORTAL_URL", "\"http://10.0.2.2:8000/login/student\"")
+        buildConfigField("String", "APP_HOST", "\"10.0.2.2\"")
     }
 
     buildTypes {
         debug {
             buildConfigField("String", "PORTAL_URL", "\"http://10.0.2.2:8000/login/student\"")
+            buildConfigField("String", "APP_HOST", "\"10.0.2.2\"")
         }
         release {
             isMinifyEnabled = false
@@ -49,7 +51,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "PORTAL_URL", "\"https://your-production-domain/login/student\"")
+            buildConfigField("String", "PORTAL_URL", "\"https://system-five-omega-53.vercel.app/login/student\"")
+            buildConfigField("String", "APP_HOST", "\"system-five-omega-53.vercel.app\"")
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -61,6 +64,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+    }
+    buildFeatures {
+        buildConfig = true
     }
 }
 

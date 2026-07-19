@@ -94,29 +94,47 @@ class MainActivity : AppCompatActivity() {
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
-                
-                // Allow web portal navigation in the webview
-                if (url.contains("10.0.2.2") || url.contains("localhost") || url.contains("mcclawis.edu.ph")) {
-                    return false
+
+                // Allow navigation within the app's own hosts (local dev + production Vercel)
+                val appHost = BuildConfig.APP_HOST
+                if (url.contains("10.0.2.2") ||
+                    url.contains("localhost") ||
+                    url.contains("mcclawis.edu.ph") ||
+                    url.contains("vercel.app") ||
+                    url.contains(appHost)) {
+                    return false  // Let the WebView handle it internally
                 }
-                
+
                 // Handle external links (tel, mailto, maps) outside WebView
-                try {
+                return try {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                     startActivity(intent)
-                    return true
+                    true
                 } catch (e: Exception) {
                     Toast.makeText(this@MainActivity, "No application can handle this action", Toast.LENGTH_SHORT).show()
+                    true
                 }
-                return true
             }
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                 super.onReceivedError(view, request, error)
-                // If it's the main frame that failed to load, show Offline page
+                // Only show offline page if the MAIN frame fails (not subresources like images/css)
+                // and the error is a genuine connection failure (not a HTTP error like 404)
                 if (request?.isForMainFrame == true) {
-                    swipeRefresh.isRefreshing = false
-                    startActivity(Intent(this@MainActivity, OfflineActivity::class.java))
+                    val errorCode = error?.errorCode ?: -1
+                    // Only treat network-level errors as offline (not HTTP errors)
+                    val networkErrors = setOf(
+                        -2,   // ERROR_HOST_LOOKUP (DNS failure)
+                        -6,   // ERROR_CONNECT (connection refused)
+                        -8,   // ERROR_TIMEOUT
+                        -15,  // ERROR_UNKNOWN
+                        -10,  // ERROR_IO
+                        -12   // ERROR_REDIRECT_LOOP
+                    )
+                    if (errorCode in networkErrors) {
+                        swipeRefresh.isRefreshing = false
+                        startActivity(Intent(this@MainActivity, OfflineActivity::class.java))
+                    }
                 }
             }
         }
