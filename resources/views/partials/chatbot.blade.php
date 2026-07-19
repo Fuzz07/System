@@ -99,7 +99,9 @@
   @media (max-width: 480px) {
     .chatbot-container {
       bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 12px);
-      right: 16px;
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
     }
   }
 
