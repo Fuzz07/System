@@ -4,7 +4,7 @@
   <div class="chatbot-toggle-wrapper">
     <div class="chatbot-label" id="chatbotLabel">Need help?</div>
     <div class="chatbot-toggle" id="chatbotToggle">
-      <i class="bi bi-robot" id="toggleIcon"style="bottom-gap: 50px;"></i>
+      <i class="bi bi-robot" id="toggleIcon"></i>
     </div>
   </div>
 
