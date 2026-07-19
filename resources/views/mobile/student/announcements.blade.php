@@ -37,7 +37,7 @@
         </div>
 
         {{-- Bottom Sheet for this announcement --}}
-        <div class="ann-sheet-overlay" id="annOverlay{{ $a->id }}" onclick="closeAnn({{ $a->id }})">
+        <div class="ann-sheet-overlay" id="annOverlay{{ $a->id }}" onclick="closeAnn({{ $a->id }})" style="display: none;">
             <div class="ann-sheet" onclick="event.stopPropagation()">
                 <div class="ann-sheet-handle"></div>
                 <div class="ann-sheet-body">

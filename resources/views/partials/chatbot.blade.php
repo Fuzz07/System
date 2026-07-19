@@ -4,7 +4,7 @@
   <div class="chatbot-toggle-wrapper">
     <div class="chatbot-label" id="chatbotLabel">Need help?</div>
     <div class="chatbot-toggle" id="chatbotToggle">
-      <i class="bi bi-chat-dots-fill" id="toggleIcon"></i>
+      <i class="bi bi-robot" id="toggleIcon"></i>
     </div>
   </div>
 
@@ -90,8 +90,8 @@
   /* Chatbot Container */
   .chatbot-container {
     position: fixed;
-    bottom: 25px;
-    right: 25px;
+    bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 16px);
+    right: 16px;
     z-index: 10000;
     font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   }
@@ -698,7 +698,7 @@
 
     function closeChatbot() {
       chatWindow.classList.remove('active');
-      toggleIcon.className = 'bi bi-chat-dots-fill';
+      toggleIcon.className = 'bi bi-robot';
     }
 
     closeBtn.addEventListener('click', closeChatbot);

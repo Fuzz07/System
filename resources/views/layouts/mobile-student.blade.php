@@ -116,44 +116,7 @@
 
     </div>{{-- /.mobile-app --}}
 
-    {{-- Chatbot FAB --}}
-    <a href="#chatbot" class="chatbot-fab" id="chatbotFab" title="Ask SSC Assistant" onclick="toggleChatbot(event)">
-        <i class="bi bi-robot"></i>
-    </a>
-
-    {{-- Chatbot Panel --}}
-    <div id="chatbotSheet"
-        style="display:none;position:fixed;inset:0;z-index:600;background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;">
-        <div
-            style="background:#fff;border-radius:28px 28px 0 0;width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;">
-            <div
-                style="padding:12px 20px 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-                <div style="font-size:1rem;font-weight:700;color:#0f172a;">🤖 SSC Assistant</div>
-                <button onclick="toggleChatbot(event)"
-                    style="background:none;border:none;font-size:1.2rem;color:#94a3b8;cursor:pointer;padding:4px;">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-            <div style="flex:1;overflow:auto;">
-                @include('partials.chatbot')
-            </div>
-        </div>
-    </div>
-
-    @stack('modals')
-
-    <script>
-        // ── Chatbot Toggle ──
-        function toggleChatbot(e) {
-            e.preventDefault();
-            const sheet = document.getElementById('chatbotSheet');
-            sheet.style.display = (sheet.style.display === 'none' || !sheet.style.display) ? 'flex' : 'none';
-        }
-
-        document.getElementById('chatbotSheet').addEventListener('click', function (e) {
-            if (e.target === this) toggleChatbot(e);
-        });
-    </script>
+    @include('partials.chatbot')
 
     @include('partials.logout-modal')
     @stack('scripts')
