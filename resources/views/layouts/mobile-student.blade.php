@@ -118,6 +118,7 @@
 
     @include('partials.chatbot')
 
+    @stack('modals')
     @include('partials.logout-modal')
     @stack('scripts')
 </body>

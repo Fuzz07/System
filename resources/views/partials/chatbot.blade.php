@@ -577,11 +577,24 @@
 
   /* Responsive styling */
   @media (max-width: 480px) {
-    .chatbot-window {
+    .chatbot-container {
+      bottom: 16px;
+      right: 16px;
+    }
+
+    /* When open on mobile, the window is rendered in a separate portal-style layer */
+    .chatbot-window.active {
       position: fixed;
       bottom: 0; right: 0; left: 0; top: 0;
       width: 100%; height: 100%;
       border-radius: 0;
+      z-index: 99999;
+    }
+
+    /* Hide toggle when chatbot is open full-screen on mobile */
+    .chatbot-container.chatbot-open .chatbot-toggle-wrapper {
+      opacity: 0;
+      pointer-events: none;
     }
   }
 </style>
@@ -598,110 +611,127 @@
     const shortcuts = document.querySelectorAll('.shortcut-btn');
     const closeBtn = document.getElementById('chatbotClose');
     const header = document.getElementById('chatbotHeader');
-    
+
     // Shortcuts Toggle Elements
     const btnToggleShortcuts = document.getElementById('btnToggleShortcuts');
     const shortcutsWrapper = document.getElementById('shortcutsWrapper');
 
     if (!toggleBtn) return;
 
-    // --- Draggable Functionality ---
-    let isDragging = false;
-    let currentX;
-    let currentY;
-    let initialX;
-    let initialY;
-    let xOffset = 0;
-    let yOffset = 0;
-    let hasMoved = false;
-
-    // Load saved position
-    const savedPos = localStorage.getItem('chatbotPosition');
-    if (savedPos) {
-      const pos = JSON.parse(savedPos);
-      xOffset = pos.x;
-      yOffset = pos.y;
-      setTranslate(xOffset, yOffset, container);
+    // --- Detect Mobile ---
+    function isMobile() {
+      return window.innerWidth <= 480;
     }
 
-    // Attach dragging listeners on both Toggle Button & Open Window Header
-    toggleBtn.addEventListener('mousedown', dragStart);
-    header.addEventListener('mousedown', dragStart);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', dragEnd);
+    // --- Draggable Functionality (desktop/tablet only) ---
+    let isDragging = false;
+    let initialX, initialY;
+    let xOffset = 0, yOffset = 0;
+    let hasMoved = false;
+
+    // Load saved position (only apply on non-mobile)
+    if (!isMobile()) {
+      const savedPos = localStorage.getItem('chatbotPosition');
+      if (savedPos) {
+        try {
+          const pos = JSON.parse(savedPos);
+          xOffset = pos.x;
+          yOffset = pos.y;
+          container.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+        } catch(e) {}
+      }
+    }
+
+    function getClientPos(e) {
+      if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+      return { x: e.clientX, y: e.clientY };
+    }
 
     function dragStart(e) {
-      // Prevent drag if close button is clicked
-      if (e.target.closest('#chatbotClose') || e.target.closest('.chatbot-close-btn')) {
-        return;
-      }
+      if (isMobile()) return; // No dragging on mobile
+      if (e.target.closest('#chatbotClose') || e.target.closest('.chatbot-close-btn')) return;
 
-      initialX = e.clientX - xOffset;
-      initialY = e.clientY - yOffset;
-      
+      const pos = getClientPos(e);
+      initialX = pos.x - xOffset;
+      initialY = pos.y - yOffset;
+
       const isHeader = e.target.closest('#chatbotHeader');
       const isToggle = e.target.closest('#chatbotToggle');
-      
+
       if (isHeader || isToggle) {
         isDragging = true;
         hasMoved = false;
-        if (isToggle) {
-          toggleBtn.style.animation = 'none';
-        }
+        if (isToggle) toggleBtn.style.animation = 'none';
       }
     }
 
     function drag(e) {
-      if (isDragging) {
-        e.preventDefault();
-        currentX = e.clientX - initialX;
-        currentY = e.clientY - initialY;
-        xOffset = currentX;
-        yOffset = currentY;
+      if (!isDragging) return;
+      e.preventDefault();
+      const pos = getClientPos(e);
+      const newX = pos.x - initialX;
+      const newY = pos.y - initialY;
+      xOffset = newX;
+      yOffset = newY;
 
-        if (Math.abs(currentX) > 5 || Math.abs(currentY) > 5) {
-          hasMoved = true;
-        }
-
-        setTranslate(currentX, currentY, container);
-      }
+      if (Math.abs(newX) > 5 || Math.abs(newY) > 5) hasMoved = true;
+      container.style.transform = `translate3d(${newX}px, ${newY}px, 0)`;
     }
 
-    function setTranslate(xPos, yPos, el) {
-      el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
-    }
-
-    function dragEnd(e) {
+    function dragEnd() {
       if (!isDragging) return;
       isDragging = false;
       toggleBtn.style.animation = 'chatbotPulse 3s infinite';
       localStorage.setItem('chatbotPosition', JSON.stringify({ x: xOffset, y: yOffset }));
     }
 
-    // Toggle window visibility
-    toggleBtn.addEventListener('click', () => {
-      if (!hasMoved) {
-        const isActive = chatWindow.classList.contains('active');
-        if (isActive) {
-          closeChatbot();
-        } else {
-          openChatbot();
-        }
+    // Mouse events (desktop)
+    toggleBtn.addEventListener('mousedown', dragStart);
+    header.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+
+    // Touch events (tablet — mobile is excluded inside dragStart)
+    toggleBtn.addEventListener('touchstart', dragStart, { passive: false });
+    header.addEventListener('touchstart', dragStart, { passive: false });
+    document.addEventListener('touchmove', drag, { passive: false });
+    document.addEventListener('touchend', dragEnd);
+
+    // --- Toggle chatbot window ---
+    toggleBtn.addEventListener('click', (e) => {
+      if (hasMoved) {
+        hasMoved = false; // Reset for next click
+        return;
       }
+      const isActive = chatWindow.classList.contains('active');
+      isActive ? closeChatbot() : openChatbot();
     });
 
     function openChatbot() {
+      // On mobile: move chatbot window outside the translated container context
+      if (isMobile()) {
+        container.style.transform = 'none'; // Remove transform so fixed positioning works
+        container.classList.add('chatbot-open');
+      }
       chatWindow.classList.add('active');
       toggleIcon.className = 'bi bi-chevron-down';
-      chatbotInput.focus();
+      setTimeout(() => chatbotInput.focus(), 100);
     }
 
     function closeChatbot() {
       chatWindow.classList.remove('active');
       toggleIcon.className = 'bi bi-robot';
+      if (isMobile()) {
+        container.classList.remove('chatbot-open');
+        // Don't restore transform on mobile — it stays at default position
+      }
     }
 
-    closeBtn.addEventListener('click', closeChatbot);
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeChatbot();
+    });
 
     // --- Collapsible Shortcuts Panel Trigger ---
     btnToggleShortcuts.addEventListener('click', () => {
@@ -714,15 +744,13 @@
     // --- Message Handling Logic ---
     shortcuts.forEach(btn => {
       btn.addEventListener('click', () => {
-        const query = btn.dataset.query;
-        handleSend(query);
+        handleSend(btn.dataset.query);
       });
     });
 
     function addMessage(text, sender) {
       const msgDiv = document.createElement('div');
-      msgDiv.classList.add('chat-msg');
-      msgDiv.classList.add(sender === 'user' ? 'user-msg' : 'bot-msg');
+      msgDiv.classList.add('chat-msg', sender === 'user' ? 'user-msg' : 'bot-msg');
 
       if (sender === 'bot') {
         msgDiv.innerHTML = text.replace(/\n/g, '<br>');
@@ -749,8 +777,7 @@
 
       setTimeout(() => {
         typingDiv.remove();
-        const response = getBotResponse(text.toLowerCase());
-        addMessage(response, 'bot');
+        addMessage(getBotResponse(text.toLowerCase()), 'bot');
       }, 1000);
     }
 
@@ -772,9 +799,7 @@
       };
 
       for (const key in responses) {
-        if (input.includes(key)) {
-          return responses[key];
-        }
+        if (input.includes(key)) return responses[key];
       }
 
       return "I'm sorry, I don't have a specific answer for that. \n\nTry asking about: \n• proposals \n• anonymous feedback \n• track budgets \n• contact ssc";
