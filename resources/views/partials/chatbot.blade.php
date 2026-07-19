@@ -689,17 +689,12 @@
       localStorage.setItem('chatbotPosition', JSON.stringify({ x: xOffset, y: yOffset }));
     }
 
-    // Mouse events (desktop)
-    toggleBtn.addEventListener('mousedown', dragStart);
-    header.addEventListener('mousedown', dragStart);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', dragEnd);
-
-    // Touch events (tablet — mobile is excluded inside dragStart)
-    toggleBtn.addEventListener('touchstart', dragStart, { passive: false });
-    header.addEventListener('touchstart', dragStart, { passive: false });
-    document.addEventListener('touchmove', drag, { passive: false });
-    document.addEventListener('touchend', dragEnd);
+    // Pointer events for desktop and mobile drag support
+    toggleBtn.addEventListener('pointerdown', dragStart, { passive: false });
+    header.addEventListener('pointerdown', dragStart, { passive: false });
+    document.addEventListener('pointermove', drag, { passive: false });
+    document.addEventListener('pointerup', dragEnd);
+    document.addEventListener('pointercancel', dragEnd);
 
     // --- Toggle chatbot window ---
     toggleBtn.addEventListener('click', (e) => {
