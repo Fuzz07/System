@@ -36,14 +36,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "PORTAL_URL", "\"http://10.0.2.2:8000/login/student\"")
-        buildConfigField("String", "APP_HOST", "\"10.0.2.2\"")
+        buildConfigField("String", "PORTAL_URL", "\"https://system-five-omega-53.vercel.app/login/student\"")
+        buildConfigField("String", "APP_HOST", "\"system-five-omega-53.vercel.app\"")
     }
 
     buildTypes {
         debug {
-            buildConfigField("String", "PORTAL_URL", "\"http://10.0.2.2:8000/login/student\"")
-            buildConfigField("String", "APP_HOST", "\"10.0.2.2\"")
+            buildConfigField("String", "PORTAL_URL", "\"https://system-five-omega-53.vercel.app/login/student\"")
+            buildConfigField("String", "APP_HOST", "\"system-five-omega-53.vercel.app\"")
         }
         release {
             isMinifyEnabled = false
