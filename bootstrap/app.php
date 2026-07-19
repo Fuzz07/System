@@ -32,6 +32,27 @@ if ($isVercel) {
             @mkdir($dir, 0755, true);
         }
     }
+
+    // Direct Laravel cache and compiled paths to /tmp to bypass read-only filesystem.
+    // This resolves errors like "bootstrap/cache directory must be present and writable".
+    $cacheOverrides = [
+        'APP_CONFIG_CACHE'   => '/tmp/config.php',
+        'APP_EVENTS_CACHE'   => '/tmp/events.php',
+        'APP_PACKAGES_CACHE' => '/tmp/packages.php',
+        'APP_ROUTES_CACHE'   => '/tmp/routes.php',
+        'APP_SERVICES_CACHE' => '/tmp/services.php',
+        'VIEW_COMPILED_PATH' => '/tmp/storage/framework/views',
+    ];
+
+    foreach ($cacheOverrides as $key => $val) {
+        putenv("$key=$val");
+        $_ENV[$key] = $val;
+        $_SERVER[$key] = $val;
+    }
+
+    // Set storage path env variable that Application constructor reads.
+    putenv("LARAVEL_STORAGE_PATH=$tmpStorage");
+    $_ENV['LARAVEL_STORAGE_PATH'] = $tmpStorage;
 }
 
 $app = Application::configure(basePath: dirname(__DIR__))
