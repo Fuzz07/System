@@ -232,10 +232,15 @@
     flex-direction: column;
     cursor: grab;
     user-select: none;
+    touch-action: none;
   }
 
   .chatbot-header:active {
     cursor: grabbing;
+  }
+
+  .chatbot-toggle {
+    touch-action: none;
   }
 
   .header-top-row {
@@ -623,23 +628,21 @@
       return window.innerWidth <= 480;
     }
 
-    // --- Draggable Functionality (desktop/tablet only) ---
+    // --- Draggable Functionality ---
     let isDragging = false;
     let initialX, initialY;
     let xOffset = 0, yOffset = 0;
     let hasMoved = false;
 
-    // Load saved position (only apply on non-mobile)
-    if (!isMobile()) {
-      const savedPos = localStorage.getItem('chatbotPosition');
-      if (savedPos) {
-        try {
-          const pos = JSON.parse(savedPos);
-          xOffset = pos.x;
-          yOffset = pos.y;
-          container.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
-        } catch(e) {}
-      }
+    // Load saved position (desktop and mobile)
+    const savedPos = localStorage.getItem('chatbotPosition');
+    if (savedPos) {
+      try {
+        const pos = JSON.parse(savedPos);
+        xOffset = pos.x;
+        yOffset = pos.y;
+        container.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+      } catch (e) {}
     }
 
     function getClientPos(e) {
@@ -649,8 +652,8 @@
     }
 
     function dragStart(e) {
-      if (isMobile()) return; // No dragging on mobile
       if (e.target.closest('#chatbotClose') || e.target.closest('.chatbot-close-btn')) return;
+      if (isMobile() && chatWindow.classList.contains('active')) return;
 
       const pos = getClientPos(e);
       initialX = pos.x - xOffset;
@@ -724,7 +727,7 @@
       toggleIcon.className = 'bi bi-robot';
       if (isMobile()) {
         container.classList.remove('chatbot-open');
-        // Don't restore transform on mobile — it stays at default position
+        container.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
       }
     }
 
