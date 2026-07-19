@@ -121,6 +121,9 @@
     @stack('modals')
     @include('partials.logout-modal')
     @stack('scripts')
+
+    <br>
+    <br>
 </body>
 
 </html>
