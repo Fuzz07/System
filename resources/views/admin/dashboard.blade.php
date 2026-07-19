@@ -130,7 +130,7 @@
             <div class="card-header-custom"><span class="card-title">Budget Distribution</span></div>
             <div class="card-body-custom d-flex align-items-center justify-content-center" style="flex: 1; position: relative;">
                 <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 10px;">
-                    <canvas id="budgetPieChart"></canvas>
+                    <canvas id="budgetPieChart" style="width:100%; height:100%; max-height: 320px;"></canvas>
                 </div>
             </div>
         </div>

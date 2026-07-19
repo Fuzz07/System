@@ -168,42 +168,70 @@ const PALETTE = [
   SSC_COLORS.purple, SSC_COLORS.orange, SSC_COLORS.blue, SSC_COLORS.green
 ];
 
+function generateChartColors(count) {
+  if (count <= PALETTE.length) {
+    return PALETTE.slice(0, count);
+  }
+
+  const colors = [...PALETTE];
+  for (let i = PALETTE.length; i < count; i++) {
+    const hue = Math.round((i / count) * 360);
+    colors.push(`hsl(${hue}, 72%, 55%)`);
+  }
+  return colors;
+}
+
 function createPieChart(canvasId, labels, data) {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
 
   const total = data.reduce((a, b) => a + b, 0);
-  let percentages = data.map(v => total > 0 ? (v / total) * 100 : 0);
-  
-  let intParts = percentages.map(p => Math.floor(p * 10));
-  let remainders = percentages.map((p, i) => ({ idx: i, rem: (p * 10) - intParts[i] }));
-  
-  let sumInts = intParts.reduce((a, b) => a + b, 0);
-  let shortfall = total > 0 ? 1000 - sumInts : 0;
-  
-  remainders.sort((a, b) => b.rem - a.rem);
-  for (let i = 0; i < shortfall; i++) {
-    intParts[remainders[i].idx]++;
-  }
-  
-  const exactPercentages = intParts.map(p => (p / 10).toFixed(1));
-  const percentLabels = labels.map((lbl, i) => `${lbl} (${exactPercentages[i]}%)`);
+  const colors = generateChartColors(data.length);
 
   return new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: percentLabels,
-      datasets: [{ data, backgroundColor: PALETTE, borderWidth: 2, borderColor: '#fff' }]
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors,
+        borderWidth: 2,
+        borderColor: '#fff',
+        hoverOffset: 12,
+      }]
     },
     options: {
       responsive: true,
-      cutout: '70%',
+      maintainAspectRatio: false,
+      cutout: '65%',
+      layout: { padding: 10 },
       plugins: {
-        legend: { position: 'bottom', labels: { padding: 16, font: { family: 'Inter', size: 12 }, boxWidth: 12 } },
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 12,
+            font: { family: 'Inter', size: 12 },
+            boxWidth: 12,
+            generateLabels: chart => {
+              const items = Chart.overrides.doughnut.plugins.legend.labels.generateLabels(chart);
+              return items.map((item, index) => {
+                const value = data[index] || 0;
+                const percent = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                return {
+                  ...item,
+                  text: `${item.text} (${percent}%)`,
+                };
+              });
+            }
+          }
+        },
         tooltip: {
           callbacks: {
+            title: ctx => ctx[0].label,
             label: ctx => {
-              return ` ₱${ctx.parsed.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+              const value = ctx.parsed;
+              const percent = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+              return `₱${value.toLocaleString('en-PH', { minimumFractionDigits: 2 })} (${percent}%)`;
             }
           }
         }
@@ -217,24 +245,22 @@ function createPieChart(canvasId, labels, data) {
         if (!meta.data.length) return;
         const x = meta.data[0].x;
         const y = meta.data[0].y;
-        
+
         ctx.restore();
-        
-        // Value Text
-        ctx.font = "bold 1.15rem Inter, sans-serif";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#0f172a";
-        const text = "₱" + total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        ctx.font = 'bold 1.15rem Inter, sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#0f172a';
+        const text = '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const textWidth = ctx.measureText(text).width;
         ctx.fillText(text, x - (textWidth / 2), y - 6);
-        
-        // Label Text
-        ctx.font = "600 0.75rem Inter, sans-serif";
-        ctx.fillStyle = "#64748b";
-        const subText = "TOTAL BUDGET";
+
+        ctx.font = '600 0.75rem Inter, sans-serif';
+        ctx.fillStyle = '#64748b';
+        const subText = 'TOTAL BUDGET';
         const subTextWidth = ctx.measureText(subText).width;
         ctx.fillText(subText, x - (subTextWidth / 2), y + 14);
-        
+
         ctx.save();
       }
     }]
