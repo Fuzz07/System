@@ -592,20 +592,27 @@
   /* Responsive styling */
   @media (max-width: 480px) {
     .chatbot-container {
-      bottom: 16px;
-      right: 16px;
+      bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 12px);
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
     }
 
-    /* When open on mobile, the window is rendered in a separate portal-style layer */
+    /* When open on mobile, the window floats above the bottom nav instead of full-screen */
     .chatbot-window.active {
       position: fixed;
-      bottom: 0; right: 0; left: 0; top: 0;
-      width: 100%; height: 100%;
-      border-radius: 0;
+      bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 12px);
+      left: 16px;
+      right: 16px;
+      width: auto;
+      max-width: calc(100% - 32px);
+      height: calc(72vh);
+      max-height: calc(100vh - (var(--nav-height, 64px) + var(--safe-bottom, 0px) + 32px));
+      border-radius: 24px;
       z-index: 99999;
+      transform: translateY(0) scale(1);
     }
 
-    /* Hide toggle when chatbot is open full-screen on mobile */
     .chatbot-container.chatbot-open .chatbot-toggle-wrapper {
       opacity: 0;
       pointer-events: none;
@@ -662,7 +669,6 @@
 
     function dragStart(e) {
       if (e.target.closest('#chatbotClose') || e.target.closest('.chatbot-close-btn')) return;
-      if (isMobile() && chatWindow.classList.contains('active')) return;
 
       const pos = getClientPos(e);
       initialX = pos.x - xOffset;
