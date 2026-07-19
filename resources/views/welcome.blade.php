@@ -1406,6 +1406,7 @@
             <div class="footer-badge">
                 <i class="bi bi-patch-check-fill" style="color: #f06529; font-size: 0.85rem;"></i>
                 <span>ABANTE PARTY · S.Y. 2025–2026</span>
+                <span>Developed by : Dave A. Alagban</span>
             </div>
         </div>
     </footer>
