@@ -252,6 +252,70 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
         return redirect()->route('mobile.student.feedback')->with('success', 'Message sent!');
     })->name('feedback.store');
 
+    Route::get('/enrollment', function () {
+        $student = \Illuminate\Support\Facades\Auth::user();
+        $currentSy = config('ssc.current_school_year');
+        $payment = \App\Models\EnrollmentPayment::where('user_id', $student->id)
+            ->where('semester', $currentSy)
+            ->orderByDesc('created_at')
+            ->first();
+        $amount = config('ssc.enrollment_fee_amount', 50);
+        return view('mobile.student.enrollment', compact('payment', 'amount'));
+    })->name('enrollment');
+
+    Route::post('/enrollment', function (\Illuminate\Http\Request $request) {
+        $student = \Illuminate\Support\Facades\Auth::user();
+        $currentSy = config('ssc.current_school_year');
+        $amount = config('ssc.enrollment_fee_amount', 50);
+
+        $payment = \App\Models\EnrollmentPayment::where('user_id', $student->id)
+            ->where('semester', $currentSy)
+            ->orderByDesc('created_at')
+            ->first();
+
+        if ($request->hasFile('proof')) {
+            $request->validate(['proof' => 'required|file|mimes:jpg,jpeg,png,pdf,mp4|max:5120']);
+            if (! $payment || $payment->status === 'paid') {
+                $payment = \App\Models\EnrollmentPayment::create([
+                    'user_id' => $student->id,
+                    'amount' => $amount,
+                    'semester' => $currentSy,
+                    'method' => 'gcash',
+                    'status' => 'pending',
+                    'reference' => 'GCASH-' . strtoupper(uniqid()),
+                    'proof_status' => 'pending',
+                ]);
+            }
+            $proofPath = $request->file('proof')->store('enrollment_proofs', 'public');
+            $payment->update([
+                'proof_path' => $proofPath,
+                'proof_status' => 'pending',
+                'proof_notes' => null,
+            ]);
+            return redirect()->route('mobile.student.enrollment')->with('success', 'Payment proof uploaded successfully. Admin will verify it soon.');
+        }
+
+        if ($payment && $payment->status === 'pending') {
+            return redirect()->route('mobile.student.enrollment')->with('info', 'You already have a pending payment. Please upload proof or wait for admin verification.');
+        }
+
+        if ($payment && $payment->status === 'paid') {
+            return redirect()->route('mobile.student.enrollment')->with('info', 'Your enrollment fee is already marked as paid.');
+        }
+
+        $payment = \App\Models\EnrollmentPayment::create([
+            'user_id' => $student->id,
+            'amount' => $amount,
+            'semester' => $currentSy,
+            'method' => 'gcash',
+            'status' => 'pending',
+            'reference' => 'GCASH-' . strtoupper(uniqid()),
+            'proof_status' => 'pending',
+        ]);
+
+        return redirect()->route('mobile.student.enrollment')->with('success', 'Payment record created. Please upload proof after sending GCash payment. Reference: ' . $payment->reference);
+    })->name('enrollment.store');
+
     Route::get('/officers', function () {
         $officers = \App\Models\User::whereIn('role', ['officer', 'treasurer'])
             ->where('status', 'active')

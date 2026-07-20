@@ -98,6 +98,13 @@
                 </div>
                 <div class="nav-tab-label">Officers</div>
             </a>
+            <a href="{{ route('mobile.student.enrollment') }}"
+                class="nav-tab {{ request()->routeIs('mobile.student.enrollment') ? 'active' : '' }}" id="tab-enrollment">
+                <div class="nav-tab-icon"><i
+                        class="bi bi-cash-stack{{ request()->routeIs('mobile.student.enrollment') ? '-fill' : '' }}"></i>
+                </div>
+                <div class="nav-tab-label">Enroll</div>
+            </a>
             <a href="{{ route('mobile.student.feedback') }}"
                 class="nav-tab {{ request()->routeIs('mobile.student.feedback') ? 'active' : '' }}" id="tab-feedback">
                 <div class="nav-tab-icon"><i
