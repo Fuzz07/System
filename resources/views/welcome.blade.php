@@ -1402,8 +1402,8 @@
         </div>
         <div class="footer-bottom">
             <p class="footer-copyright">&copy; {{ date('Y') }} Supreme Student Council — Madridejos Community College.
-                All rights reserved. Developed by : Dave A. Alagban</p>
-            <p></p>
+                All rights reserved. </p>
+            <p style="color: red;">Developed by : Dave A. Alagban</p>
             <div class="footer-badge">
                 <i class="bi bi-patch-check-fill" style="color: #f06529; font-size: 0.85rem;"></i>
                 <span>ABANTE PARTY · S.Y. 2025–2026</span>
