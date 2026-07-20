@@ -65,6 +65,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::delete('/officers/{user}', [Admin\OfficerController::class, 'destroy'])->name('officers.destroy');
 
     Route::get('/students', [Admin\StudentController::class, 'index'])->name('students.index');
+    Route::get('/enrollment-payments', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'index'])->name('enrollment.payments');
+    Route::post('/enrollment-payments/{payment}/mark-paid', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'markPaid'])->name('enrollment.payments.mark_paid');
     Route::patch('/students/{user}/approve', [Admin\StudentController::class, 'approve'])->name('students.approve');
     Route::patch('/students/{user}/toggle', [Admin\StudentController::class, 'toggleStatus'])->name('students.toggle');
     Route::delete('/students/{user}', [Admin\StudentController::class, 'destroy'])->name('students.destroy');
@@ -175,6 +177,10 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'role:student'])
     Route::get('/voting', [Student\VotingController::class, 'index'])->name('voting');
     Route::post('/voting', [Student\VotingController::class, 'store'])->name('voting.store');
     Route::get('/election-results', [Student\VotingController::class, 'results'])->name('election.results');
+    
+    // Enrollment fee (student)
+    Route::get('/enrollment', [Student\EnrollmentController::class, 'index'])->name('enrollment.index');
+    Route::post('/enrollment', [Student\EnrollmentController::class, 'store'])->name('enrollment.store');
 });
 
 // ─── Mobile Student Routes (PWA) ───

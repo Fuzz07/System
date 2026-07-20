@@ -16,6 +16,32 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
+            <div class="p-3">
+                <form class="row g-2 mb-3" method="GET">
+                    <div class="col-md-4">
+                        <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control" placeholder="Search by name, email, or student id">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="department" class="form-select">
+                            <option value="">All Departments</option>
+                            @foreach($departments as $d)
+                                <option value="{{ $d }}" {{ (isset($department) && $department == $d) ? 'selected' : '' }}>{{ $d }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="year_level" class="form-select">
+                            <option value="">All Years</option>
+                            @foreach($years as $y)
+                                <option value="{{ $y }}" {{ (isset($yearLevel) && $yearLevel == $y) ? 'selected' : '' }}>{{ $y }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <button class="btn btn-primary">Filter</button>
+                    </div>
+                </form>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead>
@@ -24,6 +50,7 @@
                             <th>Email</th>
                             <th>Student ID</th>
                             <th>Department</th>
+                            <th>Year</th>
                             <th>Status</th>
                             <th class="text-end">Actions</th>
                         </tr>
@@ -35,6 +62,7 @@
                             <td>{{ $user->email }}</td>
                             <td>{{ $user->student_id }}</td>
                             <td>{{ $user->department }}</td>
+                            <td>{{ $user->year_level }}</td>
                             <td>
                                 <span class="badge bg-{{ $user->status === 'active' ? 'success' : 'warning' }}">{{ ucfirst($user->status) }}</span>
                             </td>

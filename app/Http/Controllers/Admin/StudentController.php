@@ -13,6 +13,8 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search', '');
+        $department = $request->input('department', '');
+        $yearLevel = $request->input('year_level', '');
         $statusFilter = $request->input('status_filter', '');
 
         $totalStudents = User::where('role', 'student')->count();
@@ -33,11 +35,22 @@ class StudentController extends Controller
             $query->where('status', $statusFilter);
         }
 
+        if ($department) {
+            $query->where('department', $department);
+        }
+
+        if ($yearLevel) {
+            $query->where('year_level', $yearLevel);
+        }
+
         $users = $query->orderByDesc('created_at')->get();
 
+        $departments = User::where('role', 'student')->select('department')->distinct()->pluck('department');
+        $years = User::where('role', 'student')->select('year_level')->distinct()->pluck('year_level');
+
         return view('admin.students', compact(
-            'users', 'search', 'statusFilter', 
-            'totalStudents', 'activeStudents', 'pendingStudents'
+            'users', 'search', 'statusFilter', 'department', 'yearLevel',
+            'totalStudents', 'activeStudents', 'pendingStudents', 'departments', 'years'
         ));
     }
 

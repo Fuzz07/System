@@ -29,6 +29,10 @@
         <i class="bi bi-award"></i>
         <span>Candidacy</span>
     </a>
+    <a href="{{ route('student.enrollment.index') }}" class="nav-item">
+        <i class="bi bi-cash-stack"></i>
+        <span>Enrollment</span>
+    </a>
 @endsection
 
 @section('content')
