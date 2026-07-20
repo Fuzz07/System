@@ -58,6 +58,6 @@
                 <a href="{{ asset('storage/' . $payment->proof_path) }}" class="m-btn m-btn-secondary" style="margin-top: 10px; display: inline-block;">View Proof</a>
             </div>
         @endif
-    @endif
+   
 </div>
 @endsection
