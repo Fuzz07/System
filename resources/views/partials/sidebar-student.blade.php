@@ -10,6 +10,10 @@
     <span class="nav-icon"><i class="bi bi-people"></i></span> SSC Officers
 </a>
 
+<a href="{{ route('student.enrollment.index') }}" class="nav-link {{ request()->routeIs('student.enrollment*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-cash-stack"></i></span> Enrollment Fee
+</a>
+
 <div class="nav-section-label">Participate</div>
 <a href="{{ route('student.feedback') }}" class="nav-link {{ request()->routeIs('student.feedback') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-chat-dots"></i></span> Feedback
