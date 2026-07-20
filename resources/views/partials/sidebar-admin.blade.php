@@ -21,6 +21,10 @@
 <a href="{{ route('admin.officers') }}" class="nav-link {{ request()->routeIs('admin.officers') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-people"></i></span> Manage Officers
 </a>
+<a href="{{ route('admin.students.index') }}" class="nav-link {{ request()->routeIs('admin.students*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-person-lines-fill"></i></span> Manage Students
+    @if(($pendingStudents ?? 0) > 0)<span class="badge-count">{{ $pendingStudents }}</span>@endif
+</a>
 <a href="{{ route('admin.candidacies') }}" class="nav-link {{ request()->routeIs('admin.candidacies') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-clipboard-check"></i></span> Candidacy Filings
 </a>
