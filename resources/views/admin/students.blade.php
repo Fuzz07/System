@@ -1,4 +1,5 @@
 @extends('layouts.app')
+@section('sidebar-nav') @include('partials.sidebar-admin') @endsection
 
 @section('sidebar-nav')
     @include('layouts.app')
