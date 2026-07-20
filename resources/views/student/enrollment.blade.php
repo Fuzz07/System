@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('sidebar-nav') @include('partials.sidebar-student') @endsection
 @section('sidebar-nav')
     <a href="{{ route('student.overview') }}" class="nav-item">
         <i class="bi bi-house-door"></i>
