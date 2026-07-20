@@ -56,6 +56,11 @@ class MainActivity : AppCompatActivity() {
     private val portalUrl = BuildConfig.PORTAL_URL
     private val enrollmentUrl = portalUrl.replace("/login/student", "") + "/m/student/enrollment"
 
+    private fun isLoginUrl(url: String?): Boolean {
+        if (url.isNullOrBlank()) return false
+        return url.contains("/login/student") || url.contains("/login/auth/student") || url.contains("/login")
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -202,10 +207,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         enrollmentFab.setOnClickListener {
-            if (isNetworkAvailable()) {
+            if (!isNetworkAvailable()) {
+                Toast.makeText(this, "No network available to open enrollment", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val currentUrl = webView.url
+            if (isLoginUrl(currentUrl)) {
+                webView.loadUrl(enrollmentUrl)
+            } else if (currentUrl != null && currentUrl.contains("/m/student")) {
                 webView.loadUrl(enrollmentUrl)
             } else {
-                Toast.makeText(this, "No network available to open enrollment", Toast.LENGTH_SHORT).show()
+                webView.loadUrl(portalUrl)
             }
         }
 
