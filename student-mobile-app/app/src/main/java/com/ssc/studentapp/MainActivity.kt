@@ -16,6 +16,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import android.webkit.CookieManager
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -30,6 +31,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.firebase.messaging.FirebaseMessaging
+import android.os.Build
+import android.Manifest
 
 class MainActivity : AppCompatActivity() {
 
@@ -229,6 +233,9 @@ class MainActivity : AppCompatActivity() {
             pollHandler = Handler(Looper.getMainLooper())
             createNotificationChannel()
             pollHandler.postDelayed(pollingRunnable, 5000)
+            
+            // Initialize Firebase Cloud Messaging
+            initializeFCM()
         } else {
             startActivity(Intent(this, OfflineActivity::class.java))
         }
@@ -245,6 +252,79 @@ class MainActivity : AppCompatActivity() {
             val notificationManager: NotificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
+    }
+
+    private fun initializeFCM() {
+        // Request notification permission for Android 13+ (API 33+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+        // Get and send FCM token to backend
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                sendFCMTokenToBackend(token)
+                // Also store locally
+                val sharedPref = getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
+                sharedPref.edit().putString("fcm_token", token).apply()
+            }
+        }
+    }
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+    private fun sendFCMTokenToBackend(token: String) {
+        Thread {
+            try {
+                val url = java.net.URL("$portalUrl/api/device-token")
+                val conn = url.openConnection() as java.net.HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.connectTimeout = 8000
+                conn.readTimeout = 8000
+                conn.doOutput = true
+
+                // Forward cookies from WebView session so the API call is authenticated
+                val cookie = CookieManager.getInstance().getCookie(portalUrl)
+                if (!cookie.isNullOrEmpty()) {
+                    conn.setRequestProperty("Cookie", cookie)
+                }
+
+                // Send FCM token in request body
+                val requestBody = org.json.JSONObject().apply {
+                    put("fcm_token", token)
+                    put("device_type", "android")
+                    put("device_name", android.os.Build.MODEL)
+                }.toString()
+
+                conn.outputStream.use { os ->
+                    os.write(requestBody.toByteArray())
+                    os.flush()
+                }
+
+                val code = conn.responseCode
+                if (code == 200 || code == 201) {
+                    // Token successfully sent to backend
+                } else {
+                    // Log error but don't disrupt user experience
+                }
+                conn.disconnect()
+            } catch (e: Exception) {
+                // Silently handle network errors - FCM tokens can be sent later
+            }
+        }.start()
     }
 
     private fun fetchUnreadNotifications() {

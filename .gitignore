@@ -18,6 +18,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/firebase-key.json
 /vendor
 Homestead.json
 
@@ -33,4 +34,8 @@ Thumbs.db
 student-mobile-app/local.properties
 student-mobile-app/.idea/
 student-mobile-app/.gradle/
+student-mobile-app/app/google-services.json
+
+# Test files
+test-firebase.php
 

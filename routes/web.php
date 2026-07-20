@@ -185,6 +185,11 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'role:student'])
     Route::get('/notifications', [Student\NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/unread-count', [Student\NotificationController::class, 'unreadCount'])->name('notifications.unread');
     
+    // Device Token API for FCM push notifications
+    Route::post('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'store'])->name('device-token.store');
+    Route::delete('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'destroy'])->name('device-token.destroy');
+    Route::get('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'index'])->name('device-token.index');
+    
     // Enrollment fee (student)
     Route::get('/enrollment', [Student\EnrollmentController::class, 'index'])->name('enrollment.index');
     Route::post('/enrollment', [Student\EnrollmentController::class, 'store'])->name('enrollment.store');
