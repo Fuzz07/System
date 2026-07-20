@@ -45,7 +45,7 @@
                 <div class="col-md-4"><label class="form-label-custom">Year Level</label>
                     <select name="year_level" class="form-select-custom" required>
                         <option value="">Select</option>
-                        @foreach(['1st Year','2nd Year','3rd Year','4th Year','5th Year'] as $y)
+                        @foreach(['1st Year','2nd Year','3rd Year','4th Year'] as $y)
                         <option value="{{ $y }}" {{ old('year_level') == $y ? 'selected' : '' }}>{{ $y }}</option>
                         @endforeach
                     </select>
