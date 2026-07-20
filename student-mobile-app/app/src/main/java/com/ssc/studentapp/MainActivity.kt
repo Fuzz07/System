@@ -263,21 +263,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeFCM() {
+        android.util.Log.d("FCM_DEBUG", "initializeFCM called")
+        
         // Request notification permission for Android 13+ (API 33+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            android.util.Log.d("FCM_DEBUG", "Android 13+ detected, checking permission")
             if (ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != android.content.pm.PackageManager.PERMISSION_GRANTED
             ) {
+                android.util.Log.d("FCM_DEBUG", "Permission not granted, requesting...")
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                android.util.Log.d("FCM_DEBUG", "Permission already granted")
             }
+        } else {
+            android.util.Log.d("FCM_DEBUG", "Android version < 13, skipping permission request")
         }
 
         // Get and send FCM token to backend
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val token = task.result
+                android.util.Log.d("FCM_DEBUG", "FCM token received: $token")
                 sendFCMTokenToBackend(token)
                 // Also store locally
                 val sharedPref = getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
