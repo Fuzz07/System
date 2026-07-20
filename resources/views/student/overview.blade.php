@@ -131,7 +131,7 @@
 
         <!-- Chatbot Sidebar -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm position-sticky" style="top: 20px; max-height: 85vh;">
+            <div class="card border-0 shadow-sm position-sticky" id="chatCard" style="top: 20px; max-height: 85vh;">
                 <div class="card-header bg-primary text-white d-flex align-items-center border-0">
                     <i class="bi bi-robot me-2"></i>
                     <h5 class="mb-0">AI Assistant</h5>
@@ -169,6 +169,7 @@
         </div>
     </div>
 </div>
+    <button id="mobileChatToggle" class="mobile-chat-toggle d-lg-none" aria-label="Open chat"><i class="bi bi-chat-dots" style="font-size:1.25rem;color:white"></i></button>
 
 <style>
     .card {
@@ -276,6 +277,58 @@
             transform: translateY(-6px);
         }
     }
+
+    /* Mobile styles: make chat a bottom drawer */
+    #mobileChatToggle {
+        display: none;
+    }
+
+    .mobile-chat-toggle {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+        z-index: 1100;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        border: none;
+    }
+
+    @media (max-width: 767.98px) {
+        /* Make the chat card fixed bottom and hidden by default */
+        #chatCard.position-sticky {
+            position: fixed !important;
+            left: 12px;
+            right: 12px;
+            bottom: 0;
+            top: auto !important;
+            margin: 0;
+            max-height: 70vh;
+            border-radius: 12px 12px 0 0;
+            transform: translateY(100%);
+            transition: transform 0.28s ease;
+            z-index: 1090;
+        }
+
+        #chatCard.position-sticky.chat-open {
+            transform: translateY(0);
+        }
+
+        /* Make the floating toggle visible on mobile */
+        .mobile-chat-toggle {
+            display: inline-flex;
+        }
+
+        /* Smaller message bubbles on mobile */
+        .message-bubble {
+            max-width: 100%;
+            font-size: 0.92rem;
+        }
+    }
 </style>
 
 <script>
@@ -363,9 +416,36 @@ async function sendMessage(event) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', function() {
 // Set focus to input on load
 document.addEventListener('DOMContentLoaded', function() {
     chatInput.focus();
+
+    // Mobile chat toggle
+    const mobileToggle = document.getElementById('mobileChatToggle');
+    const chatCard = document.getElementById('chatCard');
+    if (mobileToggle && chatCard) {
+        mobileToggle.addEventListener('click', function () {
+            chatCard.classList.toggle('chat-open');
+            // Focus input when opening
+            if (chatCard.classList.contains('chat-open')) {
+                setTimeout(() => chatInput.focus(), 200);
+                mobileToggle.style.display = 'none';
+            } else {
+                mobileToggle.style.display = '';
+            }
+        });
+
+        // Close when clicking outside the chat area on mobile
+        document.addEventListener('click', function (e) {
+            if (!chatCard.classList.contains('chat-open')) return;
+            const isClickInside = chatCard.contains(e.target) || mobileToggle.contains(e.target);
+            if (!isClickInside) {
+                chatCard.classList.remove('chat-open');
+                mobileToggle.style.display = '';
+            }
+        });
+    }
 });
 </script>
 @endsection
