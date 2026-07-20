@@ -1461,7 +1461,7 @@
             }
         });
     </script>
-    @include('partials.pwa-installer', ['floating' => true])
+   
 </body>
 
 </html>
