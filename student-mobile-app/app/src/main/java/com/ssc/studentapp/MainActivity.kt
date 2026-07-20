@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
 
     // Default portal URL. For Android emulators, debug uses local host mapping while release uses the production endpoint.
     private val portalUrl = BuildConfig.PORTAL_URL
-    private val enrollmentUrl = portalUrl.replace("/login/student", "") + "/student/enrollment"
+    private val enrollmentUrl = portalUrl.replace("/login/student", "") + "/m/student/enrollment"
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
