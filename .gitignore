@@ -19,6 +19,7 @@
 /storage/*.key
 /storage/pail
 /storage/firebase-key.json
+/firebase-key-base64.txt
 /vendor
 Homestead.json
 

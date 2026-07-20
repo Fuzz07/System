@@ -145,7 +145,20 @@ class PushNotificationService
         try {
             $keyPath = config('services.firebase.service_account_key_path');
             
-            if (!$keyPath || !file_exists($keyPath)) {
+            // Try to get service account from file first
+            if (!file_exists($keyPath)) {
+                // Fallback: Try to decode from base64 environment variable
+                $keyBase64 = env('FIREBASE_SERVICE_ACCOUNT_KEY_B64');
+                if ($keyBase64) {
+                    $keyContent = base64_decode($keyBase64, true);
+                    if ($keyContent) {
+                        $serviceAccount = json_decode($keyContent, true);
+                        if ($serviceAccount) {
+                            return self::getAccessTokenFromArray($serviceAccount);
+                        }
+                    }
+                }
+                
                 Log::error('Firebase service account key not found', ['path' => $keyPath]);
                 return null;
             }
@@ -157,6 +170,21 @@ class PushNotificationService
                 return null;
             }
 
+            return self::getAccessTokenFromArray($serviceAccount);
+        } catch (\Exception $e) {
+            Log::error('Error getting Firebase access token', [
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Get access token from service account array.
+     */
+    private static function getAccessTokenFromArray($serviceAccount)
+    {
+        try {
             // Create JWT token
             $jwt = self::createJWT($serviceAccount);
 
@@ -184,7 +212,7 @@ class PushNotificationService
 
             return self::$accessToken;
         } catch (\Exception $e) {
-            Log::error('Error getting Firebase access token', [
+            Log::error('Error exchanging JWT for access token', [
                 'error' => $e->getMessage(),
             ]);
             return null;
