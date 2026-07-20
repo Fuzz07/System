@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\EnrollmentPayment;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
@@ -34,6 +35,7 @@ class User extends Authenticatable
     public function activityLogs() { return $this->hasMany(ActivityLog::class); }
     public function candidacies() { return $this->hasMany(Candidacy::class); }
     public function votes() { return $this->hasMany(Vote::class); }
+    public function enrollmentPayments() { return $this->hasMany(EnrollmentPayment::class); }
 
     public function getAvatarAttribute(): string
     {

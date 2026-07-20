@@ -29,7 +29,15 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3 text-end">
+                <div class="col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="all" {{ ($status ?? 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
+                        <option value="unpaid" {{ ($status ?? '') === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                        <option value="pending" {{ ($status ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="paid" {{ ($status ?? '') === 'paid' ? 'selected' : '' }}>Paid</option>
+                    </select>
+                </div>
+                <div class="col-md-2 text-end">
                     <button class="btn btn-primary">Filter</button>
                 </div>
             </form>
@@ -42,28 +50,56 @@
                             <th>Student ID</th>
                             <th>Department</th>
                             <th>Year</th>
-                            <th>Amount</th>
-                            <th>Method</th>
-                            <th>Status</th>
+                            <th>Payment Status</th>
+                            <th>Reference</th>
+                            <th>Proof</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($payments as $p)
+                        @foreach($students as $student)
+                        @php
+                            $payment = $student->enrollmentPayments->first();
+                            $status = $payment ? ucfirst($payment->status) : 'Unpaid';
+                            $proofStatus = $payment ? ucfirst($payment->proof_status ?? 'none') : 'None';
+                        @endphp
                         <tr>
-                            <td>{{ $p->user->fullname }}</td>
-                            <td>{{ $p->user->student_id }}</td>
-                            <td>{{ $p->user->department }}</td>
-                            <td>{{ $p->user->year_level }}</td>
-                            <td>{{ \App\Helpers\SscHelper::formatCurrency($p->amount) }}</td>
-                            <td>{{ ucfirst($p->method) }}</td>
-                            <td><span class="badge bg-{{ $p->status === 'paid' ? 'success' : 'warning' }}">{{ ucfirst($p->status) }}</span></td>
+                            <td>{{ $student->fullname }}</td>
+                            <td>{{ $student->student_id }}</td>
+                            <td>{{ $student->department }}</td>
+                            <td>{{ $student->year_level }}</td>
+                            <td><span class="badge bg-{{ $payment && $payment->status === 'paid' ? 'success' : 'warning' }}">{{ $status }}</span></td>
+                            <td>{{ $payment->reference ?? '—' }}</td>
+                            <td>
+                                @if($payment && $payment->proof_path)
+                                    <a href="{{ asset('storage/' . $payment->proof_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary mb-1">View Proof</a>
+                                    <div><small class="text-muted">{{ $proofStatus }}</small></div>
+                                @else
+                                    <span class="text-muted">{{ $proofStatus }}</span>
+                                @endif
+                            </td>
                             <td class="text-end">
-                                @if($p->status !== 'paid')
-                                <form method="POST" action="{{ route('admin.enrollment.payments.mark_paid', $p) }}" class="d-inline">
-                                    @csrf
-                                    <button class="btn btn-sm btn-success">Mark Paid (Walk-in)</button>
-                                </form>
+                                @if($payment && $payment->status !== 'paid')
+                                    <form method="POST" action="{{ route('admin.enrollment.payments.mark_paid', $payment) }}" class="d-inline">
+                                        @csrf
+                                        <button class="btn btn-sm btn-success">Mark Paid</button>
+                                    </form>
+                                    @if($payment && $payment->proof_path && $payment->proof_status === 'pending')
+                                        <form method="POST" action="{{ route('admin.enrollment.payments.proof.approve', $payment) }}" class="d-inline">
+                                            @csrf
+                                            <button class="btn btn-sm btn-primary">Approve Proof</button>
+                                        </form>
+                                        <form method="POST" action="{{ route('admin.enrollment.payments.proof.reject', $payment) }}" class="d-inline">
+                                            @csrf
+                                            <button class="btn btn-sm btn-danger">Reject Proof</button>
+                                        </form>
+                                    @endif
+                                @endif
+                                @if(!$payment)
+                                    <form method="POST" action="{{ route('admin.enrollment.payments.walk_in', $student) }}" class="d-inline">
+                                        @csrf
+                                        <button class="btn btn-sm btn-success">Walk-in Paid</button>
+                                    </form>
                                 @endif
                             </td>
                         </tr>

@@ -48,41 +48,39 @@
 
             @if($payment && $payment->status === 'paid')
                 <div class="alert alert-success">You have already paid for this semester. Reference: {{ $payment->reference }}</div>
-            @elseif($payment && $payment->status === 'pending')
-                <div class="alert alert-warning">You have a pending payment. Reference: <strong>{{ $payment->reference }}</strong></div>
+            @else
+                <div class="alert alert-warning">{{ $payment ? 'You have a pending payment. Reference: ' . $payment->reference : 'You do not have a payment record yet.' }}</div>
                 <div class="mb-3">
                     <h6>GCash Instructions</h6>
                     <ol>
                         <li>Open GCash and send {{ $amount }} to <strong>{{ config('ssc.gcash_number') ?: 'GCASH_NUMBER' }}</strong>.</li>
-                        <li>Enter the reference: <strong>{{ $payment->reference }}</strong> in the message/notes.</li>
-                        <li>After payment, wait for confirmation. Admin will verify and mark paid for walk-ins or manual confirmations.</li>
+                        <li>Enter the reference: <strong>{{ $payment->reference ?? 'will be generated' }}</strong> in the message/notes.</li>
+                        <li>After payment, upload a screenshot or receipt using the form below so admin can verify it.</li>
                     </ol>
                 </div>
-                <script>
-                    // Poll for notification updates (simple approach). Mobile app/webview can call this periodically.
-                    async function pollNotifications() {
-                        try {
-                            const res = await fetch('{{ route("student.notifications.index") }}', { credentials: 'same-origin' });
-                            const data = await res.json();
-                            // Optionally show client-side alert when payment marked paid
-                            if (data && data.length) {
-                                const latest = data[0];
-                                if (latest.data && latest.data.payment_id == {{ $payment->id ?? 'null' }} && latest.read_at == null) {
-                                    // Show simple in-page alert
-                                    alert(latest.data.message || 'Payment updated');
-                                }
-                            }
-                        } catch (e) { }
-                    }
 
-                    setInterval(pollNotifications, 15000); // every 15s
-                </script>
-            @else
-                <form method="POST" action="{{ route('student.enrollment.store') }}">
+                @if($payment && $payment->proof_path)
+                    <div class="alert alert-info">
+                        Proof status: <strong>{{ ucfirst($payment->proof_status ?? 'pending') }}</strong>
+                        @if($payment->proof_notes)
+                            <div>{{ $payment->proof_notes }}</div>
+                        @endif
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('student.enrollment.store') }}" enctype="multipart/form-data">
                     @csrf
-                    <button class="btn btn-primary">Pay via GCash (Create Payment Record)</button>
+                    <div class="mb-3">
+                        <label class="form-label">Upload GCash payment proof</label>
+                        <input type="file" name="proof" accept="image/*,.pdf,.mp4" class="form-control" />
+                        <div class="form-text">Optional but recommended. JPG, PNG, PDF, MP4 up to 5MB.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Proof / Create Payment Record</button>
                 </form>
-                <small class="text-muted d-block mt-2">Pressing the button will create a payment record and show GCash instructions.</small>
+
+                @if(! $payment)
+                    <small class="text-muted d-block mt-2">Pressing the button will create a payment record and show GCash instructions.</small>
+                @endif
             @endif
         </div>
     </div>

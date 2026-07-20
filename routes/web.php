@@ -67,6 +67,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/students', [Admin\StudentController::class, 'index'])->name('students.index');
     Route::get('/enrollment-payments', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'index'])->name('enrollment.payments');
     Route::post('/enrollment-payments/{payment}/mark-paid', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'markPaid'])->name('enrollment.payments.mark_paid');
+    Route::post('/enrollment-payments/{student}/walk-in', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'markPaidWalkIn'])->name('enrollment.payments.walk_in');
+    Route::post('/enrollment-payments/{payment}/approve-proof', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'approveProof'])->name('enrollment.payments.proof.approve');
+    Route::post('/enrollment-payments/{payment}/reject-proof', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'rejectProof'])->name('enrollment.payments.proof.reject');
     Route::patch('/students/{user}/approve', [Admin\StudentController::class, 'approve'])->name('students.approve');
     Route::patch('/students/{user}/toggle', [Admin\StudentController::class, 'toggleStatus'])->name('students.toggle');
     Route::delete('/students/{user}', [Admin\StudentController::class, 'destroy'])->name('students.destroy');
