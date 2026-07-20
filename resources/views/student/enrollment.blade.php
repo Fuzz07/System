@@ -58,6 +58,25 @@
                         <li>After payment, wait for confirmation. Admin will verify and mark paid for walk-ins or manual confirmations.</li>
                     </ol>
                 </div>
+                <script>
+                    // Poll for notification updates (simple approach). Mobile app/webview can call this periodically.
+                    async function pollNotifications() {
+                        try {
+                            const res = await fetch('{{ route("student.notifications.index") }}', { credentials: 'same-origin' });
+                            const data = await res.json();
+                            // Optionally show client-side alert when payment marked paid
+                            if (data && data.length) {
+                                const latest = data[0];
+                                if (latest.data && latest.data.payment_id == {{ $payment->id ?? 'null' }} && latest.read_at == null) {
+                                    // Show simple in-page alert
+                                    alert(latest.data.message || 'Payment updated');
+                                }
+                            }
+                        } catch (e) { }
+                    }
+
+                    setInterval(pollNotifications, 15000); // every 15s
+                </script>
             @else
                 <form method="POST" action="{{ route('student.enrollment.store') }}">
                     @csrf

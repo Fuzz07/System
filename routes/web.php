@@ -178,6 +178,10 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'role:student'])
     Route::post('/voting', [Student\VotingController::class, 'store'])->name('voting.store');
     Route::get('/election-results', [Student\VotingController::class, 'results'])->name('election.results');
     
+    // Notifications API for student app (JSON)
+    Route::get('/notifications', [Student\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [Student\NotificationController::class, 'unreadCount'])->name('notifications.unread');
+    
     // Enrollment fee (student)
     Route::get('/enrollment', [Student\EnrollmentController::class, 'index'])->name('enrollment.index');
     Route::post('/enrollment', [Student\EnrollmentController::class, 'store'])->name('enrollment.store');

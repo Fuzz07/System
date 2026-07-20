@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\SscHelper;
+use App\Notifications\EnrollmentPaidNotification;
 
 class EnrollmentPaymentController extends Controller
 {
@@ -66,6 +67,13 @@ class EnrollmentPaymentController extends Controller
 
         SscHelper::logActivity(Auth::id(), 'ENROLLMENT_MARK_PAID', "Marked enrollment payment #{$payment->id} as paid for user {$payment->user->email}");
 
-        return redirect()->back()->with('success', 'Payment marked as paid and added to budget.');
+        // Notify the student (database + broadcast). Broadcasting requires configured broadcast driver (pusher/redis).
+        try {
+            $payment->user->notify(new EnrollmentPaidNotification($payment));
+        } catch (\Throwable $e) {
+            // Fail silently; notification is optional
+        }
+
+        return redirect()->back()->with('success', 'Payment marked as paid, added to budget, and student notified.');
     }
 }
