@@ -68,10 +68,18 @@ class AuthController extends Controller
             'dean'      => ['dean'],
         };
 
+        // Fetch user regardless of status so we can detect graduated accounts
         $user = User::where('email', $request->email)
             ->whereIn('role', $allowedRoles)
-            ->where('status', 'active')
             ->first();
+
+        // Auto-deactivate graduated students if configured
+        if ($user && $user->isStudent() && config('ssc.auto_deactivate_graduates', true) && $user->isGraduated()) {
+            $user->update(['status' => 'inactive']);
+            SscHelper::logActivity(null, 'STUDENT_AUTO_DEACTIVATE', "Auto-deactivated graduated student: {$user->email}");
+
+            return back()->withErrors(['email' => 'Your account has been set to inactive due to graduation. Please contact the administrator if this is incorrect.']);
+        }
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             // Increment the rate limiter on failure
@@ -91,6 +99,12 @@ class AuthController extends Controller
             }
 
             return back()->withErrors(['email' => $message])->withInput();
+        }
+
+        // Prevent login for inactive accounts
+        if ($user->status !== 'active') {
+            RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
+            return back()->withErrors(['email' => 'Your account is not active. Please wait for admin approval.'])->withInput();
         }
 
         // ── Successful Login ─────────────────────────────────────────────────

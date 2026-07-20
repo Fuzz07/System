@@ -46,4 +46,26 @@ class User extends Authenticatable
     public function isStudent(): bool { return $this->role === 'student'; }
     public function isDean(): bool { return $this->role === 'dean'; }
     public function isAdminOrTreasurer(): bool { return in_array($this->role, ['admin', 'treasurer']); }
+
+    // Determine whether a student is considered graduated based on configured values
+    public function isGraduated(): bool
+    {
+        $year = (string) ($this->year_level ?? '');
+        if (trim($year) === '') return false;
+
+        // Normalize
+        $normalized = mb_strtolower(trim($year));
+
+        // If the value contains the word 'graduat' or 'alumni', consider graduated
+        if (str_contains($normalized, 'graduat') || str_contains($normalized, 'alumni')) {
+            return true;
+        }
+
+        $configured = config('ssc.graduated_levels', []);
+        foreach ($configured as $val) {
+            if (mb_strtolower(trim($val)) === $normalized) return true;
+        }
+
+        return false;
+    }
 }
