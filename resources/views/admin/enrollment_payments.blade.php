@@ -36,10 +36,11 @@
                         <option value="pending" {{ ($status ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="paid" {{ ($status ?? '') === 'paid' ? 'selected' : '' }}>Paid</option>
                     </select>
-                </div>
-                <div class="col-md-2 text-end">
+                    <div class="col-md-2 text-end">
                     <button class="btn btn-primary">Filter</button>
                 </div>
+                </div>
+               
             </form>
 
             <div class="table-responsive">
