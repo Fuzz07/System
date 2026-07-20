@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var enrollmentFab: com.google.android.material.floatingactionbutton.FloatingActionButton
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
     // Default portal URL. For Android emulators, debug uses local host mapping while release uses the production endpoint.
     private val portalUrl = BuildConfig.PORTAL_URL
@@ -179,6 +180,13 @@ class MainActivity : AppCompatActivity() {
             filePathCallback = null
         }
 
+        // Setup notification permission launcher
+        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         // Setup WebChromeClient
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
@@ -277,13 +285,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
-                Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show()
-            }
-        }
 
     private fun sendFCMTokenToBackend(token: String) {
         Thread {
