@@ -115,6 +115,9 @@ Route::prefix('dean')->name('dean.')->middleware(['auth', 'role:dean'])->group(f
 
 // ─── Student Routes ───
 Route::prefix('student')->name('student.')->middleware(['auth', 'role:student'])->group(function () {
+    Route::get('/', [Student\DashboardController::class, 'index'])->name('overview');
+    Route::post('/chatbot/chat', [Student\ChatbotController::class, 'chat'])->name('chatbot.chat');
+    
     Route::get('/proposals', [Student\ProposalController::class, 'index'])->name('proposals');
     Route::get('/proposals/{proposal}', [Student\ProposalController::class, 'show'])->name('proposal.show');
     Route::post('/proposals/{proposal}/comment', [Student\ProposalController::class, 'comment'])->name('proposal.comment');
