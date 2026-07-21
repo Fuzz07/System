@@ -1385,14 +1385,7 @@
                 <p class="footer-tagline">The official Supreme Student Council transparency and budget management
                     platform of Madridejos Community College.</p>
             </div>
-            <div class="footer-links-group">
-                <h4>Portals</h4>
-                <a href="{{ route('login', 'student') }}">Student Portal</a>
-                <a href="{{ route('login', 'officer') }}">Officer Portal</a>
-                <a href="{{ route('login', 'treasurer') }}">Treasurer Portal</a>
-                <a href="{{ route('login', 'dean') }}">Dean Portal</a>
-                <a href="{{ route('login', 'admin') }}">Admin Portal</a>
-            </div>
+           
             <div class="footer-links-group">
                 <h4>Quick Links</h4>
                 <a href="#features">Features</a>
