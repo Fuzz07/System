@@ -42,7 +42,7 @@
                 @csrf
                 <div class="m-field" style="margin-bottom: 14px;">
                     <label>Upload Payment Proof</label>
-                    <input type="file" name="proof" accept="image/*,.pdf,.mp4" class="form-control" style="padding: 10px; border-radius: 12px; border: 1px solid #d1d5db; width: 100%;" />
+                    <input type="file" name="proof" accept="image/*" class="form-control" style="padding: 10px; border-radius: 12px; border: 1px solid #d1d5db; width: 100%;" />
                 </div>
                 <button type="submit" class="m-btn m-btn-primary" style="width: 100%;">Upload Proof / Create Record</button>
             </form>
