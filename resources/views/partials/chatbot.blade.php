@@ -714,6 +714,11 @@
         hasMoved = false; // Reset for next click
         return;
       }
+      if (navigator.userAgent.includes('SSCStudentApp')) {
+        e.preventDefault();
+        window.location.href = 'ssc://chatbot';
+        return;
+      }
       const isActive = chatWindow.classList.contains('active');
       isActive ? closeChatbot() : openChatbot();
     });
