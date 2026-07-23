@@ -40,7 +40,7 @@
         };
 
         // Prevent form submission if reCAPTCHA checkbox is unchecked
-        document.addEventListener('DOMContentLoaded', () => {
+        (function() {
             const tokenInput = document.getElementById('captcha_verified_token');
             const form = tokenInput ? tokenInput.closest('form') : document.querySelector('form');
             if (form) {
@@ -58,7 +58,7 @@
                     }
                 });
             }
-        });
+        })();
     </script>
 @else
     <!-- Elegant Fallback "I am not a robot" Custom CAPTCHA -->
@@ -89,7 +89,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        (function() {
           const robotCheckbox = document.getElementById('robot_checkbox');
           const captchaSpinner = document.getElementById('captcha_spinner');
           const successIcon = document.getElementById('captcha_success_icon');
@@ -147,6 +147,6 @@
               }
             });
           }
-        });
+        })();
     </script>
 @endif
