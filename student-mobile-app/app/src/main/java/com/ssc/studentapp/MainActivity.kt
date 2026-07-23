@@ -305,6 +305,38 @@ class MainActivity : AppCompatActivity() {
                 sharedPref.edit().putString("fcm_token", token).apply()
             }
         }
+
+        // Request user to exclude app from battery optimization for closed delivery
+        requestIgnoreBatteryOptimizations()
+    }
+
+    private fun requestIgnoreBatteryOptimizations() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val pm = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+            val packageName = packageName
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                    .setTitle("Allow Background Alerts")
+                    .setMessage("To receive council announcements even when the app is completely closed, please disable battery optimization for the SSC Student App in the next screen.")
+                    .setPositiveButton("Configure") { _, _ ->
+                        try {
+                            val intent = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                data = Uri.parse("package:$packageName")
+                            }
+                            startActivity(intent)
+                        } catch (e: Exception) {
+                            try {
+                                val intent = Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                                startActivity(intent)
+                            } catch (e2: Exception) {
+                                // Fallback
+                            }
+                        }
+                    }
+                    .setNegativeButton("Later", null)
+                    .show()
+            }
+        }
     }
 
     private fun sendFCMTokenToBackend(token: String) {
