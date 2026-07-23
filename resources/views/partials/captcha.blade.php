@@ -1,8 +1,16 @@
 @php
-    $recaptchaSiteKey = env('RECAPTCHA_SITE_KEY');
+    $recaptchaSiteKey = trim(env('RECAPTCHA_SITE_KEY', ''));
+    
+    // Detect if keys are empty or set to common development placeholders
+    $isPlaceholder = empty($recaptchaSiteKey) || 
+                     str_contains(strtolower($recaptchaSiteKey), 'your-google') || 
+                     str_contains(strtolower($recaptchaSiteKey), 'your_actual') || 
+                     str_contains(strtolower($recaptchaSiteKey), 'placeholder') || 
+                     str_contains(strtolower($recaptchaSiteKey), 'your-key') ||
+                     str_contains($recaptchaSiteKey, '6LdXXXXXXXX');
 @endphp
 
-@if(!empty($recaptchaSiteKey))
+@if(!$isPlaceholder)
     <!-- Official Google reCAPTCHA v2 Widget -->
     <div class="captcha-wrapper mb-4 d-flex justify-content-center">
         <div id="google-recaptcha-container"></div>

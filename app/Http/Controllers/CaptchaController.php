@@ -38,8 +38,15 @@ class CaptchaController extends Controller
     public static function verifyToken(?string $token): bool
     {
         // 1. If Google reCAPTCHA keys are present in env, validate with Google API
-        $secretKey = env('RECAPTCHA_SECRET_KEY');
-        if (!empty($secretKey)) {
+        $secretKey = trim(env('RECAPTCHA_SECRET_KEY', ''));
+        $isSecretPlaceholder = empty($secretKey) || 
+                               str_contains(strtolower($secretKey), 'your-google') || 
+                               str_contains(strtolower($secretKey), 'your_actual') || 
+                               str_contains(strtolower($secretKey), 'placeholder') || 
+                               str_contains(strtolower($secretKey), 'your-key') ||
+                               str_contains($secretKey, '6LdXXXXXXXX');
+
+        if (!$isSecretPlaceholder) {
             if (!$token) {
                 return false;
             }
