@@ -126,6 +126,12 @@ class MainActivity : AppCompatActivity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
 
+                if (url.contains("/m/student/announcements") || url.contains("/student/announcements")) {
+                    val intent = Intent(this@MainActivity, AnnouncementsActivity::class.java)
+                    startActivity(intent)
+                    return true
+                }
+
                 // Allow navigation within the app's own hosts (local dev + production Vercel)
                 val appHost = BuildConfig.APP_HOST
                 if (url.contains("10.0.2.2") ||

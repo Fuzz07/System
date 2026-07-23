@@ -129,6 +129,24 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'role:student'])
 
     Route::get('/announcements', [Student\AnnouncementController::class, 'index'])->name('announcements');
 
+    Route::get('/api/announcements', function () {
+        $announcements = \App\Models\Announcement::with(['author', 'proposal'])
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($a) {
+                return [
+                    'id' => $a->id,
+                    'title' => $a->title,
+                    'content' => $a->content,
+                    'author' => $a->author->fullname ?? 'SSC Admin',
+                    'date' => $a->created_at?->format('M d, Y'),
+                    'time_ago' => $a->created_at?->diffForHumans(),
+                    'proof' => ($a->project_id && $a->proposal?->completion_proof) ? asset('storage/' . $a->proposal->completion_proof) : null
+                ];
+            });
+        return response()->json(['announcements' => $announcements]);
+    })->name('api.announcements');
+
     Route::get('/feedback', [Student\FeedbackController::class, 'index'])->name('feedback');
     Route::post('/feedback', [Student\FeedbackController::class, 'store'])->name('feedback.store');
 

@@ -44,6 +44,11 @@
             android:theme="@style/Theme.SSCStudentApp.NoActionBar" />
 
         <activity
+            android:name=".AnnouncementsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SSCStudentApp.NoActionBar" />
+
+        <activity
             android:name=".OfflineActivity"
             android:exported="false"
             android:theme="@style/Theme.SSCStudentApp.NoActionBar" />
