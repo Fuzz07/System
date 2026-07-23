@@ -36,6 +36,27 @@
                 tokenInput.value = "";
             }
         }
+
+        // Prevent form submission if reCAPTCHA checkbox is unchecked
+        document.addEventListener('DOMContentLoaded', () => {
+            const tokenInput = document.getElementById('captcha_verified_token');
+            const form = tokenInput ? tokenInput.closest('form') : document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    if (tokenInput && !tokenInput.value) {
+                        e.preventDefault();
+                        
+                        // Turn off the fullscreen loading overlay if it got triggered
+                        const loader = document.getElementById('login-loading-overlay');
+                        if (loader) {
+                            loader.style.display = 'none';
+                        }
+                        
+                        alert('Please check the "I am not a robot" box to proceed.');
+                    }
+                });
+            }
+        });
     </script>
 @else
     <!-- Elegant Fallback "I am not a robot" Custom CAPTCHA -->
