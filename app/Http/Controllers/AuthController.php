@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -142,6 +143,27 @@ class AuthController extends Controller
 
         if (! CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
             return back()->withErrors(['email' => 'Security check failed. Please verify that you are not a robot.'])->withInput();
+        }
+
+        // ── Verify with Microsoft if the school email account actively exists ──────
+        try {
+            $msResponse = Http::timeout(6)
+                ->post('https://login.microsoftonline.com/common/GetCredentialType', [
+                    'Username' => $request->email
+                ]);
+
+            if ($msResponse->successful()) {
+                $ifExistsResult = $msResponse->json('IfExistsResult');
+                // IfExistsResult of 1 explicitly indicates that the user account does NOT exist on MS servers.
+                if ($ifExistsResult === 1) {
+                    return back()->withErrors([
+                        'email' => 'This Microsoft 365 account does not exist. Please double-check your school email address spelling or contact the school IT administrator.'
+                    ])->withInput();
+                }
+            }
+        } catch (\Exception $e) {
+            // Log warning but proceed with registration so network/DNS hiccups on Microsoft's side do not lock registrations
+            Log::warning('Failed to query Microsoft realm user verification', ['error' => $e->getMessage()]);
         }
 
         $fullname = trim($request->first_name . ' ' . ($request->middle_name ?? '') . ' ' . $request->last_name);
