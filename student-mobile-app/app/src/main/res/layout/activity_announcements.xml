@@ -18,8 +18,8 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/white"
-            app:title="News &amp; Announcements"
-            app:titleTextColor="@color/navy_900"
+            app:title="News &amp; Updates"
+            app:titleTextColor="@color/black"
             app:popupTheme="@style/Theme.SSCStudentApp.PopupOverlay" />
 
     </com.google.android.material.appbar.AppBarLayout>
