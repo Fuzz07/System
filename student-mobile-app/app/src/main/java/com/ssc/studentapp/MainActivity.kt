@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val url = request?.url?.toString() ?: return false
 
-                if (url.contains("ssc://chatbot")) {
+                if (url.contains("chatbot-native")) {
                     val intent = Intent(this@MainActivity, ChatbotActivity::class.java)
                     startActivity(intent)
                     return true

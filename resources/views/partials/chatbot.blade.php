@@ -716,7 +716,7 @@
       }
       if (navigator.userAgent.includes('SSCStudentApp')) {
         e.preventDefault();
-        window.location.href = 'ssc://chatbot';
+        window.location.href = '/student/chatbot-native';
         return;
       }
       const isActive = chatWindow.classList.contains('active');
