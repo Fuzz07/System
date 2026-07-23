@@ -229,6 +229,55 @@ class AuthController extends Controller
             ->with('success', 'Email confirmed successfully! Your account has been activated. You can now log in.');
     }
 
+    public function checkEmail(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email|ends_with:@mcclawis.edu.ph',
+            ], [
+                'email.ends_with' => 'The email address must belong to the @mcclawis.edu.ph domain.',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()->first('email'),
+            ]);
+        }
+
+        // Check if user already exists
+        if (User::where('email', $request->email)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This school email address is already registered. Please log in.',
+            ]);
+        }
+
+        // Validate MS Account existence
+        try {
+            $msResponse = Http::timeout(6)
+                ->post('https://login.microsoftonline.com/common/GetCredentialType', [
+                    'Username' => $request->email
+                ]);
+
+            if ($msResponse->successful()) {
+                $ifExistsResult = $msResponse->json('IfExistsResult');
+                if ($ifExistsResult === 1) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This Microsoft 365 account does not exist. Please double-check your school email address spelling or contact the school IT administrator.',
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('MS Account check failed during AJAX checkEmail', ['error' => $e->getMessage()]);
+            // Gracefully succeed if MS API is offline to prevent blocking students
+        }
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+
     public function logout(Request $request)
     {
         if (Auth::check()) {
