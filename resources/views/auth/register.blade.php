@@ -192,6 +192,11 @@
                     // Smooth Transition to Step 2
                     step1.classList.add('d-none');
                     step2.classList.remove('d-none');
+
+                    // Dynamically trigger official Google reCAPTCHA rendering now that Step 2 is visible
+                    if (typeof window.renderGoogleRecaptcha === 'function') {
+                        window.renderGoogleRecaptcha();
+                    }
                 } else {
                     step1Error.textContent = data.message || 'Email verification failed.';
                     step1Error.classList.remove('d-none');
