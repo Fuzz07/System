@@ -58,7 +58,7 @@
       <div class="d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-3">
           <div class="position-relative" style="width: 32px; height: 32px;">
-            <input type="checkbox" id="robot_checkbox" class="form-check-input border-secondary-subtle" style="width: 32px; height: 32px; cursor: pointer; border-radius: 4px; border: 2px solid #cbd5e1; margin-top: 0;" />
+            <input type="checkbox" id="robot_checkbox" class="form-check-input border-secondary-subtle" style="width: 32px; height: 32px; cursor: pointer; border-radius: 6px; border: 2px solid #cbd5e1; background-color: #ffffff !important; accent-color: #4f46e5; margin-top: 0;" />
             <div id="captcha_spinner" class="spinner-border text-primary position-absolute d-none" role="status" style="width: 24px; height: 24px; top: 4px; left: 4px; border-width: 2px;">
               <span class="visually-hidden">Loading...</span>
             </div>
