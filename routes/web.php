@@ -38,6 +38,7 @@ Route::get('/login/{portal?}', function ($portal = null) {
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::get('/register', fn() => view('auth.register'))->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
+Route::get('/confirm-account/{user}', [AuthController::class, 'confirmAccount'])->name('confirm-account');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/captcha/verify', [App\Http\Controllers\CaptchaController::class, 'verifyCaptcha'])->name('captcha.verify');
 Route::get('/proposals/{proposal}/print', [Student\ProposalController::class, 'print'])->name('proposals.print')->middleware(['auth', 'role:admin,officer,treasurer']);

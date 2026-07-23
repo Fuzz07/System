@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -160,8 +163,48 @@ class AuthController extends Controller
 
         SscHelper::logActivity($user->id, 'REGISTER', "Student registered: {$user->email}");
 
+        // Generate temporary signed URL valid for 24 hours
+        $confirmUrl = URL::temporarySignedRoute(
+            'confirm-account', 
+            now()->addHours(24), 
+            ['user' => $user->id]
+        );
+
+        // Send Confirmation Email
+        try {
+            Mail::send([], [], function ($message) use ($user, $confirmUrl) {
+                $message->to($user->email)
+                    ->subject('Confirm your SSC Transparency Account')
+                    ->html(view('auth.emails.confirm', ['user' => $user, 'url' => $confirmUrl])->render());
+            });
+            $successMsg = 'Registration successful! A confirmation link has been sent to your school email (' . $user->email . '). Please check your inbox (or spam/junk folder) and confirm your account to sign in.';
+        } catch (\Exception $e) {
+            Log::error('Registration email failed to send', ['error' => $e->getMessage()]);
+            // Graceful fallback if SMTP isn't configured so the student isn't blocked
+            $successMsg = 'Registration successful! However, we could not send a confirmation email at this moment. Please ask an administrator to activate your account.';
+        }
+
         return redirect()->route('login', ['portal' => 'student'])
-            ->with('success', 'Registration successful! Please wait for admin approval before you can log in.');
+            ->with('success', $successMsg);
+    }
+
+    public function confirmAccount(Request $request, User $user)
+    {
+        if (! $request->hasValidSignature()) {
+            abort(401, 'This confirmation link is invalid or has expired.');
+        }
+
+        if ($user->status === 'active') {
+            return redirect()->route('login', ['portal' => 'student'])
+                ->with('success', 'Your account is already active. Please sign in.');
+        }
+
+        $user->update(['status' => 'active']);
+        
+        SscHelper::logActivity($user->id, 'ACTIVATE_EMAIL', "Student account verified & activated via email: {$user->email}");
+
+        return redirect()->route('login', ['portal' => 'student'])
+            ->with('success', 'Email confirmed successfully! Your account has been activated. You can now log in.');
     }
 
     public function logout(Request $request)
