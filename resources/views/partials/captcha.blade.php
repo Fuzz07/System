@@ -24,18 +24,20 @@
     <!-- Google reCAPTCHA JavaScript API -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
-        function onRecaptchaSuccess(token) {
+        // Explicitly bind to window scope so Google's iframe parser can always find them
+        window.onRecaptchaSuccess = function(token) {
             const tokenInput = document.getElementById('captcha_verified_token');
             if (tokenInput) {
                 tokenInput.value = token;
             }
-        }
-        function onRecaptchaExpired() {
+        };
+
+        window.onRecaptchaExpired = function() {
             const tokenInput = document.getElementById('captcha_verified_token');
             if (tokenInput) {
                 tokenInput.value = "";
             }
-        }
+        };
 
         // Prevent form submission if reCAPTCHA checkbox is unchecked
         document.addEventListener('DOMContentLoaded', () => {
