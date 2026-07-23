@@ -3,14 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class CaptchaController extends Controller
 {
     /**
-     * Generate a stateless signed CAPTCHA token.
+     * Generate a stateless signed CAPTCHA token (for fallback or client verification).
      *
      * The token is: base64( timestamp + "|" + HMAC-SHA256(timestamp, APP_KEY) )
-     * This requires no session — it can be verified on any serverless instance.
      */
     public function verifyCaptcha(Request $request)
     {
@@ -32,12 +33,44 @@ class CaptchaController extends Controller
     }
 
     /**
-     * Verify a stateless CAPTCHA token.
-     * Returns true if the token signature is valid and not older than 10 minutes.
+     * Verify a stateless CAPTCHA token or validate via Google's official reCAPTCHA API.
      */
     public static function verifyToken(?string $token): bool
     {
-        if (! $token) {
+        // 1. If Google reCAPTCHA keys are present in env, validate with Google API
+        $secretKey = env('RECAPTCHA_SECRET_KEY');
+        if (!empty($secretKey)) {
+            if (!$token) {
+                return false;
+            }
+
+            try {
+                $response = Http::asForm()
+                    ->timeout(10)
+                    ->post('https://www.google.com/recaptcha/api/siteverify', [
+                        'secret'   => $secretKey,
+                        'response' => $token,
+                        'remoteip' => request()->ip(),
+                    ]);
+
+                if ($response->successful() && $response->json('success') === true) {
+                    return true;
+                }
+
+                Log::warning('Official Google reCAPTCHA validation failed', [
+                    'errors' => $response->json('error-codes'),
+                ]);
+                return false;
+            } catch (\Throwable $e) {
+                Log::error('Error connecting to Google reCAPTCHA API', [
+                    'message' => $e->getMessage(),
+                ]);
+                // Fallback to local signed token validation on API timeouts/network failure to prevent user locking
+            }
+        }
+
+        // 2. Fallback to local cryptographic signed token verification
+        if (!$token) {
             return false;
         }
 
