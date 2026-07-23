@@ -11,45 +11,30 @@
 @endphp
 
 @if(!$isPlaceholder)
-    <!-- Official Google reCAPTCHA v2 Widget -->
+    <!-- Official Google reCAPTCHA v2 Widget (Automatic Render) -->
     <div class="captcha-wrapper mb-4 d-flex justify-content-center">
-        <div id="google-recaptcha-container"></div>
+        <div class="g-recaptcha" 
+             data-sitekey="{{ $recaptchaSiteKey }}" 
+             data-callback="onRecaptchaSuccess" 
+             data-expired-callback="onRecaptchaExpired"></div>
     </div>
     
     <input type="hidden" name="captcha_verified_token" id="captcha_verified_token" value="" />
 
-    <!-- Google reCAPTCHA JavaScript API with explicit onload callback -->
-    <script src="https://www.google.com/recaptcha/api.js?onload=onloadRecaptchaCallback&render=explicit" async defer></script>
+    <!-- Google reCAPTCHA JavaScript API -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
-        let recaptchaWidgetId = null;
-        function onloadRecaptchaCallback() {
-            window.renderGoogleRecaptcha = function() {
-                const container = document.getElementById('google-recaptcha-container');
-                if (container && recaptchaWidgetId === null && typeof grecaptcha !== 'undefined') {
-                    recaptchaWidgetId = grecaptcha.render('google-recaptcha-container', {
-                        'sitekey': '{{ $recaptchaSiteKey }}',
-                        'callback': onRecaptchaSuccess,
-                        'expired-callback': onRecaptchaExpired
-                    });
-                }
-            };
-
-            // Automatically render if container is present and visible (e.g. Login form)
-            const registerStep2 = document.getElementById('step-2');
-            if (registerStep2) {
-                if (!registerStep2.classList.contains('d-none')) {
-                    window.renderGoogleRecaptcha();
-                }
-            } else {
-                // In login form or non-multistep page
-                window.renderGoogleRecaptcha();
+        function onRecaptchaSuccess(token) {
+            const tokenInput = document.getElementById('captcha_verified_token');
+            if (tokenInput) {
+                tokenInput.value = token;
             }
         }
-        function onRecaptchaSuccess(token) {
-            document.getElementById('captcha_verified_token').value = token;
-        }
         function onRecaptchaExpired() {
-            document.getElementById('captcha_verified_token').value = "";
+            const tokenInput = document.getElementById('captcha_verified_token');
+            if (tokenInput) {
+                tokenInput.value = "";
+            }
         }
     </script>
 @else
