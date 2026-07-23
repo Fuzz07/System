@@ -96,15 +96,6 @@
     font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   }
 
-  @media (max-width: 480px) {
-    .chatbot-container {
-      bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 12px);
-      left: 50%;
-      right: auto;
-      transform: translateX(-50%);
-    }
-  }
-
   /* Chatbot Label */
   .chatbot-label {
     position: absolute;
@@ -593,11 +584,16 @@
   @media (max-width: 480px) {
     .chatbot-container {
       bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 12px);
-      left: 16px;
-      right: auto;
+      right: 16px;
+      left: auto;
       transform: none;
+      width: auto;
+    }
+
+    .chatbot-container.chatbot-open {
+      left: 16px;
+      right: 16px;
       width: calc(100% - 32px);
-      max-width: 440px;
     }
 
     /* When open on mobile, the window floats above the bottom nav instead of full-screen */
@@ -607,7 +603,7 @@
       left: 0;
       right: 0;
       width: 100%;
-      height: calc(72vh);
+      height: calc(70vh);
       max-height: calc(100vh - (var(--nav-height, 64px) + var(--safe-bottom, 0px) + 32px));
       border-radius: 24px;
       z-index: 99999;
@@ -724,12 +720,14 @@
 
     function openChatbot() {
       chatWindow.classList.add('active');
+      container.classList.add('chatbot-open');
       toggleIcon.className = 'bi bi-chevron-down';
       setTimeout(() => chatbotInput.focus(), 100);
     }
 
     function closeChatbot() {
       chatWindow.classList.remove('active');
+      container.classList.remove('chatbot-open');
       toggleIcon.className = 'bi bi-robot';
     }
 
@@ -780,10 +778,37 @@
       messagesContainer.appendChild(typingDiv);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-      setTimeout(() => {
-        typingDiv.remove();
-        addMessage(getBotResponse(text.toLowerCase()), 'bot');
-      }, 1000);
+      // Try Laravel OpenAI Backend first, fallback to rule-based on failure
+      const chatRoute = "{{ Route::has('student.chatbot.chat') ? route('student.chatbot.chat') : '' }}";
+      if (chatRoute) {
+        fetch(chatRoute, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+          body: JSON.stringify({ message: text })
+        })
+        .then(res => res.json())
+        .then(data => {
+          typingDiv.remove();
+          if (data.success && data.answer) {
+            addMessage(data.answer, 'bot');
+          } else {
+            addMessage(getBotResponse(text.toLowerCase()), 'bot');
+          }
+        })
+        .catch(err => {
+          typingDiv.remove();
+          addMessage(getBotResponse(text.toLowerCase()), 'bot');
+        });
+      } else {
+        setTimeout(() => {
+          typingDiv.remove();
+          addMessage(getBotResponse(text.toLowerCase()), 'bot');
+        }, 800);
+      }
     }
 
     sendBtn.addEventListener('click', () => handleSend());
@@ -797,6 +822,9 @@
         'proposal': "Want to submit a project proposal? 📝\n\nStudent organizations and department representatives can request Supreme Student Council (SSC) funding easily:\n1. Navigate to the <a href='{{ route('student.proposals') }}' class='chat-link'>Proposals Portal</a> on your sidebar.\n2. Click the <b>Submit Proposal</b> button and fill in the project title, expected timeline, and estimated budget.\n3. Once submitted, it will appear on the discussions list for student feedback and voting.\n4. The SSC Board will review and vote on official approval.",
         'feedback': "Your voice is essential to build a better campus! 💬\n\nTo share feedback, suggestions, or concerns with the council:\n1. Open the <a href='{{ route('student.feedback') }}' class='chat-link'>Student Feedback Wall</a>.\n2. Write your message and choose the type (Suggestion, Inquiry, or Concern).\n3. Check <b>Submit Anonymously</b> to keep your identity private if preferred.\n4. All submissions are read and addressed directly by the SSC Executive Committee.",
         'contact': "Let's stay connected! 📞\n\nYou can reach the SSC officers through our official channels:\n• <b>Email:</b> <a href='mailto:ssc.official@mcclawis.edu.ph' class='chat-link'>ssc.official@mcclawis.edu.ph</a>\n• <b>Facebook:</b> <a href='https://www.facebook.com/share/17N13YJMUC/' target='_blank' class='chat-link'>SSC Official Page</a>\n• <b>Office:</b> Student Center, 2nd Floor, MCC Campus\n• <b>Office Hours:</b> Mon-Fri | 8:00 AM – 5:00 PM",
+        'vote': "Interested in participating in the elections? 🗳️\n\nWhen voting is active, you can cast your secure ballot in 3 simple steps:\n1. Open the <a href='{{ route('student.voting') }}' class='chat-link'>Voting Portal</a> on your sidebar.\n2. Review candidate platform and position details.\n3. Select your preferred candidates and tap the <b>Cast Ballot</b> button to safely record your vote.",
+        'voting': "Interested in participating in the elections? 🗳️\n\nWhen voting is active, you can cast your secure ballot in 3 simple steps:\n1. Open the <a href='{{ route('student.voting') }}' class='chat-link'>Voting Portal</a> on your sidebar.\n2. Review candidate platform and position details.\n3. Select your preferred candidates and tap the <b>Cast Ballot</b> button to safely record your vote.",
+        'candidacy': "Are you running for office? 🚀\n\nStudents can file for official candidacy through our platform:\n1. Visit the <a href='{{ route('student.candidacy') }}' class='chat-link'>Candidacy Portal</a>.\n2. Select your desired role and enter your campaign platform details.\n3. Note that eligibility is limited by department restrictions and active election timelines set by the administration.",
         'hello': "Hi there! 👋 I'm your SSC assistant. I can help you with student concerns, proposals, anonymous feedback, and budget tracking. What can I do for you today?",
         'hi': "Hello! 🌟 Hope you're having a good day. Need help with project proposals, tracking budgets, or posting feedback?",
         'thanks': "You're very welcome! Let me know if there's anything else I can do to help you navigate the system. 🚀",
@@ -807,7 +835,7 @@
         if (input.includes(key)) return responses[key];
       }
 
-      return "I'm sorry, I don't have a specific answer for that. \n\nTry asking about: \n• proposals \n• anonymous feedback \n• track budgets \n• contact ssc";
+      return "I'm sorry, I don't have a specific answer for that. \n\nTry asking about: \n• proposals \n• anonymous feedback \n• track budgets \n• contact ssc \n• voting \n• candidacy";
     }
   });
 </script>
