@@ -21,6 +21,9 @@
 </a>
 
 <div class="nav-section-label">Management</div>
+<a href="{{ route('admin.announcements') }}" class="nav-link {{ request()->routeIs('admin.announcements') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-megaphone"></i></span> Announcements
+</a>
 <a href="{{ route('admin.officers') }}" class="nav-link {{ request()->routeIs('admin.officers') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-people"></i></span> Manage Officers
 </a>

@@ -61,6 +61,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/expenses', [Admin\ExpenseController::class, 'index'])->name('expenses');
     Route::post('/expenses/{expense}/review', [Admin\ExpenseController::class, 'review'])->name('expenses.review');
 
+    Route::get('/announcements', [Admin\AnnouncementController::class, 'index'])->name('announcements');
+    Route::post('/announcements', [Admin\AnnouncementController::class, 'store'])->name('announcements.store');
+    Route::delete('/announcements/{announcement}', [Admin\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+
     Route::get('/officers', [Admin\OfficerController::class, 'index'])->name('officers');
     Route::post('/officers', [Admin\OfficerController::class, 'store'])->name('officers.store');
     Route::put('/officers/{user}', [Admin\OfficerController::class, 'update'])->name('officers.update');
