@@ -25,4 +25,8 @@ return [
     'enrollment_fee_amount' => env('SSC_ENROLLMENT_FEE', 50),
     // GCash number to display in student payment instructions
     'gcash_number' => env('SSC_GCASH_NUMBER', ''),
+    // Bank / InstaPay details for admin enrollment payments
+    'bank_name' => env('SSC_BANK_NAME', 'Landbank of the Philippines'),
+    'bank_account_name' => env('SSC_BANK_ACCOUNT_NAME', 'MCC Supreme Student Council'),
+    'bank_account_number' => env('SSC_BANK_ACCOUNT_NUMBER', '1234-5678-90'),
 ];

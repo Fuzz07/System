@@ -31,6 +31,13 @@ class EnrollmentController extends Controller
         $amount = config('ssc.enrollment_fee_amount', 50);
         $currentSy = config('ssc.current_school_year');
 
+        $request->validate([
+            'payment_method' => 'nullable|in:gcash,instapay',
+        ]);
+
+        $method = $request->input('payment_method', 'gcash');
+        $prefix = $method === 'instapay' ? 'INSTAPAY-' : 'GCASH-';
+
         $payment = EnrollmentPayment::where('user_id', $student->id)
             ->where('semester', $currentSy)
             ->orderByDesc('created_at')
@@ -46,9 +53,9 @@ class EnrollmentController extends Controller
                     'user_id' => $student->id,
                     'amount' => $amount,
                     'semester' => $currentSy,
-                    'method' => 'gcash',
+                    'method' => $method,
                     'status' => 'pending',
-                    'reference' => 'GCASH-' . strtoupper(uniqid()),
+                    'reference' => $prefix . strtoupper(uniqid()),
                     'proof_status' => 'pending',
                 ]);
             }
@@ -75,12 +82,13 @@ class EnrollmentController extends Controller
             'user_id' => $student->id,
             'amount' => $amount,
             'semester' => $currentSy,
-            'method' => 'gcash',
+            'method' => $method,
             'status' => 'pending',
-            'reference' => 'GCASH-' . strtoupper(uniqid()),
+            'reference' => $prefix . strtoupper(uniqid()),
             'proof_status' => 'pending',
         ]);
 
-        return redirect()->route('student.enrollment.index')->with('success', 'Payment record created. Please follow the GCash instructions to complete payment and upload proof once sent. Reference: ' . $payment->reference);
+        $methodLabel = $method === 'instapay' ? 'InstaPay' : 'GCash';
+        return redirect()->route('student.enrollment.index')->with('success', 'Payment record created. Please follow the ' . $methodLabel . ' instructions to complete payment and upload proof once sent. Reference: ' . $payment->reference);
     }
 }

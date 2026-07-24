@@ -294,6 +294,13 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
         $currentSy = config('ssc.current_school_year');
         $amount = config('ssc.enrollment_fee_amount', 50);
 
+        $request->validate([
+            'payment_method' => 'nullable|in:gcash,instapay',
+        ]);
+
+        $method = $request->input('payment_method', 'gcash');
+        $prefix = $method === 'instapay' ? 'INSTAPAY-' : 'GCASH-';
+
         $payment = \App\Models\EnrollmentPayment::where('user_id', $student->id)
             ->where('semester', $currentSy)
             ->orderByDesc('created_at')
@@ -306,9 +313,9 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
                     'user_id' => $student->id,
                     'amount' => $amount,
                     'semester' => $currentSy,
-                    'method' => 'gcash',
+                    'method' => $method,
                     'status' => 'pending',
-                    'reference' => 'GCASH-' . strtoupper(uniqid()),
+                    'reference' => $prefix . strtoupper(uniqid()),
                     'proof_status' => 'pending',
                 ]);
             }
@@ -333,13 +340,14 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
             'user_id' => $student->id,
             'amount' => $amount,
             'semester' => $currentSy,
-            'method' => 'gcash',
+            'method' => $method,
             'status' => 'pending',
-            'reference' => 'GCASH-' . strtoupper(uniqid()),
+            'reference' => $prefix . strtoupper(uniqid()),
             'proof_status' => 'pending',
         ]);
 
-        return redirect()->route('mobile.student.enrollment')->with('success', 'Payment record created. Please upload proof after sending GCash payment. Reference: ' . $payment->reference);
+        $methodLabel = $method === 'instapay' ? 'InstaPay' : 'GCash';
+        return redirect()->route('mobile.student.enrollment')->with('success', 'Payment record created. Please upload proof after sending ' . $methodLabel . ' payment. Reference: ' . $payment->reference);
     })->name('enrollment.store');
 
     Route::get('/officers', function () {
