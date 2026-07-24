@@ -90,6 +90,28 @@
                 </button>
             </div>
 
+            <!-- STEP 1.5: OTP Verification -->
+            <div id="step-otp" class="d-none">
+                <div id="otp-message" class="alert alert-info mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;line-height:1.5;"></div>
+
+                <div class="mb-4 text-center">
+                    <label class="form-label-custom d-block mb-2 text-start">6-Digit Verification Code</label>
+                    <input type="text" id="otp_code" class="form-control-custom text-center fw-bold" style="font-size:24px; letter-spacing:8px; max-width:240px; margin:0 auto;" placeholder="000000" maxlength="6" pattern="\d{6}" required>
+                </div>
+
+                <div id="otp-error" class="alert alert-danger d-none mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;"></div>
+
+                <div class="d-flex gap-2">
+                    <button type="button" id="btn-back-to-step1" class="btn-secondary-custom" style="padding:14px; width:110px; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600; border-radius:var(--radius-sm); border:1.5px solid #cbd5e1; background:#fff; color:#475569;">
+                        <i class="bi bi-arrow-left-circle"></i> Edit Info
+                    </button>
+                    <button type="button" id="btn-verify-otp" class="btn-primary-custom flex-grow-1 justify-content-center" style="padding:14px; display:flex; align-items:center; gap:8px;">
+                        <span id="verify-btn-text">Verify Code</span>
+                        <div id="verify-btn-spinner" class="spinner-border spinner-border-sm text-white d-none" role="status"></div>
+                    </button>
+                </div>
+            </div>
+
             <!-- STEP 2: Password Creation & CAPTCHA Verification -->
             <div id="step-2" class="d-none">
                 <div class="alert alert-success mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;">
@@ -132,18 +154,29 @@
     document.addEventListener('DOMContentLoaded', () => {
         const btnNextStep = document.getElementById('btn-next-step');
         const btnBackStep = document.getElementById('btn-back-step');
+        const btnBackToStep1 = document.getElementById('btn-back-to-step1');
+        const btnVerifyOtp = document.getElementById('btn-verify-otp');
+        
         const step1 = document.getElementById('step-1');
+        const stepOtp = document.getElementById('step-otp');
         const step2 = document.getElementById('step-2');
+        
         const step1Error = document.getElementById('step-1-error');
+        const otpError = document.getElementById('otp-error');
+        const otpMessage = document.getElementById('otp-message');
+        
         const nextBtnText = document.getElementById('next-btn-text');
         const nextBtnSpinner = document.getElementById('next-btn-spinner');
+        const verifyBtnText = document.getElementById('verify-btn-text');
+        const verifyBtnSpinner = document.getElementById('verify-btn-spinner');
+        
         const registerForm = document.getElementById('registerForm');
+        const otpCodeInput = document.getElementById('otp_code');
 
         if (!btnNextStep) return;
 
-        // STEP 1 TO STEP 2 transition (with real-time MS account check)
+        // STEP 1 TO STEP 1.5: Send OTP & Ask for code
         btnNextStep.addEventListener('click', async () => {
-            // Find and validate all Step 1 inputs
             const step1Inputs = step1.querySelectorAll('input, select');
             let isStep1Valid = true;
 
@@ -172,8 +205,8 @@
             const csrfToken = registerForm.querySelector('input[name="_token"]').value;
 
             try {
-               const response = await fetch('/register/check-email', {
-                   method: 'POST',
+                const response = await fetch('/register/check-email', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
@@ -189,9 +222,12 @@
                 nextBtnSpinner.classList.add('d-none');
 
                 if (data.success) {
-                    // Smooth Transition to Step 2
+                    // Transition to OTP Code verification step
+                    otpMessage.innerHTML = '<i class="bi bi-envelope-check-fill text-primary"></i> ' + (data.message || 'Verification code sent.');
                     step1.classList.add('d-none');
-                    step2.classList.remove('d-none');
+                    stepOtp.classList.remove('d-none');
+                    otpCodeInput.value = '';
+                    otpCodeInput.focus();
                 } else {
                     step1Error.textContent = data.message || 'Email verification failed.';
                     step1Error.classList.remove('d-none');
@@ -206,7 +242,64 @@
             }
         });
 
-        // STEP 2 TO STEP 1 fallback (Back Button)
+        // STEP 1.5 TO STEP 2: Verify OTP
+        btnVerifyOtp.addEventListener('click', async () => {
+            const otpVal = otpCodeInput.value.trim();
+            if (otpVal.length !== 6) {
+                otpCodeInput.reportValidity();
+                return;
+            }
+
+            btnVerifyOtp.disabled = true;
+            verifyBtnText.textContent = "Verifying Code...";
+            verifyBtnSpinner.classList.remove('d-none');
+            otpError.classList.add('d-none');
+
+            const emailInput = step1.querySelector('input[name="email"]').value;
+            const csrfToken = registerForm.querySelector('input[name="_token"]').value;
+
+            try {
+                const response = await fetch('/register/verify-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({ email: emailInput, otp: otpVal })
+                });
+
+                const data = await response.json();
+
+                btnVerifyOtp.disabled = false;
+                verifyBtnText.textContent = "Verify Code";
+                verifyBtnSpinner.classList.add('d-none');
+
+                if (data.success) {
+                    // Successfully Verified! Move to Password step
+                    stepOtp.classList.add('d-none');
+                    step2.classList.remove('d-none');
+                } else {
+                    otpError.textContent = data.message || 'Invalid verification code.';
+                    otpError.classList.remove('d-none');
+                }
+            } catch (err) {
+                console.error(err);
+                btnVerifyOtp.disabled = false;
+                verifyBtnText.textContent = "Verify Code";
+                verifyBtnSpinner.classList.add('d-none');
+                otpError.textContent = 'Connection error occurred. Please try again.';
+                otpError.classList.remove('d-none');
+            }
+        });
+
+        // Back to Step 1 from OTP
+        btnBackToStep1.addEventListener('click', () => {
+            stepOtp.classList.add('d-none');
+            step1.classList.remove('d-none');
+        });
+
+        // Back to Step 1 from Step 2
         btnBackStep.addEventListener('click', () => {
             step2.classList.add('d-none');
             step1.classList.remove('d-none');

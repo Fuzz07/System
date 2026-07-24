@@ -68,6 +68,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // Exclude AJAX registration check from CSRF validation to prevent 419 mismatches on Vercel
         $middleware->validateCsrfTokens(except: [
             'register/check-email',
+            'register/verify-otp',
         ]);
 
         $middleware->web(append: [

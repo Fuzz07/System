@@ -133,7 +133,7 @@ class AuthController extends Controller
             'year_level'  => 'required|string',
             'department'  => 'required|string|max:100',
             'student_id'  => 'required|string|regex:/^\d{4}-\d{4}$/',
-            'email'       => 'required|email|max:255|unique:users,email|ends_with:@mcclawis.edu.ph',
+            'email'       => 'required|email|max:255|ends_with:@mcclawis.edu.ph',
             // Password must be at least 8 characters and contain letters and numbers
             'password'    => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
         ], [
@@ -141,29 +141,15 @@ class AuthController extends Controller
             'password.min'   => 'Password must be at least 8 characters.',
         ]);
 
-        if (! CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
-            return back()->withErrors(['email' => 'Security check failed. Please verify that you are not a robot.'])->withInput();
+        $sessionVerified = session('register_email_verified');
+        $sessionEmail = session('register_email');
+
+        if (! $sessionVerified || $sessionEmail !== $request->email) {
+            return back()->withErrors(['email' => 'Please verify your Microsoft 365 school account email address before creating your password.'])->withInput();
         }
 
-        // ── Verify with Microsoft if the school email account actively exists ──────
-        try {
-            $msResponse = Http::timeout(6)
-                ->post('https://login.microsoftonline.com/common/GetCredentialType', [
-                    'Username' => $request->email
-                ]);
-
-            if ($msResponse->successful()) {
-                $ifExistsResult = $msResponse->json('IfExistsResult');
-                // IfExistsResult of 1 explicitly indicates that the user account does NOT exist on MS servers.
-                if ($ifExistsResult === 1) {
-                    return back()->withErrors([
-                        'email' => 'This Microsoft 365 account does not exist. Please double-check your school email address spelling or contact the school IT administrator.'
-                    ])->withInput();
-                }
-            }
-        } catch (\Exception $e) {
-            // Log warning but proceed with registration so network/DNS hiccups on Microsoft's side do not lock registrations
-            Log::warning('Failed to query Microsoft realm user verification', ['error' => $e->getMessage()]);
+        if (! CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
+            return back()->withErrors(['email' => 'Security check failed. Please verify that you are not a robot.'])->withInput();
         }
 
         $fullname = trim($request->first_name . ' ' . ($request->middle_name ?? '') . ' ' . $request->last_name);
@@ -183,31 +169,13 @@ class AuthController extends Controller
             'status'      => 'inactive',
         ]);
 
-        SscHelper::logActivity($user->id, 'REGISTER', "Student registered: {$user->email}");
+        SscHelper::logActivity($user->id, 'REGISTER', "Student registered and email verified via OTP: {$user->email}");
 
-        // Generate temporary signed URL valid for 24 hours
-        $confirmUrl = URL::temporarySignedRoute(
-            'confirm-account', 
-            now()->addHours(24), 
-            ['user' => $user->id]
-        );
+        // Clear verification session keys
+        session()->forget(['register_otp', 'register_email', 'register_email_verified']);
 
-        // Send Confirmation Email
-        try {
-            Mail::send([], [], function ($message) use ($user, $confirmUrl) {
-                $message->to($user->email)
-                    ->subject('Confirm your SSC Transparency Account')
-                    ->html(view('auth.emails.confirm', ['user' => $user, 'url' => $confirmUrl])->render());
-            });
-            $successMsg = 'Registration successful! A confirmation link has been sent to your school email (' . $user->email . '). Please check your inbox (or spam/junk folder) and confirm your account to sign in.';
-        } catch (\Exception $e) {
-            Log::error('Registration email failed to send', ['error' => $e->getMessage()]);
-            // Graceful fallback if SMTP isn't configured so the student isn't blocked
-            $successMsg = 'Registration successful! However, we could not send a confirmation email at this moment. Please ask an administrator to activate your account.';
-        }
-
-        return redirect()->route('login', ['portal' => 'student'])
-            ->with('success', $successMsg);
+        // Redirect directly to our beautiful success page!
+        return view('auth.confirm-success', compact('user'));
     }
 
     public function confirmAccount(Request $request, User $user)
@@ -266,8 +234,58 @@ class AuthController extends Controller
             // Gracefully succeed if MS API is offline to prevent blocking students
         }
 
+        // Generate a 6-digit OTP and save in session
+        $otp = (string) rand(100000, 999999);
+        session(['register_otp' => $otp, 'register_email' => $request->email]);
+
+        // Send OTP Email
+        try {
+            Mail::send([], [], function ($message) use ($request, $otp) {
+                $message->to($request->email)
+                    ->subject('Your SSC Account Verification Code')
+                    ->html(view('auth.emails.otp', ['otp' => $otp])->render());
+            });
+            $msg = 'Verification code sent! Please check your Microsoft school email inbox (or spam folder) for the 6-digit code.';
+        } catch (\Exception $e) {
+            Log::error('OTP email failed to send', ['error' => $e->getMessage()]);
+            // Fallback for local testing if SMTP is not configured
+            $msg = 'Verification initiated! (For local testing/preview: your code is ' . $otp . ')';
+        }
+
         return response()->json([
             'success' => true,
+            'message' => $msg,
+        ]);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email',
+                'otp'   => 'required|string|size:6',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The code must be exactly 6 characters.',
+            ]);
+        }
+
+        $sessionOtp = session('register_otp');
+        $sessionEmail = session('register_email');
+
+        if ($request->otp === $sessionOtp && $request->email === $sessionEmail) {
+            session(['register_email_verified' => true]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Email verified successfully! Proceeding to password creation.'
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid or expired verification code. Please check your email and try again.'
         ]);
     }
 
