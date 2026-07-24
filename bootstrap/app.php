@@ -69,6 +69,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'register/check-email',
             'register/verify-otp',
+            'student/chatbot/chat',
         ]);
 
         $middleware->web(append: [
