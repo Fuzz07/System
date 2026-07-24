@@ -81,7 +81,8 @@ class CaptchaController extends Controller
             return false;
         }
 
-        if ($token === 'local_verified_token') {
+        $isAndroidApp = str_contains(request()->userAgent() ?? '', 'SSCStudentApp');
+        if ($token === 'local_verified_token' && ($isSecretPlaceholder || $isAndroidApp)) {
             return true;
         }
 

@@ -1,8 +1,12 @@
 @php
     $recaptchaSiteKey = trim(env('RECAPTCHA_SITE_KEY', ''));
     
-    // Detect if keys are empty or set to common development placeholders
-    $isPlaceholder = empty($recaptchaSiteKey) || 
+    // Detect if loading inside our official native Android APK (User Agent check)
+    $isAndroidApp = str_contains(request()->userAgent() ?? '', 'SSCStudentApp');
+    
+    // Detect if keys are empty, set to common development placeholders, or requested inside the APK
+    $isPlaceholder = $isAndroidApp ||
+                     empty($recaptchaSiteKey) || 
                      str_contains(strtolower($recaptchaSiteKey), 'your-google') || 
                      str_contains(strtolower($recaptchaSiteKey), 'your_actual') || 
                      str_contains(strtolower($recaptchaSiteKey), 'placeholder') || 
