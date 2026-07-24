@@ -172,8 +172,8 @@
             const csrfToken = registerForm.querySelector('input[name="_token"]').value;
 
             try {
-                const response = await fetch("{{ route('register.check-email') }}", {
-                    method: 'POST',
+               const response = await fetch('/register/check-email', {
+                   method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
