@@ -20,6 +20,7 @@ class SscHelper
             'Pending'  => '<span class="badge badge-pending">Pending</span>',
             'Rejected' => '<span class="badge badge-rejected">Rejected</span>',
             'Reviewed' => '<span class="badge" style="background:rgba(14,165,233,.1);color:#0ea5e9;">Reviewed</span>',
+            'Replied'  => '<span class="badge" style="background:rgba(16,185,129,.1);color:#10b981;">Replied</span>',
             'active'   => '<span class="badge bg-success">Active</span>',
             'inactive' => '<span class="badge bg-secondary">Inactive</span>',
             default    => '<span class="badge bg-secondary">' . e($status) . '</span>',

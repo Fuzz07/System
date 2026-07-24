@@ -21,7 +21,7 @@ class FeedbackController extends Controller
         $feedback->update([
             'reply'      => $request->reply,
             'replied_by' => Auth::id(),
-            'status'     => 'Reviewed',
+            'status'     => 'Replied',
         ]);
         return redirect()->route('admin.feedback')->with('success', 'Reply sent successfully.');
     }
