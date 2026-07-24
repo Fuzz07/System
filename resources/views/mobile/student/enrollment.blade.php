@@ -57,7 +57,7 @@
 
                     <!-- Open GCash App Deep Link Button -->
                     <div style="margin-top: 12px;">
-                        <a href="gcash://" class="m-btn m-btn-primary" style="display:inline-flex; align-items:center; gap:8px; justify-content:center; background:#0055ff; border:none; padding:10px 20px; border-radius:12px; font-weight:700; font-size:0.85rem; color:#fff; text-decoration:none;">
+                        <a href="javascript:void(0)" onclick="openGcash()" class="m-btn m-btn-primary" style="display:inline-flex; align-items:center; gap:8px; justify-content:center; background:#0055ff; border:none; padding:10px 20px; border-radius:12px; font-weight:700; font-size:0.85rem; color:#fff; text-decoration:none;">
                             <i class="bi bi-box-arrow-up-right"></i> Open GCash App
                         </a>
                     </div>
@@ -111,6 +111,16 @@
         } else {
             gcash.style.display = 'block';
             instapay.style.display = 'none';
+        }
+    }
+
+    function openGcash() {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            window.location.href = 'gcash://';
+        } else {
+            // High-speed Android Intent directly invoking Package Manager
+            window.location.href = 'intent://#Intent;scheme=gcash;package=com.globe.gcash.android;end';
         }
     }
 </script>
