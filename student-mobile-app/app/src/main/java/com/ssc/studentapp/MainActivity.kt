@@ -146,6 +146,25 @@ class MainActivity : AppCompatActivity() {
                     return false  // Let the WebView handle it internally
                 }
 
+                // Handle standard Chrome intent:// deep links
+                if (url.startsWith("intent://")) {
+                    try {
+                        val intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
+                        if (intent != null) {
+                            startActivity(intent)
+                            return true
+                        }
+                    } catch (e: Exception) {
+                        try {
+                            val packageName = "com.globe.gcash.android"
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
+                        } catch (e2: Exception) {
+                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.globe.gcash.android")))
+                        }
+                        return true
+                    }
+                }
+
                 // Handle external links (tel, mailto, maps) outside WebView
                 return try {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
