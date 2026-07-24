@@ -133,10 +133,11 @@ class AuthController extends Controller
             'year_level'  => 'required|string',
             'department'  => 'required|string|max:100',
             'student_id'  => 'required|string|regex:/^\d{4}-\d{4}$/',
-            'email'       => 'required|email|max:255|ends_with:@mcclawis.edu.ph',
+            'email'       => 'required|email|max:255|unique:users,email|ends_with:@mcclawis.edu.ph',
             // Password must be at least 8 characters and contain letters and numbers
             'password'    => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
         ], [
+            'email.unique'   => 'This school email address is already registered. Please log in instead.',
             'password.regex' => 'Password must contain at least one letter and one number.',
             'password.min'   => 'Password must be at least 8 characters.',
         ]);
