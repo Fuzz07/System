@@ -30,6 +30,7 @@
         <td>
             @if($u->id !== Auth::id())
             <div class="d-flex gap-1 flex-wrap">
+                <button class="btn-sm-action btn btn-outline-primary" style="font-size:.72rem;" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $u->id }}"><i class="bi bi-pencil-square"></i></button>
                 <form method="POST" action="{{ route('admin.officers.role', $u) }}" class="d-inline">@csrf @method('PATCH')
                     <select name="new_role" class="form-select-custom d-inline" style="width:auto;padding:4px 8px;font-size:.72rem;" onchange="this.form.submit()">
                         @foreach(['officer','treasurer'] as $r)<option value="{{ $r }}" {{ $u->role === $r ? 'selected' : '' }}>{{ ucfirst($r) }}</option>@endforeach
@@ -42,6 +43,38 @@
                     <button class="btn-sm-action btn btn-outline-danger" style="font-size:.72rem;"><i class="bi bi-trash"></i></button>
                 </form>
             </div>
+
+            {{-- Edit User Modal --}}
+            <div class="modal fade" id="editUserModal{{ $u->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--radius);border:none;">
+                <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;color:white;"><i class="bi bi-pencil-square"></i> Edit Officer: {{ $u->fullname }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <form method="POST" action="{{ route('admin.officers.update', $u) }}">@csrf @method('PUT')
+                    <div class="modal-body p-4 text-start">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4"><label class="form-label-custom">First Name</label><input type="text" name="first_name" value="{{ $u->first_name }}" class="form-control-custom" required></div>
+                            <div class="col-md-4"><label class="form-label-custom">Middle Name</label><input type="text" name="middle_name" value="{{ $u->middle_name }}" class="form-control-custom"></div>
+                            <div class="col-md-4"><label class="form-label-custom">Last Name</label><input type="text" name="last_name" value="{{ $u->last_name }}" class="form-control-custom" required></div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4"><label class="form-label-custom">Age</label><input type="number" name="age" value="{{ $u->age }}" class="form-control-custom" min="10" required></div>
+                            <div class="col-md-4"><label class="form-label-custom">Year Level</label><select name="year_level" class="form-select-custom" required><option value="">Select</option>@foreach(['1st Year','2nd Year','3rd Year','4th Year','5th Year'] as $y)<option {{ $u->year_level === $y ? 'selected' : '' }}>{{ $y }}</option>@endforeach</select></div>
+                            <div class="col-md-4"><label class="form-label-custom">Department</label><input type="text" name="department" value="{{ $u->department }}" class="form-control-custom" placeholder="e.g. BSIT" required></div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6"><label class="form-label-custom">Student ID</label><input type="text" name="student_id" value="{{ $u->student_id }}" class="form-control-custom" pattern="\d{4}-\d{4}" placeholder="YYYY-XXXX" required></div>
+                            <div class="col-md-6"><label class="form-label-custom">MS Account</label><input type="email" name="email" value="{{ $u->email }}" class="form-control-custom" placeholder="user@mcclawis.edu.ph" required></div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6"><label class="form-label-custom">Password <span class="text-muted" style="font-weight:400;font-size:.78rem;">(Leave blank to keep current)</span></label><input type="password" name="password" class="form-control-custom" minlength="6"></div>
+                            <div class="col-md-6"><label class="form-label-custom">Role</label><select name="role" class="form-select-custom">@foreach(['officer','treasurer'] as $r)<option value="{{ $r }}" {{ $u->role === $r ? 'selected' : '' }}>{{ ucfirst($r) }}</option>@endforeach</select></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn-primary-custom"><i class="bi bi-check2"></i> Save Changes</button>
+                    </div>
+                </form>
+            </div></div></div>
             @else <span class="badge bg-secondary" style="font-size:.68rem;">You</span>
             @endif
         </td>

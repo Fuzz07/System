@@ -8,6 +8,13 @@
                      str_contains(strtolower($recaptchaSiteKey), 'placeholder') || 
                      str_contains(strtolower($recaptchaSiteKey), 'your-key') ||
                      str_contains($recaptchaSiteKey, '6LdXXXXXXXX');
+
+    // For the mobile app, force the placeholder treatment (elegant local fallback)
+    // because Google reCAPTCHA v2 is highly unreliable inside Android WebViews.
+    $isAndroidApp = str_contains(request()->userAgent() ?? '', 'SSCStudentApp');
+    if ($isAndroidApp) {
+        $isPlaceholder = true;
+    }
 @endphp
 
 @if(!$isPlaceholder)

@@ -63,6 +63,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 
     Route::get('/officers', [Admin\OfficerController::class, 'index'])->name('officers');
     Route::post('/officers', [Admin\OfficerController::class, 'store'])->name('officers.store');
+    Route::put('/officers/{user}', [Admin\OfficerController::class, 'update'])->name('officers.update');
     Route::patch('/officers/{user}/toggle', [Admin\OfficerController::class, 'toggleStatus'])->name('officers.toggle');
     Route::patch('/officers/{user}/role', [Admin\OfficerController::class, 'changeRole'])->name('officers.role');
     Route::delete('/officers/{user}', [Admin\OfficerController::class, 'destroy'])->name('officers.destroy');

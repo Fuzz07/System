@@ -69,7 +69,7 @@ class AnnouncementsActivity : AppCompatActivity() {
             try {
                 // Determine base URL from portal URL
                 val baseUrl = portalUrl.replace("/login/student", "").trimEnd('/')
-                val url = URL("$baseUrl/api/announcements")
+                val url = URL("$baseUrl/student/api/announcements")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "GET"
                 conn.connectTimeout = 8000

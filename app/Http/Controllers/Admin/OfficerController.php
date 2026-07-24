@@ -67,6 +67,48 @@ class OfficerController extends Controller
         return redirect()->route('admin.officers')->with('success', 'User created successfully.');
     }
 
+    public function update(Request $request, User $user)
+    {
+        $this->authorizeManagedOfficer($user);
+
+        $request->validate([
+            'first_name'  => 'required|string|max:100',
+            'middle_name' => 'nullable|string|max:100',
+            'last_name'   => 'required|string|max:100',
+            'age'         => 'required|integer|min:10',
+            'year_level'  => 'required|string',
+            'department'  => 'required|string|max:100',
+            'student_id'  => 'required|string',
+            'email'       => 'required|email|unique:users,email,' . $user->id . '|ends_with:@mcclawis.edu.ph',
+            'password'    => 'nullable|min:6',
+            'role'        => 'required|in:officer,treasurer',
+        ]);
+
+        $fullname = trim("{$request->first_name} {$request->middle_name} {$request->last_name}");
+
+        $updateData = [
+            'first_name'  => $request->first_name,
+            'middle_name' => $request->middle_name,
+            'last_name'   => $request->last_name,
+            'age'         => $request->age,
+            'year_level'  => $request->year_level,
+            'department'  => $request->department,
+            'student_id'  => $request->student_id,
+            'fullname'    => $fullname,
+            'email'       => $request->email,
+            'role'        => $request->role,
+        ];
+
+        if ($request->filled('password')) {
+            $updateData['password'] = $request->password;
+        }
+
+        $user->update($updateData);
+
+        SscHelper::logActivity(Auth::id(), 'USER_UPDATE', "Updated user: {$request->email} ({$request->role})");
+        return redirect()->route('admin.officers')->with('success', 'User updated successfully.');
+    }
+
     public function toggleStatus(User $user)
     {
         $this->authorizeManagedOfficer($user);

@@ -58,7 +58,8 @@ class MainActivity : AppCompatActivity() {
 
     // Default portal URL. For Android emulators, debug uses local host mapping while release uses the production endpoint.
     private val portalUrl = BuildConfig.PORTAL_URL
-    private val enrollmentUrl = portalUrl.replace("/login/student", "") + "/m/student/enrollment"
+    private val baseUrl = portalUrl.replace("/login/student", "").trimEnd('/')
+    private val enrollmentUrl = "$baseUrl/m/student/enrollment"
 
     private fun isLoginUrl(url: String?): Boolean {
         if (url.isNullOrBlank()) return false
@@ -119,6 +120,7 @@ class MainActivity : AppCompatActivity() {
                 super.onPageFinished(view, url)
                 progressBar.visibility = View.GONE
                 swipeRefresh.isRefreshing = false
+                CookieManager.getInstance().flush()
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -343,7 +345,7 @@ class MainActivity : AppCompatActivity() {
     private fun sendFCMTokenToBackend(token: String) {
         Thread {
             try {
-                val url = java.net.URL("$portalUrl/api/device-token")
+                val url = java.net.URL("$baseUrl/student/api/device-token")
                 val conn = url.openConnection() as java.net.HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -385,7 +387,7 @@ class MainActivity : AppCompatActivity() {
     private fun fetchUnreadNotifications() {
         Thread {
             try {
-                val url = java.net.URL("$portalUrl/student/notifications/unread-count")
+                val url = java.net.URL("$baseUrl/student/notifications/unread-count")
                 val conn = url.openConnection() as java.net.HttpURLConnection
                 conn.requestMethod = "GET"
                 conn.connectTimeout = 8000
@@ -436,6 +438,11 @@ class MainActivity : AppCompatActivity() {
                 webView.loadUrl(portalUrl)
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        CookieManager.getInstance().flush()
     }
 
     // Handle Back Press to navigate WebView history rather than closing the activity
