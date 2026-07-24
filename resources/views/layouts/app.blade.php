@@ -94,7 +94,7 @@
             @yield('content')
         </main>
     </div>
-    @if(session('show_app_download'))
+    @if(session('show_app_download') && !str_contains(request()->userAgent() ?? '', 'SSCStudentApp'))
     <!-- App Download Invitation Modal -->
     <div class="modal fade" id="appDownloadModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="appDownloadModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">

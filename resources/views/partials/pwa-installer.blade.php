@@ -371,8 +371,8 @@ Usage:
             const banner = document.getElementById('pwaInstallBanner');
             if (!banner) return;
 
-            // Don't show if running inside the standalone app already
-            if (isPwaStandalone) {
+            // Don't show if running inside the standalone app already or inside our official Android APK
+            if (isPwaStandalone || navigator.userAgent.includes('SSCStudentApp')) {
                 banner.style.display = 'none';
                 return;
             }
