@@ -37,14 +37,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "PORTAL_URL", "\"https://system-five-omega-53.vercel.app/login/student\"")
-        buildConfigField("String", "APP_HOST", "\"system-five-omega-53.vercel.app\"")
+        buildConfigField("String", "PORTAL_URL", "\"https://supremestudentcouncil.vercel.app/login/student\"")
+        buildConfigField("String", "APP_HOST", "\"supremestudentcouncil.vercel.app\"")
     }
 
     buildTypes {
         debug {
-            buildConfigField("String", "PORTAL_URL", "\"https://system-five-omega-53.vercel.app/login/student\"")
-            buildConfigField("String", "APP_HOST", "\"system-five-omega-53.vercel.app\"")
+            buildConfigField("String", "PORTAL_URL", "\"https://supremestudentcouncil.vercel.app/login/student\"")
+            buildConfigField("String", "APP_HOST", "\"supremestudentcouncil.vercel.app\"")
         }
         release {
             isMinifyEnabled = false
@@ -52,8 +52,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "PORTAL_URL", "\"https://system-five-omega-53.vercel.app/login/student\"")
-            buildConfigField("String", "APP_HOST", "\"system-five-omega-53.vercel.app\"")
+            buildConfigField("String", "PORTAL_URL", "\"https://supremestudentcouncil.vercel.app/login/student\"")
+            buildConfigField("String", "APP_HOST", "\"supremestudentcouncil.vercel.app\"")
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
