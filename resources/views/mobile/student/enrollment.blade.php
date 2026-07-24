@@ -52,7 +52,14 @@
                     <div style="font-size: 0.88rem; line-height: 1.6; color:#4b5563;">
                         <p style="margin-bottom:6px;">1. Send exactly <strong>{{ \App\Helpers\SscHelper::formatCurrency($amount) }}</strong> to the Admin's GCash number: <strong style="color:#111827;">{{ config('ssc.gcash_number') ?: 'GCASH_NUMBER' }}</strong></p>
                         <p style="margin-bottom:6px;">2. Enter this reference: <strong style="background:#fef08a; padding:2px 6px; border-radius:4px; font-family:monospace; color:#111827;">{{ $payment->reference ?? 'will be generated' }}</strong> inside the GCash message box.</p>
-                        <p style="margin-bottom:0;">3. Take a screenshot of the GCash receipt and upload it below.</p>
+                        <p style="margin-bottom:12px;">3. Take a screenshot of the GCash receipt and upload it below.</p>
+                    </div>
+
+                    <!-- Open GCash App Deep Link Button -->
+                    <div style="margin-top: 12px;">
+                        <a href="gcash://" class="m-btn m-btn-primary" style="display:inline-flex; align-items:center; gap:8px; justify-content:center; background:#0055ff; border:none; padding:10px 20px; border-radius:12px; font-weight:700; font-size:0.85rem; color:#fff; text-decoration:none;">
+                            <i class="bi bi-box-arrow-up-right"></i> Open GCash App
+                        </a>
                     </div>
                 </div>
 

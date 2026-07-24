@@ -94,6 +94,13 @@
                             <li>Enter the generated reference code: <strong class="text-dark bg-warning px-2 py-0.5 rounded-2 fw-bold" style="font-size:0.85rem; font-family:monospace;">{{ $payment->reference ?? 'will be generated' }}</strong> inside the GCash **Message/Notes** field.</li>
                             <li>After completing the transfer, take a screenshot of your official receipt and upload it in the form below.</li>
                         </ol>
+
+                        <!-- Open GCash App Deep Link Button (Visible on Mobile Only) -->
+                        <div class="mt-3 d-md-none">
+                            <a href="gcash://" class="btn btn-primary d-inline-flex align-items-center gap-2" style="border-radius:10px; padding:10px 20px; font-weight:700; background:#0055ff; border:none; box-shadow: 0 4px 12px rgba(0, 85, 255, 0.25);">
+                                <i class="bi bi-box-arrow-up-right"></i> Open GCash App
+                            </a>
+                        </div>
                     </div>
 
                     <!-- InstaPay / Banking Instructions Panel -->
