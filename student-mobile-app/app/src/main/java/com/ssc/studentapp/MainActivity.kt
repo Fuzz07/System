@@ -121,6 +121,11 @@ class MainActivity : AppCompatActivity() {
                 progressBar.visibility = View.GONE
                 swipeRefresh.isRefreshing = false
                 CookieManager.getInstance().flush()
+
+                // If user successfully navigates into the student portal, re-register their FCM push token
+                if (url != null && (url.contains("/student") || url.contains("/m/student"))) {
+                    resendFCMTokenIfNeeded()
+                }
             }
 
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
@@ -339,6 +344,14 @@ class MainActivity : AppCompatActivity() {
                     .setNegativeButton("Later", null)
                     .show()
             }
+        }
+    }
+
+    private fun resendFCMTokenIfNeeded() {
+        val sharedPref = getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
+        val token = sharedPref.getString("fcm_token", null)
+        if (!token.isNullOrEmpty()) {
+            sendFCMTokenToBackend(token)
         }
     }
 

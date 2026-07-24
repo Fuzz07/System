@@ -115,7 +115,9 @@ class AuthController extends Controller
         RateLimiter::clear($throttleKey);
         session()->forget('captcha_token');
 
-        Auth::login($user);
+        // Automatically issue a persistent remember cookie for users logging in from the mobile app
+        $isAndroidApp = str_contains(request()->userAgent() ?? '', 'SSCStudentApp');
+        Auth::login($user, $isAndroidApp);
         $request->session()->regenerate();
 
         SscHelper::logActivity($user->id, 'LOGIN', "Logged in via {$portal} portal");
