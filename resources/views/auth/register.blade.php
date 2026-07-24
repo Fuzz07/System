@@ -53,9 +53,13 @@
                     </div>
                 </div>
                 <div class="row g-2 mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-5">
+                        <label class="form-label-custom">Date of Birth</label>
+                        <input type="date" id="dob_input" name="dob" class="form-control-custom" value="{{ old('dob') }}" max="{{ date('Y-m-d', strtotime('-10 years')) }}" required>
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label-custom">Age</label>
-                        <input type="number" name="age" class="form-control-custom" min="10" value="{{ old('age') }}" required>
+                        <input type="number" id="age_input" name="age" class="form-control-custom bg-light" value="{{ old('age') }}" readonly tabindex="-1" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label-custom">Year Level</label>
@@ -66,17 +70,22 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label-custom">Department</label>
-                        <input type="text" name="department" class="form-control-custom" placeholder="e.g. BSIT" value="{{ old('department') }}" required>
-                    </div>
                 </div>
                 <div class="row g-2 mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Course / Dept</label>
+                        <select name="department" class="form-select-custom" required>
+                            <option value="">Select Course</option>
+                            @foreach(['BEED', 'BSED', 'BSBA', 'BSHM', 'BSIT'] as $dept)
+                            <option value="{{ $dept }}" {{ old('department') == $dept ? 'selected' : '' }}>{{ $dept }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label-custom">Student ID</label>
                         <input type="text" name="student_id" class="form-control-custom" pattern="\d{4}-\d{4}" title="Format: YYYY-XXXX" placeholder="YYYY-XXXX" value="{{ old('student_id') }}" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label-custom">MS Account</label>
                         <input type="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph" value="{{ old('email') }}" required>
                     </div>
@@ -323,6 +332,27 @@
                 alert('Please complete the "I am not a robot" security check.');
             }
         });
+
+        // Date of Birth - Auto Age Calculator
+        const dobInput = document.getElementById('dob_input');
+        const ageInput = document.getElementById('age_input');
+        if (dobInput && ageInput) {
+            dobInput.addEventListener('change', () => {
+                if (dobInput.value) {
+                    const dob = new Date(dobInput.value);
+                    const today = new Date();
+                    let age = today.getFullYear() - dob.getFullYear();
+                    const monthDiff = today.getMonth() - dob.getMonth();
+                    
+                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                        age--;
+                    }
+                    ageInput.value = age > 0 ? age : 0;
+                } else {
+                    ageInput.value = '';
+                }
+            });
+        }
     });
 </script>
     </div>
