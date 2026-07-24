@@ -52,7 +52,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
-    private lateinit var enrollmentFab: com.google.android.material.floatingactionbutton.FloatingActionButton
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
@@ -74,7 +73,6 @@ class MainActivity : AppCompatActivity() {
         webView = findViewById(R.id.webView)
         swipeRefresh = findViewById(R.id.swipeRefresh)
         progressBar = findViewById(R.id.progressBar)
-        enrollmentFab = findViewById(R.id.enrollmentFab)
 
         // Setup Swipe to Refresh
         swipeRefresh.setOnRefreshListener {
@@ -227,22 +225,6 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this@MainActivity, "Cannot open file chooser", Toast.LENGTH_LONG).show()
                     false
                 }
-            }
-        }
-
-        enrollmentFab.setOnClickListener {
-            if (!isNetworkAvailable()) {
-                Toast.makeText(this, "No network available to open enrollment", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            val currentUrl = webView.url
-            if (isLoginUrl(currentUrl)) {
-                webView.loadUrl(enrollmentUrl)
-            } else if (currentUrl != null && currentUrl.contains("/m/student")) {
-                webView.loadUrl(enrollmentUrl)
-            } else {
-                webView.loadUrl(portalUrl)
             }
         }
 
