@@ -216,17 +216,10 @@ class AuthController extends Controller
             abort(401, 'This confirmation link is invalid or has expired.');
         }
 
-        if ($user->status === 'active') {
-            return redirect()->route('login', ['portal' => 'student'])
-                ->with('success', 'Your account is already active. Please sign in.');
-        }
+        SscHelper::logActivity($user->id, 'ACTIVATE_EMAIL', "Student email confirmed successfully: {$user->email}");
 
-        $user->update(['status' => 'active']);
-        
-        SscHelper::logActivity($user->id, 'ACTIVATE_EMAIL', "Student account verified & activated via email: {$user->email}");
-
-        return redirect()->route('login', ['portal' => 'student'])
-            ->with('success', 'Email confirmed successfully! Your account has been activated. You can now log in.');
+        // Render the beautiful confirmation success view passing the student details
+        return view('auth.confirm-success', compact('user'));
     }
 
     public function checkEmail(Request $request)
