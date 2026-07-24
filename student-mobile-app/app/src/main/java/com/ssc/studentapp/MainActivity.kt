@@ -367,7 +367,7 @@ class MainActivity : AppCompatActivity() {
                 conn.doOutput = true
 
                 // Forward cookies from WebView session so the API call is authenticated
-                val cookie = CookieManager.getInstance().getCookie(portalUrl)
+                val cookie = CookieManager.getInstance().getCookie(url.toString())
                 if (!cookie.isNullOrEmpty()) {
                     conn.setRequestProperty("Cookie", cookie)
                 }
@@ -406,7 +406,7 @@ class MainActivity : AppCompatActivity() {
                 conn.connectTimeout = 8000
                 conn.readTimeout = 8000
                 // Forward cookies from WebView session so the API call is authenticated
-                val cookie = CookieManager.getInstance().getCookie(portalUrl)
+                val cookie = CookieManager.getInstance().getCookie(url.toString())
                 if (!cookie.isNullOrEmpty()) {
                     conn.setRequestProperty("Cookie", cookie)
                 }

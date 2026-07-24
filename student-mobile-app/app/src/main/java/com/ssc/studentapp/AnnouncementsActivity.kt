@@ -76,7 +76,7 @@ class AnnouncementsActivity : AppCompatActivity() {
                 conn.readTimeout = 8000
 
                 // Attach cookies to keep authenticated
-                val cookie = CookieManager.getInstance().getCookie(portalUrl)
+                val cookie = CookieManager.getInstance().getCookie(url.toString())
                 if (!cookie.isNullOrEmpty()) {
                     conn.setRequestProperty("Cookie", cookie)
                 }
