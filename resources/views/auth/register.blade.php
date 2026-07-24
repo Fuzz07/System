@@ -185,7 +185,8 @@
         if (!btnNextStep) return;
 
         // STEP 1 TO STEP 1.5: Send OTP & Ask for code
-        btnNextStep.addEventListener('click', async () => {
+        btnNextStep.addEventListener('click', async (e) => {
+            if (e) e.preventDefault();
             const step1Inputs = step1.querySelectorAll('input, select');
             let isStep1Valid = true;
 
@@ -252,7 +253,8 @@
         });
 
         // STEP 1.5 TO STEP 2: Verify OTP
-        btnVerifyOtp.addEventListener('click', async () => {
+        btnVerifyOtp.addEventListener('click', async (e) => {
+            if (e) e.preventDefault();
             const otpVal = otpCodeInput.value.trim();
             if (otpVal.length !== 6) {
                 otpCodeInput.reportValidity();
@@ -316,6 +318,12 @@
 
         // Step 2 Form validation (Password Match)
         registerForm.addEventListener('submit', (e) => {
+            // Block submit completely if Step 2 is not visible yet!
+            if (step2.classList.contains('d-none')) {
+                e.preventDefault();
+                return false;
+            }
+
             const password = document.getElementById('register_password').value;
             const confirmPassword = document.getElementById('register_password_confirmation').value;
 
