@@ -37,6 +37,12 @@
         </div>
         @endif
 
+        @if(session('success'))
+        <div class="alert alert-success" style="border-radius:var(--radius-sm);font-size:.85rem;">
+            {{ session('success') }}
+        </div>
+        @endif
+
         <form method="POST" action="{{ route('login.submit') }}" id="loginForm">
             @csrf
             <input type="hidden" name="portal" value="{{ $portal }}">
