@@ -71,6 +71,9 @@ class AnnouncementsActivity : AppCompatActivity() {
     }
 
     private fun fetchAnnouncements() {
+        // Retrieve cookies on the MAIN thread to guarantee thread-safe, accurate session cookies!
+        val cookie = CookieManager.getInstance().getCookie(portalUrl) ?: ""
+
         thread {
             try {
                 // Determine base URL from portal URL
@@ -98,8 +101,7 @@ class AnnouncementsActivity : AppCompatActivity() {
                 conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10) SSCStudentApp/1.0")
 
                 // Attach cookies to keep authenticated
-                val cookie = CookieManager.getInstance().getCookie(url.toString())
-                if (!cookie.isNullOrEmpty()) {
+                if (cookie.isNotEmpty()) {
                     conn.setRequestProperty("Cookie", cookie)
                 }
 

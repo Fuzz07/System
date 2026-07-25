@@ -78,6 +78,9 @@ class ChatbotActivity : AppCompatActivity() {
         addMessage("Thinking...", "bot")
         val typingIndex = messagesList.size - 1
 
+        // Retrieve cookies on the MAIN thread to guarantee thread-safe, accurate session cookies!
+        val cookie = CookieManager.getInstance().getCookie(portalUrl) ?: ""
+
         thread {
             try {
                 var baseUrl = portalUrl
@@ -107,8 +110,7 @@ class ChatbotActivity : AppCompatActivity() {
                 conn.doOutput = true
 
                 // Retrieve and attach active WebView session cookies
-                val cookie = CookieManager.getInstance().getCookie(url.toString())
-                if (!cookie.isNullOrEmpty()) {
+                if (cookie.isNotEmpty()) {
                     conn.setRequestProperty("Cookie", cookie)
                 }
 
