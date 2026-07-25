@@ -132,13 +132,17 @@ class MainActivity : AppCompatActivity() {
                 val url = request?.url?.toString() ?: return false
 
                 if (url.contains("chatbot-native")) {
-                    val intent = Intent(this@MainActivity, ChatbotActivity::class.java)
+                    val intent = Intent(this@MainActivity, ChatbotActivity::class.java).apply {
+                        putExtra("portal_url", webView.url ?: portalUrl)
+                    }
                     startActivity(intent)
                     return true
                 }
 
                 if (url.contains("/m/student/announcements") || url.contains("/student/announcements")) {
-                    val intent = Intent(this@MainActivity, AnnouncementsActivity::class.java)
+                    val intent = Intent(this@MainActivity, AnnouncementsActivity::class.java).apply {
+                        putExtra("portal_url", webView.url ?: portalUrl)
+                    }
                     startActivity(intent)
                     return true
                 }

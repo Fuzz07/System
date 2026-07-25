@@ -30,11 +30,13 @@ class ChatbotActivity : AppCompatActivity() {
     private lateinit var buttonSend: MaterialButton
     private lateinit var adapter: ChatAdapter
     private val messagesList = mutableListOf<ChatMessage>()
-    private val portalUrl = BuildConfig.PORTAL_URL
+    private var portalUrl = BuildConfig.PORTAL_URL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chatbot)
+
+        portalUrl = intent.getStringExtra("portal_url") ?: BuildConfig.PORTAL_URL
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
@@ -78,7 +80,22 @@ class ChatbotActivity : AppCompatActivity() {
 
         thread {
             try {
-                val baseUrl = portalUrl.replace("/login/student", "").trimEnd('/')
+                var baseUrl = portalUrl
+                val pathsToRemove = setOf(
+                    "/login/student",
+                    "/login/auth/student",
+                    "/m/student/announcements",
+                    "/student/announcements",
+                    "/m/student/overview",
+                    "/student/dashboard",
+                    "/m/student",
+                    "/student"
+                )
+                for (path in pathsToRemove) {
+                    baseUrl = baseUrl.replace(path, "")
+                }
+                baseUrl = baseUrl.trimEnd('/')
+
                 val url = URL("$baseUrl/student/chatbot/chat")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"

@@ -37,11 +37,13 @@ class AnnouncementsActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var emptyText: TextView
     private lateinit var adapter: AnnouncementAdapter
-    private val portalUrl = BuildConfig.PORTAL_URL
+    private var portalUrl = BuildConfig.PORTAL_URL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_announcements)
+
+        portalUrl = intent.getStringExtra("portal_url") ?: BuildConfig.PORTAL_URL
 
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
@@ -68,7 +70,22 @@ class AnnouncementsActivity : AppCompatActivity() {
         thread {
             try {
                 // Determine base URL from portal URL
-                val baseUrl = portalUrl.replace("/login/student", "").trimEnd('/')
+                var baseUrl = portalUrl
+                val pathsToRemove = setOf(
+                    "/login/student",
+                    "/login/auth/student",
+                    "/m/student/announcements",
+                    "/student/announcements",
+                    "/m/student/overview",
+                    "/student/dashboard",
+                    "/m/student",
+                    "/student"
+                )
+                for (path in pathsToRemove) {
+                    baseUrl = baseUrl.replace(path, "")
+                }
+                baseUrl = baseUrl.trimEnd('/')
+
                 val url = URL("$baseUrl/student/api/announcements")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "GET"
