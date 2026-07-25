@@ -40,6 +40,13 @@ Route::get('/register', fn() => view('auth.register'))->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
 Route::post('/register/check-email', [AuthController::class, 'checkEmail'])->name('register.check-email');
 Route::post('/register/verify-otp', [AuthController::class, 'verifyOtp'])->name('register.verify-otp');
+
+// --- Password Reset Routes ---
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetCode'])->name('password.email');
+Route::get('/reset-password', [AuthController::class, 'showResetPassword'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+
 Route::get('/confirm-account/{user}', [AuthController::class, 'confirmAccount'])->name('confirm-account');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/captcha/verify', [App\Http\Controllers\CaptchaController::class, 'verifyCaptcha'])->name('captcha.verify');

@@ -139,7 +139,7 @@ class AuthController extends Controller
             // Password must be at least 8 characters and contain letters and numbers
             'password'    => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
         ], [
-            'email.unique'   => 'This school email address is already registered. Please log in instead.',
+            'email.unique'   => 'This Microsoft 365 school account is already registered under another student\'s profile. Please log in or use Forgot Password.',
             'password.regex' => 'Password must contain at least one letter and one number.',
             'password.min'   => 'Password must be at least 8 characters.',
         ]);
@@ -212,7 +212,7 @@ class AuthController extends Controller
         if (User::where('email', $request->email)->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'This school email address is already registered. Please log in.',
+                'message' => 'This Microsoft 365 school account is already registered under another student\'s profile. Please log in or use Forgot Password.',
             ]);
         }
 
@@ -336,5 +336,89 @@ class AuthController extends Controller
     private function throttleKey(Request $request): string
     {
         return 'login|' . Str::lower($request->input('email', '')) . '|' . $request->ip();
+    }
+
+    // ─── Forgot Password / Outlook Reset System ───
+
+    public function showForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|ends_with:@mcclawis.edu.ph',
+        ], [
+            'email.ends_with' => 'The email address must belong to the @mcclawis.edu.ph domain.',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return back()->withErrors(['email' => 'This Microsoft 365 school account is not registered. Please sign up first.'])->withInput();
+        }
+
+        // Generate a 6-digit password reset OTP
+        $otp = (string) rand(100000, 999999);
+        session(['reset_password_otp' => $otp, 'reset_password_email' => $request->email]);
+
+        // Send OTP Email
+        try {
+            Mail::send([], [], function ($message) use ($request, $otp) {
+                $message->to($request->email)
+                    ->subject('Your SSC Password Reset Verification Code')
+                    ->html(view('auth.emails.reset-password', ['otp' => $otp])->render());
+            });
+            $msg = 'Verification code sent! Please check your Outlook/school email inbox for the 6-digit password reset code.';
+        } catch (\Exception $e) {
+            Log::error('Reset password email failed to send', ['error' => $e->getMessage()]);
+            // Fallback for local testing if SMTP is not configured
+            $msg = 'Verification initiated! (For local testing/preview: your code is ' . $otp . ')';
+        }
+
+        return redirect()->route('password.reset')->with('success', $msg);
+    }
+
+    public function showResetPassword()
+    {
+        return view('auth.reset-password');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email'    => 'required|email|ends_with:@mcclawis.edu.ph',
+            'otp'      => 'required|string|size:6',
+            'password' => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
+        ], [
+            'otp.size'       => 'The verification code must be exactly 6 digits.',
+            'password.regex' => 'Password must contain at least one letter and one number.',
+            'password.min'   => 'Password must be at least 8 characters.',
+        ]);
+
+        $sessionOtp = session('reset_password_otp');
+        $sessionEmail = session('reset_password_email');
+
+        if ($request->otp !== $sessionOtp || $request->email !== $sessionEmail) {
+            return back()->withErrors(['otp' => 'Invalid or expired verification code. Please check your email and try again.'])->withInput();
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return back()->withErrors(['email' => 'User record not found.'])->withInput();
+        }
+
+        // Update the password
+        $user->update([
+            'password' => $request->password, // automatically hashed by User model casts
+        ]);
+
+        // Clear password reset session keys
+        session()->forget(['reset_password_otp', 'reset_password_email']);
+
+        SscHelper::logActivity($user->id, 'PASSWORD_RESET', "Reset password for: {$user->email}");
+
+        return redirect()->route('login')->with('success', 'Your password has been successfully reset! You can now log in with your new password.');
     }
 }

@@ -53,6 +53,12 @@
                 <input type="password" name="password" class="form-control-custom" placeholder="Enter your password" required>
             </div>
 
+            @if($portal === 'student')
+            <div class="mb-4 text-end" style="margin-top:-16px;">
+                <a href="{{ route('password.request') }}" style="color:var(--primary-light);font-weight:600;font-size:.82rem;text-decoration:none;">Forgot Password?</a>
+            </div>
+            @endif
+
             @include('partials.captcha')
 
             <button type="submit" class="btn-primary-custom w-100 justify-content-center" style="padding:14px;">
