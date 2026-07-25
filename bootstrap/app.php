@@ -102,27 +102,292 @@ $app = Application::configure(basePath: dirname(__DIR__))
                     ? $e->getStatusCode()
                     : 500;
 
-                // Use new \Illuminate\Http\Response() DIRECTLY — NOT response() helper.
-                // response() needs ResponseFactory → ViewFactory → 'view' (may not be bound).
-                // Direct instantiation bypasses the service container entirely.
+                // 1. Return JSON for AJAX, API, or Fetch requests to support graceful Toast/Modal errors
+                if ($request->expectsJson() || $request->ajax()) {
+                    return new \Illuminate\Http\Response(
+                        json_encode([
+                            'success' => false,
+                            'message' => config('app.debug') ? $e->getMessage() : 'An error occurred. Please try again.'
+                        ]),
+                        $status,
+                        ['Content-Type' => 'application/json; charset=utf-8']
+                    );
+                }
+
+                // 2. Return gorgeous, premium HTML pages instead of raw plain-text
                 if (config('app.debug')) {
-                    $body = implode("\n\n", [
-                        '=== Vercel Laravel Error (Debug Mode) ===',
-                        'Exception : ' . get_class($e),
-                        'Message   : ' . $e->getMessage(),
-                        'File      : ' . $e->getFile() . ':' . $e->getLine(),
-                        'Storage   : ' . storage_path(),
-                        'Writable  : ' . (is_writable(storage_path('framework/views')) ? 'YES' : 'NO'),
-                        'Trace     :' . "\n" . $e->getTraceAsString(),
-                    ]);
+                    $body = '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vercel Laravel Error (Debug Mode)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-300: #cbd5e1;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+            --red-500: #ef4444;
+            --red-50: #fef2f2;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: radial-gradient(circle at top right, #fff5f5, #f8fafc);
+            color: var(--slate-800);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .error-card {
+            background: #ffffff;
+            border-radius: 32px;
+            width: 100%;
+            max-width: 640px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(239, 68, 68, 0.05), 0 4px 12px rgba(0, 0, 0, 0.01);
+            border: 1px solid rgba(239, 68, 68, 0.1);
+            animation: floatIn 0.5s ease-out;
+        }
+        @keyframes floatIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: var(--red-50);
+            color: var(--red-500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 24px auto;
+            border: 2px dashed rgba(239, 68, 68, 0.2);
+        }
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--slate-900);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+        .error-message {
+            font-size: 0.95rem;
+            color: var(--slate-700);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .error-code {
+            display: inline-block;
+            background: var(--slate-100);
+            color: var(--slate-700);
+            font-family: monospace;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            border: 1px solid var(--slate-300);
+        }
+        .console-panel {
+            text-align: left;
+            background: #1e293b;
+            color: #38bdf8;
+            font-family: "Fira Code", Monaco, Consolas, monospace;
+            font-size: 0.78rem;
+            padding: 20px;
+            border-radius: 16px;
+            overflow-x: auto;
+            max-height: 250px;
+            margin-bottom: 24px;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .btn-go-back {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            padding: 14px 28px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-go-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45);
+        }
+    </style>
+</head>
+<body>
+    <div class="error-card">
+        <div class="icon-circle">
+            <i class="bi bi-bug-fill"></i>
+        </div>
+        <h1 class="error-title">Vercel Exception Debug</h1>
+        <p class="error-message">An unhandled server-side exception was thrown during execution.</p>
+        <span class="error-code">Status: \' . $status . \' &bull; \' . get_class($e) . \'</span>
+        
+        <div class="console-panel">
+            <strong>Exception Details:</strong><br>
+            Message: \' . e($e->getMessage()) . \'<br>
+            File: \' . e($e->getFile()) . \':\' . $e->getLine() . \'<br><br>
+            <strong>Stack Trace:</strong><br>
+            \' . e($e->getTraceAsString()) . \'
+        </div>
+
+        <a href="javascript:history.back()" class="btn-go-back">
+            <i class="bi bi-arrow-left"></i> Go Back Safely
+        </a>
+    </div>
+</body>
+</html>\';
                 } else {
-                    $body = 'HTTP ' . $status . ' – An error occurred. Please try again.';
+                    $body = \'<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oops! An Error Occurred</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --slate-100: #f1f5f9;
+            --slate-300: #cbd5e1;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: radial-gradient(circle at top right, #f5f3ff, #f8fafc);
+            color: var(--slate-800);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .error-card {
+            background: #ffffff;
+            border-radius: 32px;
+            width: 100%;
+            max-width: 480px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(79, 70, 229, 0.05), 0 4px 12px rgba(0, 0, 0, 0.01);
+            border: 1px solid rgba(79, 70, 229, 0.06);
+            animation: floatIn 0.5s ease-out;
+        }
+        @keyframes floatIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: rgba(79, 70, 229, 0.06);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 24px auto;
+            border: 2px dashed rgba(79, 70, 229, 0.2);
+        }
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--slate-900);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+        .error-message {
+            font-size: 0.95rem;
+            color: var(--slate-700);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        .error-code {
+            display: inline-block;
+            background: var(--slate-100);
+            color: var(--slate-700);
+            font-family: monospace;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            border: 1px solid var(--slate-300);
+        }
+        .btn-go-back {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            padding: 14px 28px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-go-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45);
+        }
+    </style>
+</head>
+<body>
+    <div class="error-card">
+        <div class="icon-circle">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <h1 class="error-title">Oops! System Encountered an Issue</h1>
+        <p class="error-message">Something went wrong on our end while processing your request. Please try again or go back to the previous screen.</p>
+        <span class="error-code">Error Code: \' . $status . \'</span>
+        <a href="javascript:history.back()" class="btn-go-back">
+            <i class="bi bi-arrow-left"></i> Go Back Safely
+        </a>
+    </div>
+</body>
+</html>\';
                 }
 
                 return new \Illuminate\Http\Response(
                     $body,
                     $status,
-                    ['Content-Type' => 'text/plain; charset=utf-8']
+                    ['Content-Type' => 'text/html; charset=utf-8']
                 );
             });
         }
