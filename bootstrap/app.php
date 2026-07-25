@@ -116,7 +116,14 @@ $app = Application::configure(basePath: dirname(__DIR__))
 
                 // 2. Return gorgeous, premium HTML pages instead of raw plain-text
                 if (config('app.debug')) {
-                    $body = '<!DOCTYPE html>
+                    $errClass = get_class($e);
+                    $errMsg = e($e->getMessage());
+                    $errFile = e($e->getFile());
+                    $errLine = $e->getLine();
+                    $errTrace = e($e->getTraceAsString());
+
+                    $body = <<<HTML
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -246,14 +253,14 @@ $app = Application::configure(basePath: dirname(__DIR__))
         </div>
         <h1 class="error-title">Vercel Exception Debug</h1>
         <p class="error-message">An unhandled server-side exception was thrown during execution.</p>
-        <span class="error-code">Status: \' . $status . \' &bull; \' . get_class($e) . \'</span>
+        <span class="error-code">Status: {$status} &bull; {$errClass}</span>
         
         <div class="console-panel">
             <strong>Exception Details:</strong><br>
-            Message: \' . e($e->getMessage()) . \'<br>
-            File: \' . e($e->getFile()) . \':\' . $e->getLine() . \'<br><br>
+            Message: {$errMsg}<br>
+            File: {$errFile}:{$errLine}<br><br>
             <strong>Stack Trace:</strong><br>
-            \' . e($e->getTraceAsString()) . \'
+            {$errTrace}
         </div>
 
         <a href="javascript:history.back()" class="btn-go-back">
@@ -261,9 +268,11 @@ $app = Application::configure(basePath: dirname(__DIR__))
         </a>
     </div>
 </body>
-</html>\';
+</html>
+HTML;
                 } else {
-                    $body = \'<!DOCTYPE html>
+                    $body = <<<HTML
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -375,13 +384,14 @@ $app = Application::configure(basePath: dirname(__DIR__))
         </div>
         <h1 class="error-title">Oops! System Encountered an Issue</h1>
         <p class="error-message">Something went wrong on our end while processing your request. Please try again or go back to the previous screen.</p>
-        <span class="error-code">Error Code: \' . $status . \'</span>
+        <span class="error-code">Error Code: {$status}</span>
         <a href="javascript:history.back()" class="btn-go-back">
             <i class="bi bi-arrow-left"></i> Go Back Safely
         </a>
     </div>
 </body>
-</html>\';
+</html>
+HTML;
                 }
 
                 return new \Illuminate\Http\Response(
