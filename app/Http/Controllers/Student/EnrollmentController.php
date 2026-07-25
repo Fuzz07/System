@@ -45,7 +45,7 @@ class EnrollmentController extends Controller
 
         if ($request->hasFile('proof')) {
             $request->validate([
-                'proof' => 'required|file|mimes:jpg,jpeg,png,pdf,mp4|max:5120',
+                'proof' => 'required|file|extensions:jpg,jpeg,png,pdf,mp4|max:5120',
             ]);
 
             if (! $payment || $payment->status === 'paid') {

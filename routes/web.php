@@ -312,7 +312,7 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
             ->first();
 
         if ($request->hasFile('proof')) {
-            $request->validate(['proof' => 'required|file|mimes:jpg,jpeg,png,pdf,mp4|max:5120']);
+            $request->validate(['proof' => 'required|file|extensions:jpg,jpeg,png,pdf,mp4|max:5120']);
             if (! $payment || $payment->status === 'paid') {
                 $payment = \App\Models\EnrollmentPayment::create([
                     'user_id' => $student->id,
