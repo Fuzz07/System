@@ -65,11 +65,13 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // Trust all proxies (critical for accurate client IP address resolution under Vercel)
         $middleware->trustProxies(at: '*');
 
-        // Exclude AJAX registration check from CSRF validation to prevent 419 mismatches on Vercel
+        // Exclude AJAX registration and enrollment submissions from CSRF validation to prevent 419 mismatches
         $middleware->validateCsrfTokens(except: [
             'register/check-email',
             'register/verify-otp',
             'student/chatbot/chat',
+            'm/student/enrollment',
+            'student/enrollment',
         ]);
 
         $middleware->web(append: [
