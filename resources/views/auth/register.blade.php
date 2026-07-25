@@ -130,11 +130,21 @@
                 <div class="row g-2 mb-4">
                     <div class="col-md-6">
                         <label class="form-label-custom">Password</label>
-                        <input type="password" name="password" id="register_password" class="form-control-custom" minlength="8" required>
+                        <div style="position: relative;">
+                            <input type="password" name="password" id="register_password" class="form-control-custom" minlength="8" required style="padding-right: 44px;">
+                            <button type="button" onclick="togglePasswordVisibility('register_password', this)" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; color: #64748b; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label-custom">Confirm Password</label>
-                        <input type="password" name="password_confirmation" id="register_password_confirmation" class="form-control-custom" minlength="8" required>
+                        <div style="position: relative;">
+                            <input type="password" name="password_confirmation" id="register_password_confirmation" class="form-control-custom" minlength="8" required style="padding-right: 44px;">
+                            <button type="button" onclick="togglePasswordVisibility('register_password_confirmation', this)" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; color: #64748b; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

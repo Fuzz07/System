@@ -65,7 +65,14 @@
                             <div class="col-md-6"><label class="form-label-custom">MS Account</label><input type="email" name="email" value="{{ $u->email }}" class="form-control-custom" placeholder="user@mcclawis.edu.ph" required></div>
                         </div>
                         <div class="row g-2 mb-3">
-                            <div class="col-md-6"><label class="form-label-custom">Password <span class="text-muted" style="font-weight:400;font-size:.78rem;">(Leave blank to keep current)</span></label><input type="password" name="password" class="form-control-custom" minlength="6"></div>
+                            <div class="col-md-6"><label class="form-label-custom">Password <span class="text-muted" style="font-weight:400;font-size:.78rem;">(Leave blank to keep current)</span></label>
+                                <div style="position: relative;">
+                                    <input type="password" name="password" id="edit_password{{ $u->id }}" class="form-control-custom" minlength="6" style="padding-right: 44px;">
+                                    <button type="button" onclick="togglePasswordVisibility('edit_password{{ $u->id }}', this)" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; color: #64748b; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
                             <div class="col-md-6"><label class="form-label-custom">Role</label><select name="role" class="form-select-custom">@foreach(['officer','treasurer'] as $r)<option value="{{ $r }}" {{ $u->role === $r ? 'selected' : '' }}>{{ ucfirst($r) }}</option>@endforeach</select></div>
                         </div>
                     </div>
@@ -106,7 +113,14 @@
                 <div class="col-md-6"><label class="form-label-custom">MS Account</label><input type="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph" required></div>
             </div>
             <div class="row g-2 mb-3">
-                <div class="col-md-6"><label class="form-label-custom">Password</label><input type="password" name="password" class="form-control-custom" minlength="6" required></div>
+                <div class="col-md-6"><label class="form-label-custom">Password</label>
+                    <div style="position: relative;">
+                        <input type="password" name="password" id="create_password" class="form-control-custom" minlength="6" required style="padding-right: 44px;">
+                        <button type="button" onclick="togglePasswordVisibility('create_password', this)" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; color: #64748b; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
                 <div class="col-md-6"><label class="form-label-custom">Role</label><select name="role" class="form-select-custom">@foreach(['officer','treasurer'] as $r)<option value="{{ $r }}">{{ ucfirst($r) }}</option>@endforeach</select></div>
             </div>
         </div>

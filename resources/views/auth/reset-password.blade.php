@@ -50,12 +50,22 @@
 
             <div class="mb-3">
                 <label class="form-label-custom">New Password</label>
-                <input type="password" name="password" class="form-control-custom" placeholder="Minimum 8 chars, with letters and numbers" required style="background:#fff;">
+                <div style="position: relative;">
+                    <input type="password" name="password" id="reset_password" class="form-control-custom" placeholder="Minimum 8 chars, with letters and numbers" required style="background:#fff; padding-right: 44px;">
+                    <button type="button" onclick="togglePasswordVisibility('reset_password', this)" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; color: #64748b; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="mb-4">
                 <label class="form-label-custom">Confirm New Password</label>
-                <input type="password" name="password_confirmation" class="form-control-custom" placeholder="Confirm your new password" required style="background:#fff;">
+                <div style="position: relative;">
+                    <input type="password" name="password_confirmation" id="reset_password_confirmation" class="form-control-custom" placeholder="Confirm your new password" required style="background:#fff; padding-right: 44px;">
+                    <button type="button" onclick="togglePasswordVisibility('reset_password_confirmation', this)" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; color: #64748b; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
 
             <button type="submit" class="btn-primary-custom w-100 justify-content-center" style="padding:14px;">

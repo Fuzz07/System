@@ -56,7 +56,12 @@
             </div>
             <div class="mb-4">
                 <label class="form-label-custom">Password</label>
-                <input type="password" name="password" class="form-control-custom" placeholder="Enter your password" required>
+                <div style="position: relative;">
+                    <input type="password" name="password" id="login_password" class="form-control-custom" placeholder="Enter your password" required style="padding-right: 44px;">
+                    <button type="button" onclick="togglePasswordVisibility('login_password', this)" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; color: #64748b; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
 
             @if($portal === 'student')
@@ -101,6 +106,7 @@
   }
 </style>
 
+<script src="{{ asset('assets/js/main.js') }}"></script>
 <script>
   document.getElementById('loginForm').addEventListener('submit', () => {
     document.getElementById('login-loading-overlay').style.display = 'flex';
