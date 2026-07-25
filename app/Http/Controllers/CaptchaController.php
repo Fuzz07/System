@@ -37,12 +37,6 @@ class CaptchaController extends Controller
      */
     public static function verifyToken(?string $token): bool
     {
-        // Automatically bypass verification for the mobile APK
-        $isAndroidApp = str_contains(request()->userAgent() ?? '', 'SSCStudentApp');
-        if ($isAndroidApp) {
-            return true;
-        }
-
         // 1. If Google reCAPTCHA keys are present in env, validate with Google API
         $secretKey = trim(env('RECAPTCHA_SECRET_KEY', ''));
         $isSecretPlaceholder = empty($secretKey) || 

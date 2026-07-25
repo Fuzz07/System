@@ -8,14 +8,9 @@
                      str_contains(strtolower($recaptchaSiteKey), 'placeholder') || 
                      str_contains(strtolower($recaptchaSiteKey), 'your-key') ||
                      str_contains($recaptchaSiteKey, '6LdXXXXXXXX');
-
-    $isAndroidApp = str_contains(request()->userAgent() ?? '', 'SSCStudentApp');
 @endphp
 
-@if($isAndroidApp)
-    <!-- Mobile App: Completely bypass CAPTCHA (No visuals, auto-validated) -->
-    <input type="hidden" name="captcha_verified_token" id="captcha_verified_token" value="local_verified_token" />
-@elseif(!$isPlaceholder)
+@if(!$isPlaceholder)
     <!-- Official Google reCAPTCHA v2 Widget (Automatic Render) -->
     <div class="captcha-wrapper mb-4 d-flex justify-content-center">
         <div class="g-recaptcha" 
