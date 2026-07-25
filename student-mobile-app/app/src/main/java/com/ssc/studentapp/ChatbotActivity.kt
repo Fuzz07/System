@@ -101,6 +101,7 @@ class ChatbotActivity : AppCompatActivity() {
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.setRequestProperty("Accept", "application/json")
+                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10) SSCStudentApp/1.0")
                 conn.connectTimeout = 8000
                 conn.readTimeout = 8000
                 conn.doOutput = true

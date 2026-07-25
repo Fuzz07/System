@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -37,6 +38,7 @@ class AnnouncementsActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var emptyText: TextView
     private lateinit var adapter: AnnouncementAdapter
+    private lateinit var skeletonLayout: LinearLayout
     private var portalUrl = BuildConfig.PORTAL_URL
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +55,7 @@ class AnnouncementsActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.recyclerView)
         progressBar = findViewById(R.id.progressBar)
         emptyText = findViewById(R.id.emptyText)
+        skeletonLayout = findViewById(R.id.skeletonLayout)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = AnnouncementAdapter { announcement ->
@@ -62,7 +65,8 @@ class AnnouncementsActivity : AppCompatActivity() {
 
         swipeRefresh.setOnRefreshListener { fetchAnnouncements() }
 
-        progressBar.visibility = View.VISIBLE
+        skeletonLayout.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
         fetchAnnouncements()
     }
 
@@ -91,6 +95,7 @@ class AnnouncementsActivity : AppCompatActivity() {
                 conn.requestMethod = "GET"
                 conn.connectTimeout = 8000
                 conn.readTimeout = 8000
+                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10) SSCStudentApp/1.0")
 
                 // Attach cookies to keep authenticated
                 val cookie = CookieManager.getInstance().getCookie(url.toString())
@@ -121,14 +126,16 @@ class AnnouncementsActivity : AppCompatActivity() {
                     }
 
                     runOnUiThread {
-                        progressBar.visibility = View.GONE
+                        skeletonLayout.visibility = View.GONE
+                        recyclerView.visibility = View.VISIBLE
                         swipeRefresh.isRefreshing = false
                         adapter.submitList(list)
                         emptyText.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
                     }
                 } else {
                     runOnUiThread {
-                        progressBar.visibility = View.GONE
+                        skeletonLayout.visibility = View.GONE
+                        recyclerView.visibility = View.VISIBLE
                         swipeRefresh.isRefreshing = false
                     }
                 }
@@ -136,7 +143,8 @@ class AnnouncementsActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 runOnUiThread {
-                    progressBar.visibility = View.GONE
+                    skeletonLayout.visibility = View.GONE
+                    recyclerView.visibility = View.VISIBLE
                     swipeRefresh.isRefreshing = false
                 }
             }

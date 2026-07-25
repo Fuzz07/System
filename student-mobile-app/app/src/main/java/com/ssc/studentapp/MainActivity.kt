@@ -366,6 +366,7 @@ class MainActivity : AppCompatActivity() {
                 val conn = url.openConnection() as java.net.HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
+                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10) SSCStudentApp/1.0")
                 conn.connectTimeout = 8000
                 conn.readTimeout = 8000
                 conn.doOutput = true
@@ -407,6 +408,7 @@ class MainActivity : AppCompatActivity() {
                 val url = java.net.URL("$baseUrl/student/notifications/unread-count")
                 val conn = url.openConnection() as java.net.HttpURLConnection
                 conn.requestMethod = "GET"
+                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10) SSCStudentApp/1.0")
                 conn.connectTimeout = 8000
                 conn.readTimeout = 8000
                 // Forward cookies from WebView session so the API call is authenticated
