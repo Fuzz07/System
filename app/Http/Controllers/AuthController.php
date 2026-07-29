@@ -37,9 +37,9 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email|max:255',
+            'email' => 'required|email|max:255',
             'password' => 'required|max:255',
-            'portal'   => 'required|in:admin,officer,student,treasurer,dean',
+            'portal' => 'required|in:admin,officer,student,treasurer,dean',
         ]);
 
         // ── Brute-Force / Rate-Limit Check ──────────────────────────────────
@@ -56,28 +56,28 @@ class AuthController extends Controller
             ])->withInput()->with('lockout_seconds', $secondsLeft);
         }
 
-        // ── CAPTCHA Verification (stateless HMAC token) ──────────────────────
-        if (! CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
+
+        if (!CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
             RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
             return back()->withErrors(['email' => 'Security check failed. Please verify that you are not a robot.'])->withInput();
         }
 
-        // ── Role-Portal Mapping ──────────────────────────────────────────────
+
         $portal = $request->portal;
         $allowedRoles = match ($portal) {
-            'admin'     => ['admin'],
+            'admin' => ['admin'],
             'treasurer' => ['treasurer'],
-            'officer'   => ['officer'],
-            'student'   => ['student'],
-            'dean'      => ['dean'],
+            'officer' => ['officer'],
+            'student' => ['student'],
+            'dean' => ['dean'],
         };
 
-        // Fetch user regardless of status so we can detect graduated accounts
+
         $user = User::where('email', $request->email)
             ->whereIn('role', $allowedRoles)
-            ->first();
+            ->first();  
 
-        // Auto-deactivate graduated students if configured
+
         if ($user && $user->isStudent() && config('ssc.auto_deactivate_graduates', true) && $user->isGraduated()) {
             $user->update(['status' => 'inactive']);
             SscHelper::logActivity(null, 'STUDENT_AUTO_DEACTIVATE', "Auto-deactivated graduated student: {$user->email}");
@@ -86,7 +86,7 @@ class AuthController extends Controller
         }
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            // Increment the rate limiter on failure
+
             RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
 
             $attemptsLeft = self::MAX_ATTEMPTS - RateLimiter::attempts($throttleKey);
@@ -105,17 +105,17 @@ class AuthController extends Controller
             return back()->withErrors(['email' => $message])->withInput();
         }
 
-        // Prevent login for inactive accounts
+
         if ($user->status !== 'active') {
             RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
             return back()->withErrors(['email' => 'Your account is not active. Please wait for admin approval.'])->withInput();
         }
 
-        // ── Successful Login ─────────────────────────────────────────────────
+
         RateLimiter::clear($throttleKey);
         session()->forget('captcha_token');
 
-        // Automatically issue a persistent remember cookie for users logging in from the mobile app
+
         $isAndroidApp = str_contains(request()->userAgent() ?? '', 'SSCStudentApp');
         Auth::login($user, $isAndroidApp);
         $request->session()->regenerate();
@@ -128,68 +128,68 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'first_name'  => 'required|string|max:100',
+            'first_name' => 'required|string|max:100',
             'middle_name' => 'nullable|string|max:100',
-            'last_name'   => 'required|string|max:100',
-            'age'         => 'required|integer|min:10|max:100',
-            'year_level'  => 'required|string',
-            'department'  => 'required|string|max:100',
-            'student_id'  => 'required|string|regex:/^\d{4}-\d{4}$/',
-            'email'       => 'required|email|max:255|unique:users,email|ends_with:@mcclawis.edu.ph',
-            // Password must be at least 8 characters and contain letters and numbers
-            'password'    => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
+            'last_name' => 'required|string|max:100',
+            'age' => 'required|integer|min:10|max:100',
+            'year_level' => 'required|string',
+            'department' => 'required|string|max:100',
+            'student_id' => 'required|string|regex:/^\d{4}-\d{4}$/',
+            'email' => 'required|email|max:255|unique:users,email|ends_with:@mcclawis.edu.ph',
+
+            'password' => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
         ], [
-            'email.unique'   => 'This Microsoft 365 school account is already registered under another student\'s profile. Please log in or use Forgot Password.',
+            'email.unique' => 'This Microsoft 365 school account is already registered under another student\'s profile. Please log in or use Forgot Password.',
             'password.regex' => 'Password must contain at least one letter and one number.',
-            'password.min'   => 'Password must be at least 8 characters.',
+            'password.min' => 'Password must be at least 8 characters.',
         ]);
 
         $sessionVerified = session('register_email_verified');
         $sessionEmail = session('register_email');
 
-        if (! $sessionVerified || $sessionEmail !== $request->email) {
+        if (!$sessionVerified || $sessionEmail !== $request->email) {
             return back()->withErrors(['email' => 'Please verify your Microsoft 365 school account email address before creating your password.'])->withInput();
         }
 
-        if (! CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
+        if (!CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
             return back()->withErrors(['email' => 'Security check failed. Please verify that you are not a robot.'])->withInput();
         }
 
         $fullname = trim($request->first_name . ' ' . ($request->middle_name ?? '') . ' ' . $request->last_name);
 
         $user = User::create([
-            'first_name'  => $request->first_name,
+            'first_name' => $request->first_name,
             'middle_name' => $request->middle_name,
-            'last_name'   => $request->last_name,
-            'age'         => $request->age,
-            'year_level'  => $request->year_level,
-            'department'  => $request->department,
-            'student_id'  => $request->student_id,
-            'fullname'    => $fullname,
-            'email'       => $request->email,
-            'password'    => $request->password,
-            'role'        => 'student',
-            'status'      => 'inactive',
+            'last_name' => $request->last_name,
+            'age' => $request->age,
+            'year_level' => $request->year_level,
+            'department' => $request->department,
+            'student_id' => $request->student_id,
+            'fullname' => $fullname,
+            'email' => $request->email,
+            'password' => $request->password,
+            'role' => 'student',
+            'status' => 'inactive',
         ]);
 
         SscHelper::logActivity($user->id, 'REGISTER', "Student registered and email verified via OTP: {$user->email}");
 
-        // Clear verification session keys
+
         session()->forget(['register_otp', 'register_email', 'register_email_verified']);
 
-        // Redirect directly to our beautiful success page!
+
         return view('auth.confirm-success', compact('user'));
     }
 
     public function confirmAccount(Request $request, User $user)
     {
-        if (! $request->hasValidSignature()) {
+        if (!$request->hasValidSignature()) {
             abort(401, 'This confirmation link is invalid or has expired.');
         }
 
         SscHelper::logActivity($user->id, 'ACTIVATE_EMAIL', "Student email confirmed successfully: {$user->email}");
 
-        // Render the beautiful confirmation success view passing the student details
+
         return view('auth.confirm-success', compact('user'));
     }
 
@@ -208,7 +208,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // Check if user already exists
+
         if (User::where('email', $request->email)->exists()) {
             return response()->json([
                 'success' => false,
@@ -216,7 +216,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // Validate MS Account existence
+
         try {
             $msResponse = Http::timeout(6)
                 ->post('https://login.microsoftonline.com/common/GetCredentialType', [
@@ -234,14 +234,14 @@ class AuthController extends Controller
             }
         } catch (\Exception $e) {
             Log::warning('MS Account check failed during AJAX checkEmail', ['error' => $e->getMessage()]);
-            // Gracefully succeed if MS API is offline to prevent blocking students
+
         }
 
-        // Generate a 6-digit OTP and save in session
+
         $otp = (string) rand(100000, 999999);
         session(['register_otp' => $otp, 'register_email' => $request->email]);
 
-        // Send OTP Email
+
         try {
             Mail::send([], [], function ($message) use ($request, $otp) {
                 $message->to($request->email)
@@ -251,7 +251,7 @@ class AuthController extends Controller
             $msg = 'Verification code sent! Please check your Microsoft school email inbox (or spam folder) for the 6-digit code.';
         } catch (\Exception $e) {
             Log::error('OTP email failed to send', ['error' => $e->getMessage()]);
-            // Fallback for local testing if SMTP is not configured
+
             $msg = 'Verification initiated! (For local testing/preview: your code is ' . $otp . ')';
         }
 
@@ -266,7 +266,7 @@ class AuthController extends Controller
         try {
             $request->validate([
                 'email' => 'required|email',
-                'otp'   => 'required|string|size:6',
+                'otp' => 'required|string|size:6',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -307,7 +307,7 @@ class AuthController extends Controller
     {
         $redirect = null;
         if ($user->role === 'student') {
-            $ua       = request()->userAgent() ?? '';
+            $ua = request()->userAgent() ?? '';
             $isMobile = preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua);
             if ($isMobile) {
                 $redirect = redirect()->route('mobile.student.proposals');
@@ -319,26 +319,24 @@ class AuthController extends Controller
             }
         } else {
             $redirect = match ($user->role) {
-                'admin'     => redirect()->route('admin.dashboard'),
+                'admin' => redirect()->route('admin.dashboard'),
                 'treasurer' => redirect()->route('treasurer.dashboard'),
-                'officer'   => redirect()->route('officer.dashboard'),
-                'dean'      => redirect()->route('dean.dashboard'),
-                default     => redirect('/'),
+                'officer' => redirect()->route('officer.dashboard'),
+                'dean' => redirect()->route('dean.dashboard'),
+                default => redirect('/'),
             };
         }
 
         return $redirect->with('success', 'Welcome back, ' . $user->fullname . '! You have successfully signed into the portal.');
     }
 
-    /**
-     * Build a unique throttle key per email + IP address combination.
-     */
+
     private function throttleKey(Request $request): string
     {
         return 'login|' . Str::lower($request->input('email', '')) . '|' . $request->ip();
     }
 
-    // ─── Forgot Password / Outlook Reset System ───
+
 
     public function showForgotPassword()
     {
@@ -359,11 +357,11 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'This Microsoft 365 school account is not registered. Please sign up first.'])->withInput();
         }
 
-        // Generate a 6-digit password reset OTP
+
         $otp = (string) rand(100000, 999999);
         session(['reset_password_otp' => $otp, 'reset_password_email' => $request->email]);
 
-        // Send OTP Email
+
         try {
             Mail::send([], [], function ($message) use ($request, $otp) {
                 $message->to($request->email)
@@ -373,7 +371,7 @@ class AuthController extends Controller
             $msg = 'Verification code sent! Please check your Outlook/school email inbox for the 6-digit password reset code.';
         } catch (\Exception $e) {
             Log::error('Reset password email failed to send', ['error' => $e->getMessage()]);
-            // Fallback for local testing if SMTP is not configured
+
             $msg = 'Verification initiated! (For local testing/preview: your code is ' . $otp . ')';
         }
 
@@ -388,13 +386,13 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email|ends_with:@mcclawis.edu.ph',
-            'otp'      => 'required|string|size:6',
+            'email' => 'required|email|ends_with:@mcclawis.edu.ph',
+            'otp' => 'required|string|size:6',
             'password' => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
         ], [
-            'otp.size'       => 'The verification code must be exactly 6 digits.',
+            'otp.size' => 'The verification code must be exactly 6 digits.',
             'password.regex' => 'Password must contain at least one letter and one number.',
-            'password.min'   => 'Password must be at least 8 characters.',
+            'password.min' => 'Password must be at least 8 characters.',
         ]);
 
         $sessionOtp = session('reset_password_otp');
