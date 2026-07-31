@@ -373,7 +373,7 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             Log::error('Reset password email failed to send', ['error' => $e->getMessage()]);
 
-            return redirect()->back()->with('danger', 'Failed to send password reset email. Please try again later or contact support.')->withInput();
+            return back()->withErrors(['email' => 'Failed to send password reset email. Please try again later or contact support.'])->withInput();
         }
     }
 
