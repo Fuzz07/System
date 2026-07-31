@@ -7,6 +7,21 @@ use App\Http\Controllers\Student;
 use Illuminate\Support\Facades\Route;
 
 
+// ─── Admin Subdomain Routing ───
+Route::domain('admin.mccsupremestudentcouncil.com')->group(function () {
+    Route::get('/', function () {
+        if (Illuminate\Support\Facades\Auth::check() && Illuminate\Support\Facades\Auth::user()->role === 'admin') {
+            return redirect('/dashboard');
+        }
+        return redirect()->route('login.portal', ['portal' => 'admin']);
+    })->name('admin.subdomain.root');
+
+    Route::middleware(['auth', 'role:admin'])->group(function () {
+        Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('admin.subdomain.dashboard');
+    });
+});
+
+
 // ─── Public / Landing ───
 Route::get('/', function () {
     return view('welcome');
