@@ -13,7 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Modify users table role enum to add 'dean'
-        DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'treasurer', 'officer', 'student', 'dean') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'treasurer', 'officer', 'student', 'dean') NOT NULL");
+        }
 
         // 2. Add candidacy_open to school_years table
         if (!Schema::hasColumn('school_years', 'candidacy_open')) {
@@ -52,6 +54,8 @@ return new class extends Migration
             });
         }
 
-        DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'treasurer', 'officer', 'student') NOT NULL");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'treasurer', 'officer', 'student') NOT NULL");
+        }
     }
 };

@@ -101,6 +101,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/settings/export', [Admin\SettingsController::class, 'export'])->name('settings.export');
     Route::post('/settings/candidacy/toggle', [Admin\SettingsController::class, 'toggleCandidacy'])->name('settings.candidacy.toggle');
     Route::get('/candidacies', [Admin\CandidacyController::class, 'index'])->name('candidacies');
+    Route::post('/election/open', [Admin\CandidacyController::class, 'openVoting'])->name('election.open');
+    Route::post('/election/close', [Admin\CandidacyController::class, 'closeVoting'])->name('election.close');
+    Route::post('/election/announce', [Admin\CandidacyController::class, 'announceResults'])->name('election.announce');
     Route::delete('/candidacies/{candidacy}', [Admin\CandidacyController::class, 'destroy'])->name('candidacy.destroy');
     Route::get('/election-results', [Admin\CandidacyController::class, 'results'])->name('election.results');
 });
@@ -211,7 +214,9 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'role:student'])
     })->name('candidacy.store');
 
     Route::get('/voting', [Student\VotingController::class, 'index'])->name('voting');
-    Route::post('/voting', [Student\VotingController::class, 'store'])->name('voting.store');
+    Route::post('/voting/start', [Student\VotingController::class, 'startBallot'])->name('voting.start');
+    Route::post('/voting/cast', [Student\VotingController::class, 'castVote'])->name('voting.cast');
+    Route::post('/voting/skip', [Student\VotingController::class, 'skipPosition'])->name('voting.skip');
     Route::get('/election-results', [Student\VotingController::class, 'results'])->name('election.results');
     
     // Notifications API for student app (JSON)

@@ -1,0 +1,16 @@
+/node_modules
+/vendor
+.phpunit.result.cache
+.env
+.env.testing
+/public/storage
+/storage/*.key
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/testing/*
+/bootstrap/cache/*
+.vscode/
+.idea/
+npm-debug.log
+yarn-error.log

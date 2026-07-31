@@ -5,28 +5,30 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Vote extends Model
+class StudentBallot extends Model
 {
     use HasFactory;
 
+    protected $table = 'student_ballots';
     public $timestamps = false;
 
     protected $fillable = [
         'user_id',
-        'candidacy_id',
         'position',
         'school_year',
+        'started_at',
+        'submitted_at',
         'ip_address',
         'user_agent',
+    ];
+
+    protected $casts = [
+        'started_at' => 'datetime',
+        'submitted_at' => 'datetime',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function candidacy()
-    {
-        return $this->belongsTo(Candidacy::class);
     }
 }
