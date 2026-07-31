@@ -107,6 +107,10 @@ class ChatbotController extends Controller
             return "Are you running for office? 🚀\n\nStudents can file for official candidacy through our platform:\n1. Visit the Candidacy Portal.\n2. Select your desired role and enter your campaign platform details.\n3. Note that eligibility is limited by department restrictions and active election timelines set by the administration.";
         }
 
+        if (str_contains($normalized, 'location') || str_contains($normalized, 'office') || str_contains($normalized, 'where') || str_contains($normalized, 'map') || str_contains($normalized, 'address')) {
+            return "Our campus and the SSC Office are located at:\n📍 Madridejos Community College (MCC)\nBunakan, Madridejos, Cebu, Philippines.\n\n🏢 SSC Office Location: Student Center, 2nd Floor, MCC Campus.\n\n🗺️ Open Google Maps: https://maps.google.com/maps?q=Madridejos%20Community%20College,%20Cebu,%20Philippines";
+        }
+
         if (str_contains($normalized, 'hello') || str_contains($normalized, 'hi') || str_contains($normalized, 'hey')) {
             return "Hi there! 👋 I'm your SSC assistant. I can help you with student concerns, proposals, anonymous feedback, and budget tracking. What can I do for you today?";
         }

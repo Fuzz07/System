@@ -57,6 +57,9 @@
         <button class="shortcut-btn" data-query="contact">
           <span class="btn-emoji">📞</span> Contact SSC Officers
         </button>
+        <button class="shortcut-btn" data-query="location">
+          <span class="btn-emoji">📍</span> SSC Office & School Location
+        </button>
       </div>
     </div>
 
@@ -830,7 +833,8 @@
         'hello': "Hi there! 👋 I'm your SSC assistant. I can help you with student concerns, proposals, anonymous feedback, and budget tracking. What can I do for you today?",
         'hi': "Hello! 🌟 Hope you're having a good day. Need help with project proposals, tracking budgets, or posting feedback?",
         'thanks': "You're very welcome! Let me know if there's anything else I can do to help you navigate the system. 🚀",
-        'thank': "Anytime! Stay awesome. Let me know if you have other student concerns!"
+        'thank': "Anytime! Stay awesome. Let me know if you have other student concerns!",
+        'location': "Our campus and the SSC Office are located at:<br>📍 <b>Madridejos Community College (MCC)</b><br>Bunakan, Madridejos, Cebu, Philippines.<br><br>🏢 <b>SSC Office Location:</b> Student Center, 2nd Floor, MCC Campus.<br><br>🗺️ <b>Google Maps Location:</b><br><div class='map-container mb-2' style='width:100%; height:160px; border-radius:8px; overflow:hidden; border:1px solid #cbd5e1;'><iframe src='https://maps.google.com/maps?q=Madridejos%20Community%20College,%20Cebu,%20Philippines&t=&z=15&ie=UTF8&iwloc=&output=embed' width='100%' height='100%' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe></div><a href='https://maps.google.com/maps?q=Madridejos%20Community%20College,%20Cebu,%20Philippines' target='_blank' class='chat-link'><i class='bi bi-box-arrow-up-right'></i> Open in Google Maps</a>"
       };
 
       for (const key in responses) {
