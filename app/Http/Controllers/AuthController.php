@@ -248,17 +248,18 @@ class AuthController extends Controller
                     ->subject('Your SSC Account Verification Code')
                     ->html(view('auth.emails.otp', ['otp' => $otp])->render());
             });
-            $msg = 'Verification code sent! Please check your Microsoft school email inbox (or spam folder) for the 6-digit code.';
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification code sent! Please check your Microsoft school email inbox (or spam folder) for the 6-digit code.',
+            ]);
         } catch (\Exception $e) {
             Log::error('OTP email failed to send', ['error' => $e->getMessage()]);
 
-            $msg = 'Verification initiated! (For local testing/preview: your code is ' . $otp . ')';
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification email. Please try again later or contact support.',
+            ]);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => $msg,
-        ]);
     }
 
     public function verifyOtp(Request $request)
@@ -368,14 +369,12 @@ class AuthController extends Controller
                     ->subject('Your SSC Password Reset Verification Code')
                     ->html(view('auth.emails.reset-password', ['otp' => $otp])->render());
             });
-            $msg = 'Verification code sent! Please check your Outlook/school email inbox for the 6-digit password reset code.';
+            return redirect()->route('password.reset')->with('success', 'Verification code sent! Please check your Outlook/school email inbox for the 6-digit password reset code.');
         } catch (\Exception $e) {
             Log::error('Reset password email failed to send', ['error' => $e->getMessage()]);
 
-            $msg = 'Verification initiated! (For local testing/preview: your code is ' . $otp . ')';
+            return redirect()->back()->with('danger', 'Failed to send password reset email. Please try again later or contact support.')->withInput();
         }
-
-        return redirect()->route('password.reset')->with('success', $msg);
     }
 
     public function showResetPassword()
