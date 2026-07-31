@@ -48,9 +48,6 @@
         <i class="bi bi-chevron-down" id="shortcutsChevron"></i>
       </div>
       <div class="chatbot-shortcuts" id="chatbotShortcuts">
-        <button class="shortcut-btn" data-query="proposal">
-          <span class="btn-emoji">📝</span> Submit Project Proposals
-        </button>
         <button class="shortcut-btn" data-query="feedback">
           <span class="btn-emoji">💬</span> Post Anonymous Feedback
         </button>
