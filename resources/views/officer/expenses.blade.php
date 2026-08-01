@@ -15,7 +15,7 @@
         <td><div style="font-weight:700;">{{ $ex->expense_title }}</div><div style="font-size:.75rem;color:#718096;">{{ Str::limit($ex->description, 60) }}</div></td>
         <td><span class="badge bg-primary" style="font-size:.7rem;">{{ $ex->budget->title ?? 'N/A' }}</span></td>
         <td style="font-weight:700;color:var(--danger);">{!! \App\Helpers\SscHelper::formatCurrency($ex->amount) !!}</td>
-        <td>@if($ex->receipt)<a href="{{ asset('storage/' . $ex->receipt) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size:.72rem;"><i class="bi bi-file-earmark"></i> View</a>@else —@endif</td>
+        <td>@if($ex->receipt)<a href="{{ \App\Helpers\SscHelper::getUploadUrl($ex->receipt) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size:.72rem;"><i class="bi bi-file-earmark"></i> View</a>@else —@endif</td>
         <td>{!! \App\Helpers\SscHelper::statusBadge($ex->status) !!}</td>
         <td style="font-size:.78rem;color:#718096;max-width:140px;">{{ $ex->admin_notes ?? '—' }}</td>
         <td style="font-size:.78rem;white-space:nowrap;">{{ $ex->created_at?->format('M d, Y') }}</td>

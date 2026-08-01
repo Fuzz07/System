@@ -44,7 +44,7 @@ class LiquidationController extends Controller
             ->where('status', 'Approved')
             ->firstOrFail();
 
-        $filePath = $request->file('liq_file')->store('liquidation', 'public');
+        $filePath = $request->file('liq_file')->storeOnCloudinary('liquidation')->getSecurePath();
 
         Liquidation::create([
             'proposal_id' => $proposal->id,

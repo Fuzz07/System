@@ -74,7 +74,7 @@
                             <td>{{ $payment->reference ?? '—' }}</td>
                             <td>
                                 @if($payment && $payment->proof_path)
-                                    <a href="{{ asset('storage/' . $payment->proof_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary mb-1">View Proof</a>
+                                    <a href="{{ \App\Helpers\SscHelper::getUploadUrl($payment->proof_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary mb-1">View Proof</a>
                                     <div><small class="text-muted">{{ $proofStatus }}</small></div>
                                 @else
                                     <span class="text-muted">{{ $proofStatus }}</span>

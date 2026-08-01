@@ -321,7 +321,7 @@
               @endif
               @if ($br->receipt_file)
                 <div style="margin-top:4px;">
-                  <a href="{{ asset('storage/' . $br->receipt_file) }}" target="_blank"
+                  <a href="{{ \App\Helpers\SscHelper::getUploadUrl($br->receipt_file) }}" target="_blank"
                     style="font-size:.72rem;color:#3b82f6;text-decoration:none;">
                     <i class="bi bi-file-earmark-pdf"></i> View Receipt
                   </a>

@@ -17,7 +17,7 @@
                 </div>
                 <div class="mb-5"><h5 class="fw-bold mb-3">Project Description</h5><div class="text-muted" style="line-height:1.8;font-size:1.05rem;">{!! nl2br(e($proposal->description)) !!}</div></div>
                 @if($proposal->admin_notes)<div class="p-4 rounded-4 mb-4" style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);"><h6 class="fw-bold text-warning-emphasis mb-2"><i class="bi bi-info-circle-fill"></i> Council Notes</h6><div class="text-dark small opacity-75">{{ $proposal->admin_notes }}</div></div>@endif
-                @if($proposal->project_status === 'Completed' && $proposal->completion_proof)<div class="p-4 rounded-4 bg-light border d-flex justify-content-between align-items-center mb-5"><div><h6 class="fw-bold text-success mb-1"><i class="bi bi-patch-check-fill"></i> Project Liquidated</h6><div class="text-muted small">Official receipt available.</div></div><a href="{{ asset('storage/' . $proposal->completion_proof) }}" target="_blank" class="btn btn-sm btn-success px-4" style="border-radius:10px;"><i class="bi bi-receipt"></i> View Receipt</a></div>@endif
+                @if($proposal->project_status === 'Completed' && $proposal->completion_proof)<div class="p-4 rounded-4 bg-light border d-flex justify-content-between align-items-center mb-5"><div><h6 class="fw-bold text-success mb-1"><i class="bi bi-patch-check-fill"></i> Project Liquidated</h6><div class="text-muted small">Official receipt available.</div></div><a href="{{ \App\Helpers\SscHelper::getUploadUrl($proposal->completion_proof) }}" target="_blank" class="btn btn-sm btn-success px-4" style="border-radius:10px;"><i class="bi bi-receipt"></i> View Receipt</a></div>@endif
             </div>
         </div>
 

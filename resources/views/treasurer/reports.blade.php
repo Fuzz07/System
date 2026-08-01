@@ -175,7 +175,7 @@
             </td>
             <td style="padding:10px 16px;">
               @if ($br->receipt_file)
-                <a href="{{ asset('storage/' . $br->receipt_file) }}" target="_blank"
+                <a href="{{ \App\Helpers\SscHelper::getUploadUrl($br->receipt_file) }}" target="_blank"
                    style="color:#3b82f6;font-size:.78rem;text-decoration:none;">
                   <i class="bi bi-file-earmark"></i> View
                 </a>

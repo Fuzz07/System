@@ -174,7 +174,7 @@ Route::prefix('student')->name('student.')->middleware(['auth', 'role:student'])
                     'author' => $a->author->fullname ?? 'SSC Admin',
                     'date' => $a->created_at?->format('M d, Y'),
                     'time_ago' => $a->created_at?->diffForHumans(),
-                    'proof' => ($a->project_id && $a->proposal?->completion_proof) ? asset('storage/' . $a->proposal->completion_proof) : null
+                    'proof' => ($a->project_id && $a->proposal?->completion_proof) ? \App\Helpers\SscHelper::getUploadUrl($a->proposal->completion_proof) : null
                 ];
             });
         return response()->json(['announcements' => $announcements]);
@@ -351,7 +351,7 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
                     'proof_status' => 'pending',
                 ]);
             }
-            $proofPath = $request->file('proof')->store('enrollment_proofs', 'public');
+            $proofPath = $request->file('proof')->storeOnCloudinary('enrollment_proofs')->getSecurePath();
             $payment->update([
                 'proof_path' => $proofPath,
                 'proof_status' => 'pending',

@@ -54,7 +54,7 @@
         <div class="proof-label"><i class="bi bi-patch-check-fill"></i> Project Liquidated</div>
         <div class="proof-sub">Official receipt available for transparency.</div>
     </div>
-    <a href="{{ asset('storage/' . $proposal->completion_proof) }}" target="_blank" class="proof-btn">
+    <a href="{{ \App\Helpers\SscHelper::getUploadUrl($proposal->completion_proof) }}" target="_blank" class="proof-btn">
         <i class="bi bi-receipt"></i> Receipt
     </a>
 </div>

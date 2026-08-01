@@ -61,7 +61,7 @@
             <hr class="opacity-10 my-4">
             @if ($a->proposal->completion_proof)
               <div class="text-center mt-3">
-                <a href="{{ asset('storage/' . $a->proposal->completion_proof) }}" target="_blank" class="btn btn-outline-info" style="border-radius: 12px; font-weight: 600;">
+                <a href="{{ \App\Helpers\SscHelper::getUploadUrl($a->proposal->completion_proof) }}" target="_blank" class="btn btn-outline-info" style="border-radius: 12px; font-weight: 600;">
                   <i class="bi bi-receipt"></i> View Completion Receipt
                 </a>
               </div>

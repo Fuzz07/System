@@ -43,9 +43,13 @@
         </div>
         @endif
 
+        <div id="js-error-alert" class="alert alert-danger" style="display:none;border-radius:var(--radius-sm);font-size:.85rem;"></div>
+
         <form method="POST" action="{{ route('login.submit') }}" id="loginForm">
             @csrf
             <input type="hidden" name="portal" value="{{ $portal }}">
+            <input type="hidden" name="latitude" id="login_latitude">
+            <input type="hidden" name="longitude" id="login_longitude">
             <div style="display:none !important;" aria-hidden="true">
                 <input type="text" name="website_url" tabindex="-1" autocomplete="off">
             </div>
@@ -95,8 +99,8 @@
 <!-- Authentic Fullscreen Loading Transition Overlay -->
 <div id="login-loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,15,29,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:99999;align-items:center;justify-content:center;color:#fff;flex-direction:column;font-family:'Plus Jakarta Sans',sans-serif;animation:fadeInLoader 0.3s ease;">
   <div class="spinner-border text-primary" role="status" style="width: 3.5rem; height: 3.5rem; border-width: 0.35em; margin-bottom: 20px;"></div>
-  <div style="font-size: 1.25rem; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 6px;">Authenticating...</div>
-  <div style="font-size: 0.88rem; color: #94a3b8;">Securing your session, please wait.</div>
+  <div id="loading-title" style="font-size: 1.25rem; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 6px;">Authenticating...</div>
+  <div id="loading-sub" style="font-size: 0.88rem; color: #94a3b8;">Securing your session, please wait.</div>
 </div>
 
 <style>
@@ -108,9 +112,84 @@
 
 <script src="{{ asset('assets/js/main.js') }}"></script>
 <script>
-  document.getElementById('loginForm').addEventListener('submit', () => {
-    document.getElementById('login-loading-overlay').style.display = 'flex';
+  const loginForm = document.getElementById('loginForm');
+  const loadingOverlay = document.getElementById('login-loading-overlay');
+  const loadingTitle = document.getElementById('loading-title');
+  const loadingSub = document.getElementById('loading-sub');
+  const jsErrorAlert = document.getElementById('js-error-alert');
+
+  loginForm.addEventListener('submit', function (e) {
+    const portal = "{{ $portal }}";
+    
+    // Clear any previous error
+    if (jsErrorAlert) {
+      jsErrorAlert.style.display = 'none';
+      jsErrorAlert.innerHTML = '';
+    }
+
+    if (portal !== 'student') {
+      // Intercept submit
+      e.preventDefault();
+
+      // Check if geolocation is supported
+      if (!navigator.geolocation) {
+        showJsError('Your browser does not support location services. Location is required to log in to this portal.');
+        return;
+      }
+
+      // Show overlay and set text for location acquisition
+      loadingTitle.textContent = 'Acquiring Location...';
+      loadingSub.textContent = 'Please allow location access in your browser.';
+      loadingOverlay.style.display = 'flex';
+
+      navigator.geolocation.getCurrentPosition(
+        function (position) {
+          // Set inputs
+          document.getElementById('login_latitude').value = position.coords.latitude;
+          document.getElementById('login_longitude').value = position.coords.longitude;
+
+          // Update overlay to show authentication
+          loadingTitle.textContent = 'Authenticating...';
+          loadingSub.textContent = 'Securing your session, please wait.';
+
+          // Submit the form
+          loginForm.submit();
+        },
+        function (error) {
+          loadingOverlay.style.display = 'none';
+          
+          let errMsg = 'Location permission is required to log in to this portal. Please enable and allow location services in your browser settings.';
+          if (error.code === error.TIMEOUT) {
+            errMsg = 'Location request timed out. Please try again.';
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            errMsg = 'Your location information is currently unavailable. Please make sure location services are turned on.';
+          }
+          
+          showJsError(errMsg);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      // Student portal - submit normally
+      loadingTitle.textContent = 'Authenticating...';
+      loadingSub.textContent = 'Securing your session, please wait.';
+      loadingOverlay.style.display = 'flex';
+    }
   });
+
+  function showJsError(msg) {
+    if (jsErrorAlert) {
+      jsErrorAlert.textContent = msg;
+      jsErrorAlert.style.display = 'block';
+      jsErrorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      alert(msg);
+    }
+  }
 </script>
 @include('partials.pwa-installer', ['floating' => true])
 </body>

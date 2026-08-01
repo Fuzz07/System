@@ -39,7 +39,7 @@ class ExpenseController extends Controller
 
         $receiptPath = null;
         if ($request->hasFile('receipt')) {
-            $receiptPath = $request->file('receipt')->store('receipts', 'public');
+            $receiptPath = $request->file('receipt')->storeOnCloudinary('receipts')->getSecurePath();
         }
 
         Expense::create([

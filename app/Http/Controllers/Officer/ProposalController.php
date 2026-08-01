@@ -67,7 +67,7 @@ class ProposalController extends Controller
             'receipt' => UploadValidation::requiredFile(),
         ]);
 
-        $receiptPath = $request->file('receipt')->store('receipts', 'public');
+        $receiptPath = $request->file('receipt')->storeOnCloudinary('receipts')->getSecurePath();
 
         $proposal->update([
             'project_status'   => 'Completed',

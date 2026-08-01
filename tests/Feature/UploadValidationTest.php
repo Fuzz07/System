@@ -57,6 +57,20 @@ class UploadValidationTest extends TestCase
         }
     }
 
+    public function test_get_upload_url_returns_correct_url(): void
+    {
+        // Null or empty paths should return '#'
+        $this->assertEquals('#', \App\Helpers\SscHelper::getUploadUrl(null));
+        $this->assertEquals('#', \App\Helpers\SscHelper::getUploadUrl(''));
+
+        // Full http/https URLs should be returned as-is
+        $this->assertEquals('http://res.cloudinary.com/demo/image/upload/sample.jpg', \App\Helpers\SscHelper::getUploadUrl('http://res.cloudinary.com/demo/image/upload/sample.jpg'));
+        $this->assertEquals('https://res.cloudinary.com/demo/image/upload/sample.jpg', \App\Helpers\SscHelper::getUploadUrl('https://res.cloudinary.com/demo/image/upload/sample.jpg'));
+
+        // Local relative paths should return local asset storage URLs
+        $this->assertStringContainsString('storage/receipts/receipt.jpg', \App\Helpers\SscHelper::getUploadUrl('receipts/receipt.jpg'));
+    }
+
     private function uploadedFileWithContent(string $name, string $content): UploadedFile
     {
         $path = tempnam(sys_get_temp_dir(), 'upload-validation-');

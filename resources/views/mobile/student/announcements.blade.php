@@ -73,7 +73,7 @@
                             <div style="color: #059669; font-weight: 700; font-size: 0.9rem; margin-bottom: 4px;"><i class="bi bi-shield-check"></i> Verified Proof</div>
                             <div style="color: #047857; font-size: 0.8rem; opacity: 0.8;">Official receipt is available.</div>
                         </div>
-                        <a href="{{ asset('storage/' . $a->proposal->completion_proof) }}" target="_blank" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; text-decoration: none;">
+                        <a href="{{ \App\Helpers\SscHelper::getUploadUrl($a->proposal->completion_proof) }}" target="_blank" style="background: #10b981; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; text-decoration: none;">
                             <i class="bi bi-receipt"></i> View
                         </a>
                     </div>

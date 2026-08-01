@@ -95,7 +95,7 @@
                 @if($payment->proof_notes)
                     <div class="m-field" style="margin-top: 8px;">Notes: {{ $payment->proof_notes }}</div>
                 @endif
-                <a href="{{ asset('storage/' . $payment->proof_path) }}" class="m-btn m-btn-secondary" style="margin-top: 10px; display: inline-block;">View Proof</a>
+                <a href="{{ \App\Helpers\SscHelper::getUploadUrl($payment->proof_path) }}" class="m-btn m-btn-secondary" style="margin-top: 10px; display: inline-block;">View Proof</a>
             </div>
         @endif
     </div>

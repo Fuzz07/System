@@ -61,4 +61,15 @@ class SscHelper
         $sy = SchoolYear::where('is_active', 1)->first();
         return $sy ? $sy->label : 'N/A';
     }
+
+    public static function getUploadUrl(?string $path): string
+    {
+        if (!$path) {
+            return '#';
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+        return asset('storage/' . $path);
+    }
 }

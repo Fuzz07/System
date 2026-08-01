@@ -42,6 +42,16 @@ class AuthController extends Controller
             'portal' => 'required|in:admin,officer,student,treasurer,dean',
         ]);
 
+        if ($request->input('portal') !== 'student') {
+            $request->validate([
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
+            ], [
+                'latitude.required' => 'Location coordinates are required to log in.',
+                'longitude.required' => 'Location coordinates are required to log in.',
+            ]);
+        }
+
         // ── Brute-Force / Rate-Limit Check ──────────────────────────────────
         $throttleKey = $this->throttleKey($request);
 
@@ -120,7 +130,13 @@ class AuthController extends Controller
         Auth::login($user, $isAndroidApp);
         $request->session()->regenerate();
 
-        SscHelper::logActivity($user->id, 'LOGIN', "Logged in via {$portal} portal");
+        $logDetails = "Logged in via {$portal} portal";
+        if ($portal !== 'student') {
+            $lat = $request->input('latitude');
+            $lng = $request->input('longitude');
+            $logDetails .= " | Location: Lat {$lat}, Lng {$lng}";
+        }
+        SscHelper::logActivity($user->id, 'LOGIN', $logDetails);
 
         return $this->redirectByRole($user, true);
     }

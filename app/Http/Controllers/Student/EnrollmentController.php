@@ -60,7 +60,7 @@ class EnrollmentController extends Controller
                 ]);
             }
 
-            $proofPath = $request->file('proof')->store('enrollment_proofs', 'public');
+            $proofPath = $request->file('proof')->storeOnCloudinary('enrollment_proofs')->getSecurePath();
             $payment->update([
                 'proof_path' => $proofPath,
                 'proof_status' => 'pending',

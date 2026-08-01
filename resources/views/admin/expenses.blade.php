@@ -22,7 +22,7 @@
         <td style="font-size:.82rem;">{{ $ex->officer->fullname ?? 'N/A' }}</td>
         <td><span class="badge bg-primary" style="font-size:.7rem;">{{ $ex->budget->title ?? 'N/A' }}</span></td>
         <td style="font-weight:700;color:var(--danger);">{!! \App\Helpers\SscHelper::formatCurrency($ex->amount) !!}</td>
-        <td>@if($ex->receipt)<a href="{{ asset('storage/' . $ex->receipt) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size:.72rem;"><i class="bi bi-file-earmark"></i> View</a>@else<span class="text-muted">—</span>@endif</td>
+        <td>@if($ex->receipt)<a href="{{ \App\Helpers\SscHelper::getUploadUrl($ex->receipt) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size:.72rem;"><i class="bi bi-file-earmark"></i> View</a>@else<span class="text-muted">—</span>@endif</td>
         <td>{!! \App\Helpers\SscHelper::statusBadge($ex->status) !!}</td>
         <td>
             @if($ex->status === 'Pending')

@@ -17,7 +17,7 @@
         <td style="font-size:.8rem;color:#718096;">{{ Str::limit($liq->notes, 80) }}</td>
         <td>{!! \App\Helpers\SscHelper::statusBadge($liq->status) !!}</td>
         <td style="font-size:.78rem;white-space:nowrap;">{{ $liq->created_at?->format('M d, Y') }}</td>
-        <td><a href="{{ asset('storage/' . $liq->file_path) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size:.72rem;"><i class="bi bi-download"></i> View</a></td>
+        <td><a href="{{ \App\Helpers\SscHelper::getUploadUrl($liq->file_path) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size:.72rem;"><i class="bi bi-download"></i> View</a></td>
     </tr>
     @empty
     <tr><td colspan="7" class="text-center py-5 text-muted">No liquidation reports yet.</td></tr>
