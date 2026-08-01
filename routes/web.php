@@ -351,7 +351,12 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
                     'proof_status' => 'pending',
                 ]);
             }
-            $proofPath = $request->file('proof')->storeOnCloudinary('enrollment_proofs')->getSecurePath();
+            try {
+                $proofPath = $request->file('proof')->storeOnCloudinary('enrollment_proofs')->getSecurePath();
+            } catch (\Exception $e) {
+                \Log::warning('Cloudinary upload failed for mobile student enrollment proof, falling back to local public disk: ' . $e->getMessage());
+                $proofPath = $request->file('proof')->store('enrollment_proofs', 'public');
+            }
             $payment->update([
                 'proof_path' => $proofPath,
                 'proof_status' => 'pending',

@@ -44,7 +44,12 @@ class LiquidationController extends Controller
             ->where('status', 'Approved')
             ->firstOrFail();
 
-        $filePath = $request->file('liq_file')->storeOnCloudinary('liquidation')->getSecurePath();
+        try {
+            $filePath = $request->file('liq_file')->storeOnCloudinary('liquidation')->getSecurePath();
+        } catch (\Exception $e) {
+            \Log::warning('Cloudinary upload failed for liquidation report, falling back to local public disk: ' . $e->getMessage());
+            $filePath = $request->file('liq_file')->store('liquidation', 'public');
+        }
 
         Liquidation::create([
             'proposal_id' => $proposal->id,

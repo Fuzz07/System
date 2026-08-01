@@ -37,9 +37,21 @@ class ExpenseController extends Controller
             ->where('status', 'Approved')
             ->firstOrFail();
 
+        // Validate that requested amount does not exceed the remaining balance
+        if ($request->amount > $budget->remaining_balance) {
+            return back()->withErrors([
+                'amount' => 'The expense amount cannot exceed the remaining budget balance (' . \App\Helpers\SscHelper::formatCurrency($budget->remaining_balance) . ').'
+            ])->withInput();
+        }
+
         $receiptPath = null;
         if ($request->hasFile('receipt')) {
-            $receiptPath = $request->file('receipt')->storeOnCloudinary('receipts')->getSecurePath();
+            try {
+                $receiptPath = $request->file('receipt')->storeOnCloudinary('receipts')->getSecurePath();
+            } catch (\Exception $e) {
+                \Log::warning('Cloudinary upload failed for expense receipt, falling back to local public disk: ' . $e->getMessage());
+                $receiptPath = $request->file('receipt')->store('receipts', 'public');
+            }
         }
 
         Expense::create([

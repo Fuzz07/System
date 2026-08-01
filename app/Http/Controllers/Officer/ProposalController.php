@@ -67,7 +67,12 @@ class ProposalController extends Controller
             'receipt' => UploadValidation::requiredFile(),
         ]);
 
-        $receiptPath = $request->file('receipt')->storeOnCloudinary('receipts')->getSecurePath();
+        try {
+            $receiptPath = $request->file('receipt')->storeOnCloudinary('receipts')->getSecurePath();
+        } catch (\Exception $e) {
+            \Log::warning('Cloudinary upload failed for proposal completion receipt, falling back to local public disk: ' . $e->getMessage());
+            $receiptPath = $request->file('receipt')->store('receipts', 'public');
+        }
 
         $proposal->update([
             'project_status'   => 'Completed',

@@ -60,7 +60,12 @@ class EnrollmentController extends Controller
                 ]);
             }
 
-            $proofPath = $request->file('proof')->storeOnCloudinary('enrollment_proofs')->getSecurePath();
+            try {
+                $proofPath = $request->file('proof')->storeOnCloudinary('enrollment_proofs')->getSecurePath();
+            } catch (\Exception $e) {
+                \Log::warning('Cloudinary upload failed for student enrollment proof, falling back to local public disk: ' . $e->getMessage());
+                $proofPath = $request->file('proof')->store('enrollment_proofs', 'public');
+            }
             $payment->update([
                 'proof_path' => $proofPath,
                 'proof_status' => 'pending',
