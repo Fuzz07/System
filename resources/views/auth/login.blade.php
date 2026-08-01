@@ -45,7 +45,7 @@
 
         <div id="js-error-alert" class="alert alert-danger" style="display:none;border-radius:var(--radius-sm);font-size:.85rem;"></div>
 
-        <form method="POST" action="{{ route('login.submit') }}" id="loginForm">
+        <form method="POST" action="{{ url()->current() }}" id="loginForm">
             @csrf
             <input type="hidden" name="portal" value="{{ $portal }}">
             <input type="hidden" name="latitude" id="login_latitude">

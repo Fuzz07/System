@@ -112,7 +112,7 @@
                 </div>
                 <div class="nav-tab-label">Feedback</div>
             </a>
-            <form method="POST" action="{{ route('logout') }}" style="flex:1;display:flex;">
+            <form method="POST" action="{{ url('/logout') }}" style="flex:1;display:flex;">
                 @csrf
                 <button type="submit" class="nav-tab" id="tab-logout" title="Sign Out">
                     <div class="nav-tab-icon"><i class="bi bi-box-arrow-right"></i></div>

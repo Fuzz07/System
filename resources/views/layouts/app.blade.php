@@ -35,7 +35,7 @@
         </nav>
 
         <div class="sidebar-footer">
-            <form method="POST" action="{{ route('logout') }}" class="d-inline">
+            <form method="POST" action="{{ url('/logout') }}" class="d-inline">
                 @csrf
                 <button type="submit" class="logout-btn" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;">
                     <i class="bi bi-box-arrow-left"></i> Sign Out

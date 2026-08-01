@@ -11,14 +11,25 @@ use Illuminate\Support\Facades\Auth;
 
 $baseDomain = env('APP_URL_BASE', 'mccsupremestudentcouncil.com');
 
+// Helper to register standard auth routes on subdomains
+if (!function_exists('registerSubdomainAuthRoutes')) {
+    function registerSubdomainAuthRoutes(string $portal) {
+        Route::get('/login', [AuthController::class, 'showLogin'])->defaults('portal', $portal)->name($portal . '.login');
+        Route::post('/login', [AuthController::class, 'login'])->name($portal . '.login.submit');
+        Route::post('/logout', [AuthController::class, 'logout'])->name($portal . '.logout');
+    }
+}
+
 // ─── Admin Subdomain Routing ───
-Route::domain('admin.' . $baseDomain)->group(function () {
+Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
     Route::get('/', function () {
         if (Auth::check() && Auth::user()->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
-        return redirect()->route('login.portal', ['portal' => 'admin']);
+        return redirect('/login');
     })->name('admin.subdomain.root');
+
+    registerSubdomainAuthRoutes('admin');
 
     Route::middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
         Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
@@ -82,8 +93,10 @@ Route::domain('officer.' . $baseDomain)->group(function () {
         if (Auth::check() && (Auth::user()->role === 'officer' || Auth::user()->role === 'treasurer')) {
             return redirect()->route('officer.dashboard');
         }
-        return redirect()->route('login.portal', ['portal' => 'officer']);
+        return redirect('/login');
     })->name('officer.subdomain.root');
+
+    registerSubdomainAuthRoutes('officer');
 
     Route::middleware(['auth', 'role:officer,treasurer'])->name('officer.')->group(function () {
         Route::get('/dashboard', [Officer\DashboardController::class, 'index'])->name('dashboard');
@@ -112,8 +125,10 @@ Route::domain('dean.' . $baseDomain)->group(function () {
         if (Auth::check() && Auth::user()->role === 'dean') {
             return redirect()->route('dean.dashboard');
         }
-        return redirect()->route('login.portal', ['portal' => 'dean']);
+        return redirect('/login');
     })->name('dean.subdomain.root');
+
+    registerSubdomainAuthRoutes('dean');
 
     Route::middleware(['auth', 'role:dean'])->name('dean.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Dean\DashboardController::class, 'index'])->name('dashboard');
@@ -129,8 +144,10 @@ Route::domain('treasurer.' . $baseDomain)->group(function () {
         if (Auth::check() && Auth::user()->role === 'treasurer') {
             return redirect()->route('treasurer.dashboard');
         }
-        return redirect()->route('login.portal', ['portal' => 'treasurer']);
+        return redirect('/login');
     })->name('treasurer.subdomain.root');
+
+    registerSubdomainAuthRoutes('treasurer');
 
     Route::middleware(['auth', 'role:treasurer'])->name('treasurer.')->group(function () {
         Route::get('/dashboard', [App\Http\Controllers\Treasurer\DashboardController::class, 'index'])->name('dashboard');
@@ -142,7 +159,7 @@ Route::domain('treasurer.' . $baseDomain)->group(function () {
 });
 
 // ─── Main Domain / Student Portal Routing ───
-Route::domain($baseDomain)->group(function () {
+Route::domain($baseDomain)->group(function () use ($baseDomain) {
     // ─── Public / Landing ───
     Route::get('/', function () {
         return view('welcome');
