@@ -134,6 +134,7 @@ Route::prefix('officer')->name('officer.')->middleware(['auth', 'role:officer,tr
 
     Route::get('/expenses', [Officer\ExpenseController::class, 'index'])->name('expenses');
     Route::post('/expenses', [Officer\ExpenseController::class, 'store'])->name('expenses.store');
+    Route::delete('/expenses/{expense}', [Officer\ExpenseController::class, 'destroy'])->name('expenses.destroy');
 
     Route::get('/announcements', [Officer\AnnouncementController::class, 'index'])->name('announcements');
     Route::post('/announcements', [Officer\AnnouncementController::class, 'store'])->name('announcements.store');

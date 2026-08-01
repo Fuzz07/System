@@ -66,4 +66,23 @@ class ExpenseController extends Controller
         SscHelper::logActivity(Auth::id(), 'EXPENSE_SUBMIT', "Filed expense: {$request->expense_title} ({$request->amount})");
         return redirect()->route('officer.expenses')->with('success', 'Expense submitted for approval.');
     }
+
+    public function destroy(Expense $expense)
+    {
+        if ((int)$expense->officer_id !== (int)Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($expense->status !== 'Pending') {
+            return redirect()->route('officer.expenses')->with('danger', 'Only pending expenses can be deleted or cancelled.');
+        }
+
+        $title = $expense->expense_title;
+        $amount = $expense->amount;
+        $expense->delete();
+
+        SscHelper::logActivity(Auth::id(), 'EXPENSE_CANCEL', "Cancelled/Deleted pending expense: {$title} ({$amount})");
+
+        return redirect()->route('officer.expenses')->with('success', 'Pending expense cancelled and deleted successfully.');
+    }
 }

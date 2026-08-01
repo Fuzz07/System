@@ -7,7 +7,7 @@
 </div>
 
 <div class="card"><div class="table-responsive-custom"><table class="table-custom">
-    <thead><tr><th>#</th><th>Expense Title</th><th>Budget Fund</th><th>Amount</th><th>Receipt</th><th>Status</th><th>Notes</th><th>Date</th></tr></thead>
+    <thead><tr><th>#</th><th>Expense Title</th><th>Budget Fund</th><th>Amount</th><th>Receipt</th><th>Status</th><th>Notes</th><th>Date</th><th style="text-align:center;">Actions</th></tr></thead>
     <tbody>
     @forelse($expenses as $i => $ex)
     <tr>
@@ -19,9 +19,20 @@
         <td>{!! \App\Helpers\SscHelper::statusBadge($ex->status) !!}</td>
         <td style="font-size:.78rem;color:#718096;max-width:140px;">{{ $ex->admin_notes ?? '—' }}</td>
         <td style="font-size:.78rem;white-space:nowrap;">{{ $ex->created_at?->format('M d, Y') }}</td>
+        <td style="text-align:center;">
+            @if($ex->status === 'Pending')
+            <form method="POST" action="{{ route('officer.expenses.destroy', $ex) }}" onsubmit="return confirm('Are you sure you want to cancel and delete this pending expense?');" style="display:inline-block;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger btn-sm" style="font-size:.72rem; padding: 2px 8px;"><i class="bi bi-trash"></i> Cancel</button>
+            </form>
+            @else
+            <span class="text-muted small" style="font-size:.72rem;"><i class="bi bi-lock-fill"></i> Locked</span>
+            @endif
+        </td>
     </tr>
     @empty
-    <tr><td colspan="8" class="text-center py-5 text-muted">No expenses filed yet.</td></tr>
+    <tr><td colspan="9" class="text-center py-5 text-muted">No expenses filed yet.</td></tr>
     @endforelse
     </tbody>
 </table></div></div>
