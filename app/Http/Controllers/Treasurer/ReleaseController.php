@@ -97,7 +97,7 @@ class ReleaseController extends Controller
         $receiptFile = null;
         if ($request->hasFile('receipt')) {
             try {
-                $receiptFile = $request->file('receipt')->storeOnCloudinary('releases')->getSecurePath();
+                $receiptFile = SscHelper::uploadToCloudinary($request->file('receipt'), 'releases');
             } catch (\Exception $e) {
                 \Log::warning('Cloudinary upload failed for budget release receipt, falling back to local public disk: ' . $e->getMessage());
                 $receiptFile = $request->file('receipt')->store('releases', 'public');

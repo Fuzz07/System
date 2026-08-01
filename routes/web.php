@@ -353,7 +353,7 @@ Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:s
                 ]);
             }
             try {
-                $proofPath = $request->file('proof')->storeOnCloudinary('enrollment_proofs')->getSecurePath();
+                $proofPath = \App\Helpers\SscHelper::uploadToCloudinary($request->file('proof'), 'enrollment_proofs');
             } catch (\Exception $e) {
                 \Log::warning('Cloudinary upload failed for mobile student enrollment proof, falling back to local public disk: ' . $e->getMessage());
                 $proofPath = $request->file('proof')->store('enrollment_proofs', 'public');

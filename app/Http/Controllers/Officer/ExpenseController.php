@@ -47,7 +47,7 @@ class ExpenseController extends Controller
         $receiptPath = null;
         if ($request->hasFile('receipt')) {
             try {
-                $receiptPath = $request->file('receipt')->storeOnCloudinary('receipts')->getSecurePath();
+                $receiptPath = SscHelper::uploadToCloudinary($request->file('receipt'), 'receipts');
             } catch (\Exception $e) {
                 \Log::warning('Cloudinary upload failed for expense receipt, falling back to local public disk: ' . $e->getMessage());
                 $receiptPath = $request->file('receipt')->store('receipts', 'public');

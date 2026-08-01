@@ -80,4 +80,26 @@ class SscHelper
     {
         return ($latitude >= 4.0 && $latitude <= 21.5) && ($longitude >= 116.0 && $longitude <= 127.0);
     }
+
+    /**
+     * Uploads a file directly to Cloudinary using the official PHP SDK, bypassing Laravel service provider discovery.
+     */
+    public static function uploadToCloudinary($file, string $folder): string
+    {
+        $cloudinaryUrl = env('CLOUDINARY_URL');
+        if (!$cloudinaryUrl) {
+            throw new \Exception('CLOUDINARY_URL is not set in the environment.');
+        }
+
+        $cloudinary = new \Cloudinary\Cloudinary($cloudinaryUrl);
+        $response = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+            'folder' => $folder
+        ]);
+
+        if (empty($response['secure_url'])) {
+            throw new \Exception('Cloudinary upload response did not return secure_url.');
+        }
+
+        return $response['secure_url'];
+    }
 }
