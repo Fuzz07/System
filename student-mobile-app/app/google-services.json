@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "168243060490",
+    "project_id": "ssc-student-app",
+    "storage_bucket": "ssc-student-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:168243060490:android:1450ede7f7c572f10fe4f3",
+        "android_client_info": {
+          "package_name": "com.ssc.studentapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBY0d4vVd93eI9KUwDLZmXGGQa2V64u2WM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

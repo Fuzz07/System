@@ -534,7 +534,7 @@
             height: 44px;
             border-radius: 14px;
             border: none;
-            background: rgba(255,255,255,0.92);
+            background: rgba(255, 255, 255, 0.92);
             color: var(--slate-900);
             font-size: 1.2rem;
             cursor: pointer;
@@ -1108,7 +1108,7 @@
             <a href="#home" class="nav-link">Home</a>
             <a href="#features" class="nav-link">Features</a>
             <a href="#officers" class="nav-link">Officers</a>
-           
+
             <a href="{{ route('login', 'student') }}" class="nav-cta">
                 <i class="bi bi-box-arrow-in-right"></i> Student Login
             </a>
@@ -1135,9 +1135,10 @@
                         <i class="bi bi-mortarboard-fill"></i> Access Student Portal
                     </a>
                     @if(!str_contains(request()->userAgent() ?? '', 'SSCStudentApp'))
-                    <a href="/app-debug.apk" class="btn-outline-hero" style="border-color: var(--primary-light); color: var(--primary-light);">
-                        <i class="bi bi-android2"></i> Install Android App
-                    </a>
+                        <a href="/ssc-student-app.apk" class="btn-outline-hero"
+                            style="border-color: var(--primary-light); color: var(--primary-light);">
+                            <i class="bi bi-android2"></i> Install Android App
+                        </a>
                     @endif
                     <a href="#features" class="btn-outline-hero">
                         Explore Features <i class="bi bi-arrow-down"></i>
@@ -1173,10 +1174,13 @@
                 <div class="overview-eyebrow">
                     <i class="bi bi-building"></i> Supreme Student Council
                 </div>
-                <h2 class="overview-title">Forge ahead with heart and honor — the SSC that advances open governance for MCC.</h2>
+                <h2 class="overview-title">Forge ahead with heart and honor — the SSC that advances open governance for
+                    MCC.</h2>
                 <p class="overview-text">
-                    This portal brings together students, officers, deans, and administrators in one modern system for budget transparency,
-                    project management, election oversight, and community feedback. It is built to support informed decision-making and
+                    This portal brings together students, officers, deans, and administrators in one modern system for
+                    budget transparency,
+                    project management, election oversight, and community feedback. It is built to support informed
+                    decision-making and
                     encourage meaningful participation across the college.
                 </p>
                 <div class="overview-list">
@@ -1190,11 +1194,13 @@
                     </div>
                     <div class="overview-list-item">
                         <span class="overview-list-item-icon"><i class="bi bi-check-lg"></i></span>
-                        <span>Real-time announcements, proposals, and feedback channels that connect the student body.</span>
+                        <span>Real-time announcements, proposals, and feedback channels that connect the student
+                            body.</span>
                     </div>
                     <div class="overview-list-item">
                         <span class="overview-list-item-icon"><i class="bi bi-check-lg"></i></span>
-                        <span>Professional digital experience designed for the unique needs of MCC’s student governance.</span>
+                        <span>Professional digital experience designed for the unique needs of MCC’s student
+                            governance.</span>
                     </div>
                 </div>
             </div>
@@ -1208,16 +1214,19 @@
     <section class="gallery-section" id="gallery">
         <div class="gallery-header fade-up">
             <div class="gallery-title">Student council moments captured in action</div>
-            <p class="gallery-subtitle">A visual overview of the Supreme Student Council’s activities, community engagement, and leadership presence at MCC.</p>
+            <p class="gallery-subtitle">A visual overview of the Supreme Student Council’s activities, community
+                engagement, and leadership presence at MCC.</p>
         </div>
         <div class="gallery-grid">
             <div class="gallery-card fade-up" style="transition-delay: 0.04s;">
                 <img src="{{ asset('assets/images/b1.jpg') }}" alt="SSC event photo 1">
-                <div class="gallery-caption">Council leadership and faculty partners gathering for a collaborative planning session.</div>
+                <div class="gallery-caption">Council leadership and faculty partners gathering for a collaborative
+                    planning session.</div>
             </div>
             <div class="gallery-card fade-up" style="transition-delay: 0.08s;">
                 <img src="{{ asset('assets/images/b2.jpg') }}" alt="SSC event photo 2">
-                <div class="gallery-caption">Student officers representing MCC at a campus event with pride and purpose.</div>
+                <div class="gallery-caption">Student officers representing MCC at a campus event with pride and purpose.
+                </div>
             </div>
             <div class="gallery-card fade-up" style="transition-delay: 0.12s;">
                 <img src="{{ asset('assets/images/b3.jpg') }}" alt="SSC event photo 3">
@@ -1225,7 +1234,8 @@
             </div>
             <div class="gallery-card fade-up" style="transition-delay: 0.16s;">
                 <img src="{{ asset('assets/images/b4.jpg') }}" alt="SSC event photo 4">
-                <div class="gallery-caption">Community-driven engagement reflecting the council’s mission to serve MCC students.</div>
+                <div class="gallery-caption">Community-driven engagement reflecting the council’s mission to serve MCC
+                    students.</div>
             </div>
         </div>
     </section>
@@ -1233,7 +1243,8 @@
     <!-- ─── IMAGE MODAL ─── -->
     <div class="image-modal-overlay" id="imageModal">
         <div class="image-modal-card">
-            <button type="button" class="image-modal-close" id="imageModalClose" aria-label="Close image modal">×</button>
+            <button type="button" class="image-modal-close" id="imageModalClose"
+                aria-label="Close image modal">×</button>
             <img class="image-modal-photo" id="imageModalPhoto" src="" alt="SSC photo preview">
             <div class="image-modal-footer">
                 <div class="image-modal-caption" id="imageModalCaption"></div>
@@ -1352,7 +1363,7 @@
         </div>
     </section>
 
-  
+
 
     <!-- ─── CTA SECTION ─── -->
     <section class="cta-section">
@@ -1387,7 +1398,7 @@
                 <p class="footer-tagline">The official Supreme Student Council transparency and budget management
                     platform of Madridejos Community College.</p>
             </div>
-           
+
             <div class="footer-links-group">
                 <h4>Quick Links</h4>
                 <a href="#features">Features</a>
@@ -1402,7 +1413,7 @@
             <div class="footer-badge">
                 <i class="bi bi-patch-check-fill" style="color: #f06529; font-size: 0.85rem;"></i>
                 <span>ABANTE PARTY · S.Y. 2025–2026</span>
-                
+
             </div>
         </div>
     </footer>
@@ -1456,7 +1467,7 @@
             }
         });
     </script>
-   
+
 </body>
 
 </html>
