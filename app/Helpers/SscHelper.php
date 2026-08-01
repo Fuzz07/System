@@ -72,4 +72,12 @@ class SscHelper
         }
         return asset('storage/' . $path);
     }
+
+    /**
+     * Checks if coordinates fall within the geographical boundary box of the Philippines.
+     */
+    public static function isWithinPhilippines(float $latitude, float $longitude): bool
+    {
+        return ($latitude >= 4.0 && $latitude <= 21.5) && ($longitude >= 116.0 && $longitude <= 127.0);
+    }
 }

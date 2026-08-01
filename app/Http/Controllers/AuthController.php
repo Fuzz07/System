@@ -50,6 +50,16 @@ class AuthController extends Controller
                 'latitude.required' => 'Location coordinates are required to log in.',
                 'longitude.required' => 'Location coordinates are required to log in.',
             ]);
+
+            $lat = (float) $request->input('latitude');
+            $lng = (float) $request->input('longitude');
+
+            if (!SscHelper::isWithinPhilippines($lat, $lng)) {
+                SscHelper::logActivity(null, 'LOGIN_BLOCKED_GEO', "Access denied: Login attempt from outside the Philippines (Lat: {$lat}, Lng: {$lng}) for email: {$request->email}");
+                return back()->withErrors([
+                    'email' => 'Access denied: You are attempting to log in from outside the Philippines.',
+                ])->withInput();
+            }
         }
 
         // ── Brute-Force / Rate-Limit Check ──────────────────────────────────

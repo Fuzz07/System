@@ -71,6 +71,19 @@ class UploadValidationTest extends TestCase
         $this->assertStringContainsString('storage/receipts/receipt.jpg', \App\Helpers\SscHelper::getUploadUrl('receipts/receipt.jpg'));
     }
 
+    public function test_is_within_philippines_detects_regions(): void
+    {
+        // Valid PH Coordinates
+        $this->assertTrue(\App\Helpers\SscHelper::isWithinPhilippines(14.5995, 120.9842)); // Manila
+        $this->assertTrue(\App\Helpers\SscHelper::isWithinPhilippines(10.3157, 123.8854)); // Cebu
+        $this->assertTrue(\App\Helpers\SscHelper::isWithinPhilippines(7.1907, 125.4553));   // Davao
+
+        // Invalid Outside Coordinates
+        $this->assertFalse(\App\Helpers\SscHelper::isWithinPhilippines(35.6762, 139.6503)); // Tokyo
+        $this->assertFalse(\App\Helpers\SscHelper::isWithinPhilippines(40.7128, -74.0060)); // New York
+        $this->assertFalse(\App\Helpers\SscHelper::isWithinPhilippines(1.3521, 103.8198));  // Singapore
+    }
+
     private function uploadedFileWithContent(string $name, string $content): UploadedFile
     {
         $path = tempnam(sys_get_temp_dir(), 'upload-validation-');
