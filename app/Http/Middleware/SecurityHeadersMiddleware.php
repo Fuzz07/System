@@ -27,7 +27,7 @@ class SecurityHeadersMiddleware
         // Permissions policy — disable dangerous browser features
         $response->headers->set(
             'Permissions-Policy',
-            'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()'
+            'camera=(), microphone=(), geolocation=(self), payment=(), usb=(), interest-cohort=()'
         );
 
         // Content Security Policy — only allow assets from our own origin

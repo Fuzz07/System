@@ -131,6 +131,13 @@
       // Intercept submit
       e.preventDefault();
 
+      // Check if we are in a secure context (since modern browsers block geolocation on non-secure HTTP)
+      const isSecure = window.isSecureContext || window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (!isSecure) {
+        showJsError('Location services require a secure connection (HTTPS) or localhost. Since you are accessing via HTTP on a custom local domain, please configure an SSL certificate (HTTPS) or use http://localhost/ or http://127.0.0.1/ to test.');
+        return;
+      }
+
       // Check if geolocation is supported
       if (!navigator.geolocation) {
         showJsError('Your browser does not support location services. Location is required to log in to this portal.');
