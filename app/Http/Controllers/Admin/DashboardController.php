@@ -45,10 +45,63 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
+        // Fetch any pending device login approvals
+        $pendingApprovals = [];
+        $userPendingKey = "admin_pending_approvals_" . Auth::id();
+        $pendingList = \Illuminate\Support\Facades\Cache::get($userPendingKey, []);
+        foreach ($pendingList as $approvalId) {
+            $requestData = \Illuminate\Support\Facades\Cache::get("admin_login_approval_{$approvalId}");
+            if ($requestData && $requestData['status'] === 'pending') {
+                $pendingApprovals[] = $requestData;
+            }
+        }
+
         return view('admin.dashboard', compact(
             'totalBudget', 'totalExpenses', 'remainingBudget',
             'pendingProposals', 'pendingExpenses', 'pendingFeedback', 'pendingStudents', 'totalUsers',
-            'budgets', 'monthlyExpenses', 'recentExpenses'
+            'budgets', 'monthlyExpenses', 'recentExpenses', 'pendingApprovals'
         ));
+    }
+
+    public function approveLoginRequest($approvalId)
+    {
+        $requestData = \Illuminate\Support\Facades\Cache::get("admin_login_approval_{$approvalId}");
+        if ($requestData && $requestData['user_id'] === Auth::id()) {
+            $requestData['status'] = 'approved';
+            \Illuminate\Support\Facades\Cache::put("admin_login_approval_{$approvalId}", $requestData, now()->addMinutes(5));
+
+            // Remove from admin pending approvals list
+            $userPendingKey = "admin_pending_approvals_" . Auth::id();
+            $pendingList = \Illuminate\Support\Facades\Cache::get($userPendingKey, []);
+            $pendingList = array_diff($pendingList, [$approvalId]);
+            \Illuminate\Support\Facades\Cache::put($userPendingKey, $pendingList, now()->addMinutes(5));
+
+            SscHelper::logActivity(Auth::id(), 'DEVICE_APPROVED', "Approved login request {$approvalId} for unregistered device");
+
+            return back()->with('success', "Login request approved! The secure verification code is: {$requestData['otp']}. Provide this code to the new device to log in.");
+        }
+
+        return back()->with('danger', 'Login request not found or unauthorized.');
+    }
+
+    public function rejectLoginRequest($approvalId)
+    {
+        $requestData = \Illuminate\Support\Facades\Cache::get("admin_login_approval_{$approvalId}");
+        if ($requestData && $requestData['user_id'] === Auth::id()) {
+            $requestData['status'] = 'rejected';
+            \Illuminate\Support\Facades\Cache::put("admin_login_approval_{$approvalId}", $requestData, now()->addMinutes(5));
+
+            // Remove from admin pending approvals list
+            $userPendingKey = "admin_pending_approvals_" . Auth::id();
+            $pendingList = \Illuminate\Support\Facades\Cache::get($userPendingKey, []);
+            $pendingList = array_diff($pendingList, [$approvalId]);
+            \Illuminate\Support\Facades\Cache::put($userPendingKey, $pendingList, now()->addMinutes(5));
+
+            SscHelper::logActivity(Auth::id(), 'DEVICE_REJECTED', "Rejected login request {$approvalId} for unregistered device");
+
+            return back()->with('success', 'Login request declined.');
+        }
+
+        return back()->with('danger', 'Login request not found or unauthorized.');
     }
 }

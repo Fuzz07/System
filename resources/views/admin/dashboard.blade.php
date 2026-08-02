@@ -82,6 +82,37 @@
     <div><h1>Admin Dashboard</h1><p>System overview and financial summary</p></div>
 </div>
 
+{{-- Pending Device Login Approvals --}}
+@if(!empty($pendingApprovals))
+    @foreach($pendingApprovals as $approval)
+        <div class="alert alert-warning d-flex align-items-center justify-content-between p-3 mb-3" style="border-radius: 8px; border-left: 5px solid #d97706; background-color: #fef3c7; color: #78350f; box-shadow: 0 4px 12px rgba(217,119,6,0.15); margin-top: -4px;">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-shield-fill-exclamation" style="font-size: 1.8rem; color: #d97706;"></i>
+                <div>
+                    <h6 class="mb-1" style="font-weight: 700; font-size: 0.9rem;">Security Alert: Login Attempt on New Device</h6>
+                    <p class="mb-0" style="font-size: 0.78rem; opacity: 0.9;">
+                        An unrecognized device is attempting to log in to your account from IP: <strong style="font-family: monospace;">{{ $approval['ip'] }}</strong> ({{ $approval['user_agent'] }}). Do you authorize this device?
+                    </p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <form method="POST" action="{{ route('admin.login_approvals.approve', $approval['id']) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-success btn-sm px-3" style="font-weight: 700; font-size: 0.78rem; border-radius: 4px;">
+                        <i class="bi bi-check-circle"></i> Authorize
+                    </button>
+                </form>
+                <form method="POST" action="{{ route('admin.login_approvals.reject', $approval['id']) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-danger btn-sm px-3" style="font-weight: 700; font-size: 0.78rem; border-radius: 4px;">
+                        <i class="bi bi-x-circle"></i> Block
+                    </button>
+                </form>
+            </div>
+        </div>
+    @endforeach
+@endif
+
 {{-- Stat Cards --}}
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">

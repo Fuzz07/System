@@ -34,8 +34,15 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
     Route::get('/login/otp', [AuthController::class, 'showAdminOtp'])->name('admin.login.otp');
     Route::post('/login/otp', [AuthController::class, 'verifyAdminOtp'])->name('admin.login.otp.submit');
 
+    Route::get('/login/approval-waiting/{approvalId}', [AuthController::class, 'showApprovalWaiting'])->name('admin.login.approval_waiting');
+    Route::get('/login/approval-check/{approvalId}', [AuthController::class, 'checkApprovalStatus'])->name('admin.login.approval_check');
+    Route::get('/login/approval-complete/{approvalId}', [AuthController::class, 'completeApprovalLogin'])->name('admin.login.approval_complete');
+    Route::post('/login/approval-fallback/{approvalId}', [AuthController::class, 'triggerOtpFallback'])->name('admin.login.approval_fallback');
+
     Route::middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
         Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
+        Route::post('/login-approvals/{approvalId}/approve', [Admin\DashboardController::class, 'approveLoginRequest'])->name('login_approvals.approve');
+        Route::post('/login-approvals/{approvalId}/reject', [Admin\DashboardController::class, 'rejectLoginRequest'])->name('login_approvals.reject');
 
         Route::get('/budgets', [Admin\BudgetController::class, 'index'])->name('budgets');
         Route::post('/budgets', [Admin\BudgetController::class, 'store'])->name('budgets.store');
@@ -188,6 +195,12 @@ Route::domain($baseDomain)->group(function () use ($baseDomain) {
 
     Route::get('/login/admin/otp', [AuthController::class, 'showAdminOtp'])->name('admin.login.otp.main');
     Route::post('/login/admin/otp', [AuthController::class, 'verifyAdminOtp'])->name('admin.login.otp.submit.main');
+    
+    Route::get('/login/admin/approval-waiting/{approvalId}', [AuthController::class, 'showApprovalWaiting'])->name('admin.login.approval_waiting.main');
+    Route::get('/login/admin/approval-check/{approvalId}', [AuthController::class, 'checkApprovalStatus'])->name('admin.login.approval_check.main');
+    Route::get('/login/admin/approval-complete/{approvalId}', [AuthController::class, 'completeApprovalLogin'])->name('admin.login.approval_complete.main');
+    Route::post('/login/admin/approval-fallback/{approvalId}', [AuthController::class, 'triggerOtpFallback'])->name('admin.login.approval_fallback.main');
+
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     Route::get('/register', fn() => view('auth.register'))->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.submit');

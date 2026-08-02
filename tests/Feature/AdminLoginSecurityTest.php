@@ -114,9 +114,9 @@ class AdminLoginSecurityTest extends TestCase
     }
 
     /**
-     * Test logins from an unregistered device are blocked completely.
+     * Test logins from an unregistered device redirect to the approval waiting page.
      */
-    public function test_login_from_unregistered_device_is_blocked(): void
+    public function test_login_from_unregistered_device_redirects_to_approval_waiting(): void
     {
         Mail::fake();
 
@@ -134,13 +134,11 @@ class AdminLoginSecurityTest extends TestCase
             'captcha_verified_token' => 'MOCK_CAPTCHA_VALID',
         ]);
 
-        // Should block the login and show unrecognized device error
-        $response->assertSessionHasErrors(['email']);
+        // Should redirect to approval waiting page
+        $response->assertRedirect();
+        $redirectUrl = $response->headers->get('Location');
+        $this->assertStringContainsString('login/admin/approval-waiting/', $redirectUrl);
         $this->assertFalse(Auth::check());
-
-        // Verify the exact error message
-        $errors = session('errors');
-        $this->assertStringContainsString('Access Denied: Unrecognized device', $errors->first('email'));
     }
 
     /**
@@ -163,5 +161,70 @@ class AdminLoginSecurityTest extends TestCase
         // Verify DB token is cleared
         $this->adminUser->refresh();
         $this->assertNull($this->adminUser->admin_device_token);
+    }
+
+    /**
+     * Test that logging in from an unrecognized device initiates an approval request
+     * and succeeding when approved by the primary device.
+     */
+    public function test_unrecognized_device_initiates_approval_waiting_flow_and_can_be_approved(): void
+    {
+        // 1. Establish a primary device token for this admin
+        $primaryToken = Str::random(60);
+        $this->adminUser->update(['admin_device_token' => $primaryToken]);
+
+        // 2. Attempt login from an unrecognized device (missing cookie)
+        $response = $this->post(route('login.submit'), [
+            'email' => 'admin@mcclawis.edu.ph',
+            'password' => 'Password123',
+            'portal' => 'admin',
+            'latitude' => 12.0,
+            'longitude' => 121.0,
+            'captcha_verified_token' => 'MOCK_CAPTCHA_VALID',
+        ]);
+
+        // Assert redirect to the approval waiting page
+        $response->assertRedirect();
+        $redirectUrl = $response->headers->get('Location');
+        $this->assertStringContainsString('login/admin/approval-waiting/', $redirectUrl);
+
+        // Extract the approval ID from URL
+        $parts = explode('/', $redirectUrl);
+        $approvalId = end($parts);
+        $this->assertNotEmpty($approvalId);
+
+        // 3. Verify approval record exists in Cache as pending
+        $approvalData = \Illuminate\Support\Facades\Cache::get("admin_login_approval_{$approvalId}");
+        $this->assertNotNull($approvalData);
+        $this->assertEquals('pending', $approvalData['status']);
+        $this->assertEquals($this->adminUser->id, $approvalData['user_id']);
+
+        // 4. Log in as the admin on their primary device and approve the login
+        $this->actingAs($this->adminUser);
+        $approveResponse = $this->post(route('admin.login_approvals.approve', $approvalId));
+
+        $approveResponse->assertSessionHas('success');
+
+        // Verify status in Cache is updated to approved
+        $approvalData = \Illuminate\Support\Facades\Cache::get("admin_login_approval_{$approvalId}");
+        $this->assertEquals('approved', $approvalData['status']);
+
+        // 5. Unrecognized device hits the complete route
+        // Logout primary device mock first to test public login complete
+        Auth::logout();
+        
+        $completeResponse = $this->get(route('admin.login.approval_complete.main', $approvalId));
+
+        // Should successfully log in and redirect to dashboard
+        $completeResponse->assertRedirect(route('admin.dashboard'));
+        $this->assertTrue(Auth::check());
+        $this->assertEquals($this->adminUser->id, Auth::id());
+
+        // Refresh model and verify the unrecognized device has registered its new token
+        $this->adminUser->refresh();
+        $this->assertEquals($approvalData['temp_device_token'], $this->adminUser->admin_device_token);
+
+        // Verify cookie is issued
+        $completeResponse->assertCookie('admin_device_token', $this->adminUser->admin_device_token);
     }
 }

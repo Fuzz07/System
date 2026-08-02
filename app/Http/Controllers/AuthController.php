@@ -138,10 +138,45 @@ class AuthController extends Controller
                 $cookieToken = request()->cookie('admin_device_token');
 
                 if (!empty($registeredToken) && $cookieToken !== $registeredToken) {
-                    SscHelper::logActivity($user->id, 'LOGIN_BLOCKED_DEVICE', "Admin login blocked: Attempted login from an unrecognized/unauthorized device for email: {$request->email}");
-                    return back()->withErrors([
-                        'email' => 'Access Denied: Unrecognized device. Admin login is restricted to the primary registered device.',
-                    ])->withInput();
+                    // Instead of blocking, we initiate a Device Login Approval Request!
+                    $approvalId = \Illuminate\Support\Str::random(32);
+                    $tempToken = \Illuminate\Support\Str::random(60);
+                    $otp = (string) rand(100000, 999999);
+
+                    $requestData = [
+                        'id' => $approvalId,
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'ip' => $request->ip(),
+                        'latitude' => $request->input('latitude'),
+                        'longitude' => $request->input('longitude'),
+                        'user_agent' => $request->userAgent() ?? 'Unknown Browser',
+                        'status' => 'pending',
+                        'temp_device_token' => $tempToken,
+                        'otp' => $otp,
+                        'created_at' => now(),
+                    ];
+
+                    // Store details in Cache for 5 minutes
+                    \Illuminate\Support\Facades\Cache::put("admin_login_approval_{$approvalId}", $requestData, now()->addMinutes(5));
+
+                    // Append to admin's pending approvals list
+                    $userPendingKey = "admin_pending_approvals_{$user->id}";
+                    $pendingList = \Illuminate\Support\Facades\Cache::get($userPendingKey, []);
+                    $pendingList[] = $approvalId;
+                    \Illuminate\Support\Facades\Cache::put($userPendingKey, $pendingList, now()->addMinutes(5));
+
+                    // Log activity
+                    SscHelper::logActivity($user->id, 'LOGIN_APPROVAL_REQUEST', "Unrecognized device login approval initiated for {$user->email} from IP {$request->ip()}");
+
+                    $host = request()->getHost();
+                    if (str_starts_with($host, 'admin.')) {
+                        $waitingRoute = route('admin.login.approval_waiting', $approvalId);
+                    } else {
+                        $waitingRoute = route('admin.login.approval_waiting.main', $approvalId);
+                    }
+
+                    return redirect()->to($waitingRoute);
                 }
             }
 
@@ -565,5 +600,114 @@ class AuthController extends Controller
         session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_user_id', 'admin_login_latitude', 'admin_login_longitude']);
 
         return redirect()->route('admin.dashboard')->with('success', 'Successfully authenticated and device registered.');
+    }
+
+    public function showApprovalWaiting($approvalId)
+    {
+        $requestData = \Illuminate\Support\Facades\Cache::get("admin_login_approval_{$approvalId}");
+        if (!$requestData) {
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'Authorization request expired or invalid. Please try again.']);
+        }
+
+        return view('auth.approval-waiting', compact('approvalId', 'requestData'));
+    }
+
+    public function checkApprovalStatus($approvalId)
+    {
+        $requestData = \Illuminate\Support\Facades\Cache::get("admin_login_approval_{$approvalId}");
+        if (!$requestData) {
+            return response()->json(['status' => 'expired']);
+        }
+
+        return response()->json(['status' => $requestData['status']]);
+    }
+
+    public function completeApprovalLogin($approvalId)
+    {
+        $requestData = \Illuminate\Support\Facades\Cache::get("admin_login_approval_{$approvalId}");
+        if (!$requestData || $requestData['status'] !== 'approved') {
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'Authorization request was declined or expired.']);
+        }
+
+        $user = User::find($requestData['user_id']);
+        if (!$user) {
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'User not found.']);
+        }
+
+        // Register the new device token
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'admin_device_token')) {
+            $user->update(['admin_device_token' => $requestData['temp_device_token']]);
+            cookie()->queue(cookie()->forever('admin_device_token', $requestData['temp_device_token']));
+        }
+
+        // Log the admin in
+        Auth::login($user);
+        request()->session()->regenerate();
+
+        // Log Activity
+        $lat = $requestData['latitude'];
+        $lng = $requestData['longitude'];
+        $logDetails = "Logged in via Admin Device Login Approval";
+        if (!empty($lat) && !empty($lng)) {
+            $logDetails .= " | Location: Lat {$lat}, Lng {$lng}";
+        }
+        SscHelper::logActivity($user->id, 'LOGIN', $logDetails);
+
+        // Clear the cache key
+        \Illuminate\Support\Facades\Cache::forget("admin_login_approval_{$approvalId}");
+
+        return redirect()->route('admin.dashboard')->with('success', 'Logged in and new device authorized successfully.');
+    }
+
+    public function triggerOtpFallback($approvalId)
+    {
+        $requestData = \Illuminate\Support\Facades\Cache::get("admin_login_approval_{$approvalId}");
+        if (!$requestData) {
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'Authorization request expired. Please try again.']);
+        }
+
+        $user = User::find($requestData['user_id']);
+        if (!$user) {
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'User not found.']);
+        }
+
+        // Send OTP to email
+        $otp = $requestData['otp'];
+        session([
+            'admin_login_user_id' => $user->id,
+            'admin_login_otp' => $otp,
+            'admin_login_otp_expires_at' => now()->addMinutes(10),
+            'admin_login_latitude' => $requestData['latitude'],
+            'admin_login_longitude' => $requestData['longitude'],
+        ]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::send([], [], function ($message) use ($user, $otp) {
+                $message->to($user->email)
+                    ->subject('Your Admin Login Verification Code')
+                    ->html("
+                        <div style='font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 8px;'>
+                            <h2 style='color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>SSC Admin Portal Verification</h2>
+                            <p style='color: #334155; font-size: 16px;'>You are attempting to log in to the SSC Admin Portal. Please use the following secure 6-digit verification code to complete your login:</p>
+                            <div style='background: #f1f5f9; padding: 15px; border-radius: 6px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e3a8a; margin: 20px 0;'>{$otp}</div>
+                            <p style='color: #64748b; font-size: 14px;'>This code is valid for 10 minutes. If you did not request this login attempt, please change your password immediately.</p>
+                        </div>
+                    ");
+            });
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Admin OTP fallback email failed to send', ['error' => $e->getMessage()]);
+        }
+
+        // Clear approval cache
+        \Illuminate\Support\Facades\Cache::forget("admin_login_approval_{$approvalId}");
+
+        $host = request()->getHost();
+        if (str_starts_with($host, 'admin.')) {
+            $otpRoute = route('admin.login.otp');
+        } else {
+            $otpRoute = route('admin.login.otp.main');
+        }
+
+        return redirect()->to($otpRoute)->with('success', 'A secure 6-digit verification code has been sent to your email address.');
     }
 }
