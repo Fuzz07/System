@@ -17,6 +17,7 @@ class User extends Authenticatable
         'first_name', 'middle_name', 'last_name', 'age', 'year_level',
         'fullname', 'email', 'password', 'role', 'department',
         'student_id', 'profile_pic', 'status', 'position', 'party',
+        'admin_device_token',
     ];
 
     protected $hidden = ['password'];

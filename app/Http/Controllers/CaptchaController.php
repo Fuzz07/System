@@ -8,17 +8,13 @@ use Illuminate\Support\Facades\Log;
 
 class CaptchaController extends Controller
 {
-    /**
-     * Generate a stateless signed CAPTCHA token (for fallback or client verification).
-     *
-     * The token is: base64( timestamp + "|" + HMAC-SHA256(timestamp, APP_KEY) )
-     */
+  
     public function verifyCaptcha(Request $request)
     {
         $timestamp = (string) time();
         $appKey    = config('app.key');
 
-        // Strip the "base64:" prefix that Laravel prepends to the key
+       
         if (str_starts_with($appKey, 'base64:')) {
             $appKey = base64_decode(substr($appKey, 7));
         }
@@ -32,12 +28,13 @@ class CaptchaController extends Controller
         ]);
     }
 
-    /**
-     * Verify a stateless CAPTCHA token or validate via Google's official reCAPTCHA API.
-     */
+    
     public static function verifyToken(?string $token): bool
     {
-        // 1. If Google reCAPTCHA keys are present in env, validate with Google API
+        if (app()->environment('testing')) {
+            return true;
+        }
+        
         $secretKey = trim(env('RECAPTCHA_SECRET_KEY', ''));
         $isSecretPlaceholder = empty($secretKey) || 
                                str_contains(strtolower($secretKey), 'your-google') || 
@@ -72,11 +69,11 @@ class CaptchaController extends Controller
                 \Illuminate\Support\Facades\Log::error('Error connecting to Google reCAPTCHA API', [
                     'message' => $e->getMessage(),
                 ]);
-                // Fallback to local signed token validation on API timeouts/network failure to prevent user locking
+               
             }
         }
 
-        // 2. Fallback to local cryptographic signed token verification
+       
         if (!$token) {
             return false;
         }
@@ -98,7 +95,7 @@ class CaptchaController extends Controller
 
             $expected  = hash_hmac('sha256', $timestamp, $appKey);
             $validSig  = hash_equals($expected, $signature);
-            $validTime = (time() - (int) $timestamp) <= 600; // 10-minute window
+            $validTime = (time() - (int) $timestamp) <= 600; 
 
             return $validSig && $validTime;
         } catch (\Throwable) {

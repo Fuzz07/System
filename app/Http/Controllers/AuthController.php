@@ -16,14 +16,10 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    /**
-     * Maximum login attempts before lockout.
-     */
+   
     private const MAX_ATTEMPTS = 5;
 
-    /**
-     * Lockout duration in seconds (10 minutes).
-     */
+
     private const DECAY_SECONDS = 600;
 
     public function showLogin(string $portal = 'student')
@@ -134,6 +130,56 @@ class AuthController extends Controller
 
         RateLimiter::clear($throttleKey);
         session()->forget('captcha_token');
+
+        if ($user->isAdmin()) {
+            // ── Device Restriction Check ──────────────────
+            $registeredToken = $user->admin_device_token;
+            $cookieToken = request()->cookie('admin_device_token');
+
+            if (!empty($registeredToken) && $cookieToken !== $registeredToken) {
+                SscHelper::logActivity($user->id, 'LOGIN_BLOCKED_DEVICE', "Admin login blocked: Attempted login from an unrecognized/unauthorized device for email: {$request->email}");
+                return back()->withErrors([
+                    'email' => 'Access Denied: Unrecognized device. Admin login is restricted to the primary registered device.',
+                ])->withInput();
+            }
+
+            // ── Generate and Send OTP ─────────────────────
+            $otp = (string) rand(100000, 999999);
+            session([
+                'admin_login_user_id' => $user->id,
+                'admin_login_otp' => $otp,
+                'admin_login_otp_expires_at' => now()->addMinutes(10),
+                'admin_login_latitude' => $request->input('latitude'),
+                'admin_login_longitude' => $request->input('longitude'),
+            ]);
+
+            try {
+                Mail::send([], [], function ($message) use ($user, $otp) {
+                    $message->to($user->email)
+                        ->subject('Your Admin Login Verification Code')
+                        ->html("
+                            <div style='font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 8px;'>
+                                <h2 style='color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>SSC Admin Portal Verification</h2>
+                                <p style='color: #334155; font-size: 16px;'>You are attempting to log in to the SSC Admin Portal. Please use the following secure 6-digit verification code to complete your login:</p>
+                                <div style='background: #f1f5f9; padding: 15px; border-radius: 6px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e3a8a; margin: 20px 0;'>{$otp}</div>
+                                <p style='color: #64748b; font-size: 14px;'>This code is valid for 10 minutes. If you did not request this login attempt, please change your password and secure your account immediately.</p>
+                            </div>
+                        ");
+                });
+            } catch (\Exception $e) {
+                Log::error('Admin OTP email failed to send', ['error' => $e->getMessage()]);
+            }
+
+            // Check if current domain is admin subdomain or main domain
+            $host = request()->getHost();
+            if (str_starts_with($host, 'admin.')) {
+                $otpRoute = route('admin.login.otp');
+            } else {
+                $otpRoute = route('admin.login.otp.main');
+            }
+
+            return redirect()->to($otpRoute)->with('success', 'A secure 6-digit verification code has been sent to your admin email address.');
+        }
 
 
         $isAndroidApp = str_contains(request()->userAgent() ?? '', 'SSCStudentApp');
@@ -443,5 +489,75 @@ class AuthController extends Controller
         SscHelper::logActivity($user->id, 'PASSWORD_RESET', "Reset password for: {$user->email}");
 
         return redirect()->route('login')->with('success', 'Your password has been successfully reset! You can now log in with your new password.');
+    }
+
+    public function showAdminOtp()
+    {
+        if (!session()->has('admin_login_otp') || !session()->has('admin_login_user_id')) {
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'Session expired. Please log in again.']);
+        }
+
+        return view('auth.admin-otp');
+    }
+
+    public function verifyAdminOtp(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required|string|size:6',
+        ], [
+            'otp.size' => 'The verification code must be exactly 6 digits.',
+        ]);
+
+        $sessionOtp = session('admin_login_otp');
+        $expiresAt = session('admin_login_otp_expires_at');
+        $userId = session('admin_login_user_id');
+
+        if (!$sessionOtp || !$userId || now()->greaterThan($expiresAt)) {
+            session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_user_id']);
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'The verification code has expired. Please log in again.']);
+        }
+
+        if ($request->otp !== $sessionOtp) {
+            return back()->withErrors(['otp' => 'Invalid verification code. Please try again.'])->withInput();
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'User not found.']);
+        }
+
+        // Manage Device Token
+        $cookieToken = $request->cookie('admin_device_token');
+        if (empty($user->admin_device_token)) {
+            // First time registration of this device
+            $token = \Illuminate\Support\Str::random(60);
+            $user->update(['admin_device_token' => $token]);
+            // Store cookie forever (5 years)
+            cookie()->queue(cookie()->forever('admin_device_token', $token));
+        } else {
+            // Ensure cookie matches the existing token
+            if ($cookieToken !== $user->admin_device_token) {
+                // Set the cookie again just in case it was lost but they managed to verify OTP
+                cookie()->queue(cookie()->forever('admin_device_token', $user->admin_device_token));
+            }
+        }
+
+        // Log the admin in
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        // Log Activity
+        $lat = session('admin_login_latitude');
+        $lng = session('admin_login_longitude');
+        $logDetails = "Logged in via admin portal with OTP and Device Verification";
+        if (!empty($lat) && !empty($lng)) {
+            $logDetails .= " | Location: Lat {$lat}, Lng {$lng}";
+        }
+        SscHelper::logActivity($user->id, 'LOGIN', $logDetails);
+
+        // Clear Admin Login session
+        session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_user_id', 'admin_login_latitude', 'admin_login_longitude']);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Successfully authenticated and device registered.');
     }
 }

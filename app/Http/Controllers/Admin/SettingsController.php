@@ -22,6 +22,16 @@ class SettingsController extends Controller
         return view('admin.settings', compact('schoolYears', 'dbStats'));
     }
 
+    public function resetDevice()
+    {
+        $user = Auth::user();
+        $user->update(['admin_device_token' => null]);
+        
+        SscHelper::logActivity($user->id, 'ADMIN_DEVICE_RESET', 'Cleared registered device token. Ready for new device registration on next login.');
+        
+        return redirect()->route('admin.settings')->with('success', 'Your registered device has been successfully reset. Next time you log in, the new device will be registered.');
+    }
+
     public function addSchoolYear(Request $request)
     {
         $request->validate(['sy_label' => 'required|regex:/^\d{4}-\d{4}$/|unique:school_years,label']);

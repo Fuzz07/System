@@ -76,6 +76,34 @@
             @endforeach
             </tbody></table>
         </div></div>
+
+        <div class="card mt-4">
+            <div class="card-header-custom">
+                <span class="card-title">Admin Device Security & Restriction</span>
+            </div>
+            <div class="card-body-custom">
+                <p style="font-size: 0.85rem; color: #475569; line-height: 1.5; margin-bottom: 16px;">
+                    This administration portal is secured with primary device lock and multi-factor OTP authentication. Only the registered primary device is authorized to log in.
+                </p>
+                @if(Auth::user()->admin_device_token)
+                    <div class="alert alert-info d-flex align-items-center gap-2 mb-3" style="font-size: 0.82rem; border-radius: 6px; padding: 10px 14px; color: #0f172a; background-color: #f1f5f9; border: 1px solid #cbd5e1;">
+                        <i class="bi bi-shield-lock-fill" style="font-size: 1.2rem; color: var(--primary);"></i>
+                        <div><strong>Device Authorized:</strong> A primary device is currently registered for your account. All login attempts from other devices are blocked.</div>
+                    </div>
+                    <form method="POST" action="{{ route('admin.settings.reset_device') }}" onsubmit="return confirm('Are you sure you want to reset your registered device? You will need to log in and re-authorize a new device using OTP.')">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-danger w-100" style="font-weight: 600;">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset Registered Device
+                        </button>
+                    </form>
+                @else
+                    <div class="alert alert-warning d-flex align-items-center gap-2 mb-0" style="font-size: 0.82rem; border-radius: 6px; padding: 10px 14px; color: #854d0e; background-color: #fef9c3; border: 1px solid #fef08a;">
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.2rem; color: #ca8a04;"></i>
+                        <div><strong>No Registered Device:</strong> Your current device has not been registered as the exclusive primary device yet. The next device that successfully logs in via OTP will be locked in.</div>
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 </div>
 

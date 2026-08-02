@@ -31,6 +31,9 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
 
     registerSubdomainAuthRoutes('admin');
 
+    Route::get('/login/otp', [AuthController::class, 'showAdminOtp'])->name('admin.login.otp');
+    Route::post('/login/otp', [AuthController::class, 'verifyAdminOtp'])->name('admin.login.otp.submit');
+
     Route::middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
         Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
@@ -78,6 +81,7 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::delete('/settings/school-year/{schoolYear}', [Admin\SettingsController::class, 'deleteSchoolYear'])->name('settings.sy.delete');
         Route::get('/settings/export', [Admin\SettingsController::class, 'export'])->name('settings.export');
         Route::post('/settings/candidacy/toggle', [Admin\SettingsController::class, 'toggleCandidacy'])->name('settings.candidacy.toggle');
+        Route::post('/settings/reset-device', [Admin\SettingsController::class, 'resetDevice'])->name('settings.reset_device');
         Route::get('/candidacies', [Admin\CandidacyController::class, 'index'])->name('candidacies');
         Route::post('/election/open', [Admin\CandidacyController::class, 'openVoting'])->name('election.open');
         Route::post('/election/close', [Admin\CandidacyController::class, 'closeVoting'])->name('election.close');
@@ -182,6 +186,8 @@ Route::domain($baseDomain)->group(function () use ($baseDomain) {
         return redirect('/login/student');
     })->name('login');
 
+    Route::get('/login/admin/otp', [AuthController::class, 'showAdminOtp'])->name('admin.login.otp.main');
+    Route::post('/login/admin/otp', [AuthController::class, 'verifyAdminOtp'])->name('admin.login.otp.submit.main');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     Route::get('/register', fn() => view('auth.register'))->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
