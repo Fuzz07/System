@@ -133,14 +133,16 @@ class AuthController extends Controller
 
         if ($user->isAdmin()) {
             // ── Device Restriction Check ──────────────────
-            $registeredToken = $user->admin_device_token;
-            $cookieToken = request()->cookie('admin_device_token');
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'admin_device_token')) {
+                $registeredToken = $user->admin_device_token;
+                $cookieToken = request()->cookie('admin_device_token');
 
-            if (!empty($registeredToken) && $cookieToken !== $registeredToken) {
-                SscHelper::logActivity($user->id, 'LOGIN_BLOCKED_DEVICE', "Admin login blocked: Attempted login from an unrecognized/unauthorized device for email: {$request->email}");
-                return back()->withErrors([
-                    'email' => 'Access Denied: Unrecognized device. Admin login is restricted to the primary registered device.',
-                ])->withInput();
+                if (!empty($registeredToken) && $cookieToken !== $registeredToken) {
+                    SscHelper::logActivity($user->id, 'LOGIN_BLOCKED_DEVICE', "Admin login blocked: Attempted login from an unrecognized/unauthorized device for email: {$request->email}");
+                    return back()->withErrors([
+                        'email' => 'Access Denied: Unrecognized device. Admin login is restricted to the primary registered device.',
+                    ])->withInput();
+                }
             }
 
             // ── Generate and Send OTP ─────────────────────
@@ -527,19 +529,23 @@ class AuthController extends Controller
         }
 
         // Manage Device Token
-        $cookieToken = $request->cookie('admin_device_token');
-        if (empty($user->admin_device_token)) {
-            // First time registration of this device
-            $token = \Illuminate\Support\Str::random(60);
-            $user->update(['admin_device_token' => $token]);
-            // Store cookie forever (5 years)
-            cookie()->queue(cookie()->forever('admin_device_token', $token));
-        } else {
-            // Ensure cookie matches the existing token
-            if ($cookieToken !== $user->admin_device_token) {
-                // Set the cookie again just in case it was lost but they managed to verify OTP
-                cookie()->queue(cookie()->forever('admin_device_token', $user->admin_device_token));
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'admin_device_token')) {
+            $cookieToken = $request->cookie('admin_device_token');
+            if (empty($user->admin_device_token)) {
+                // First time registration of this device
+                $token = \Illuminate\Support\Str::random(60);
+                $user->update(['admin_device_token' => $token]);
+                // Store cookie forever (5 years)
+                cookie()->queue(cookie()->forever('admin_device_token', $token));
+            } else {
+                // Ensure cookie matches the existing token
+                if ($cookieToken !== $user->admin_device_token) {
+                    // Set the cookie again just in case it was lost but they managed to verify OTP
+                    cookie()->queue(cookie()->forever('admin_device_token', $user->admin_device_token));
+                }
             }
+        } else {
+            \Illuminate\Support\Facades\Log::warning("admin_device_token column is missing in users table. Please run 'php artisan migrate' to enable device restriction security.");
         }
 
         // Log the admin in
