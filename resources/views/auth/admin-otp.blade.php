@@ -32,7 +32,7 @@
         </div>
         @endif
 
-        <form method="POST" action="{{ route('admin.login.otp.submit') }}" id="otpForm">
+        <form method="POST" action="{{ url()->current() }}" id="otpForm">
             @csrf
             <div class="mb-4">
                 <label class="form-label-custom">Verification Code (6 Digits)</label>
