@@ -149,11 +149,10 @@ class AdminLoginSecurityTest extends TestCase
         $token = Str::random(60);
         $this->adminUser->update(['admin_device_token' => $token]);
 
-        // Log the admin in
-        $this->actingAs($this->adminUser);
-
-        // Send reset device request
-        $response = $this->post(route('admin.settings.reset_device'));
+        // Log the admin in with correct cookie
+        $response = $this->withCookie('admin_device_token', $token)
+            ->actingAs($this->adminUser)
+            ->post(route('admin.settings.reset_device'));
 
         $response->assertRedirect(route('admin.settings'));
         $response->assertSessionHas('success');
@@ -200,8 +199,9 @@ class AdminLoginSecurityTest extends TestCase
         $this->assertEquals($this->adminUser->id, $approvalData['user_id']);
 
         // 4. Log in as the admin on their primary device and approve the login
-        $this->actingAs($this->adminUser);
-        $approveResponse = $this->post(route('admin.login_approvals.approve', $approvalId));
+        $approveResponse = $this->withCookie('admin_device_token', $primaryToken)
+            ->actingAs($this->adminUser)
+            ->post(route('admin.login_approvals.approve', $approvalId));
 
         $approveResponse->assertSessionHas('success');
 
@@ -227,4 +227,41 @@ class AdminLoginSecurityTest extends TestCase
         // Verify cookie is issued
         $completeResponse->assertCookie('admin_device_token', $this->adminUser->admin_device_token);
     }
-}
+
+        /**
+        * Test that RoleMiddleware actively terminates sessions of other devices
+        * if the DB token is updated (Revoked/Terminated).
+        */
+        public function test_logout_other_devices_terminates_unauthorized_sessions(): void
+        {
+        // 1. Setup a device token
+        $token = Str::random(60);
+        $this->adminUser->update(['admin_device_token' => $token]);
+
+        // 2. Try to hit protected admin dashboard with a MISMATCHED cookie
+        $this->actingAs($this->adminUser);
+        $response = $this->withCookie('admin_device_token', 'WRONG_OLD_TOKEN')
+            ->get(route('admin.dashboard'));
+
+        // Should log them out and redirect to login
+        $response->assertRedirect(route('login', ['portal' => 'admin']));
+        $this->assertFalse(Auth::check());
+        $response->assertSessionHasErrors(['email']);
+
+        // 3. Log in with the CORRECT token
+        $this->actingAs($this->adminUser);
+        $settingsResponse = $this->withCookie('admin_device_token', $token)
+            ->post(route('admin.settings.logout_others'));
+
+        $settingsResponse->assertRedirect(route('admin.settings'));
+        $settingsResponse->assertSessionHas('success');
+
+        // Verify DB token has changed (regenerated)
+        $this->adminUser->refresh();
+        $this->assertNotEmpty($this->adminUser->admin_device_token);
+        $this->assertNotEquals($token, $this->adminUser->admin_device_token);
+
+        // Verify the response sets the newly regenerated token in current device cookie
+        $settingsResponse->assertCookie('admin_device_token', $this->adminUser->admin_device_token);
+        }
+        }

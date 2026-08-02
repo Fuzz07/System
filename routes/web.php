@@ -89,6 +89,7 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::get('/settings/export', [Admin\SettingsController::class, 'export'])->name('settings.export');
         Route::post('/settings/candidacy/toggle', [Admin\SettingsController::class, 'toggleCandidacy'])->name('settings.candidacy.toggle');
         Route::post('/settings/reset-device', [Admin\SettingsController::class, 'resetDevice'])->name('settings.reset_device');
+        Route::post('/settings/logout-others', [Admin\SettingsController::class, 'logoutOthers'])->name('settings.logout_others');
         Route::get('/candidacies', [Admin\CandidacyController::class, 'index'])->name('candidacies');
         Route::post('/election/open', [Admin\CandidacyController::class, 'openVoting'])->name('election.open');
         Route::post('/election/close', [Admin\CandidacyController::class, 'closeVoting'])->name('election.close');

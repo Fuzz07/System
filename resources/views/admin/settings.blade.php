@@ -90,12 +90,20 @@
                         <i class="bi bi-shield-lock-fill" style="font-size: 1.2rem; color: var(--primary);"></i>
                         <div><strong>Device Authorized:</strong> A primary device is currently registered for your account. All login attempts from other devices are blocked.</div>
                     </div>
-                    <form method="POST" action="{{ route('admin.settings.reset_device') }}" onsubmit="return confirm('Are you sure you want to reset your registered device? You will need to log in and re-authorize a new device using OTP.')">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-danger w-100" style="font-weight: 600;">
-                            <i class="bi bi-arrow-counterclockwise"></i> Reset Registered Device
-                        </button>
-                    </form>
+                    <div class="d-flex flex-column gap-2">
+                        <form method="POST" action="{{ route('admin.settings.logout_others') }}" onsubmit="return confirm('Are you sure you want to terminate all other active device sessions? Any other browser currently logged in will be instantly signed out.')">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="font-weight: 600;">
+                                <i class="bi bi-box-arrow-right"></i> Log Out All Other Devices / Sessions
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.settings.reset_device') }}" onsubmit="return confirm('Are you sure you want to reset your registered device? You will need to log in and re-authorize a new device using OTP.')">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-danger w-100" style="font-weight: 600;">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reset & De-authorize Device
+                            </button>
+                        </form>
+                    </div>
                 @else
                     <div class="alert alert-warning d-flex align-items-center gap-2 mb-0" style="font-size: 0.82rem; border-radius: 6px; padding: 10px 14px; color: #854d0e; background-color: #fef9c3; border: 1px solid #fef08a;">
                         <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.2rem; color: #ca8a04;"></i>

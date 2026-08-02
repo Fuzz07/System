@@ -32,6 +32,22 @@ class SettingsController extends Controller
         return redirect()->route('admin.settings')->with('success', 'Your registered device has been successfully reset. Next time you log in, the new device will be registered.');
     }
 
+    public function logoutOthers()
+    {
+        $user = Auth::user();
+        
+        // Regenerate the token
+        $newToken = \Illuminate\Support\Str::random(60);
+        $user->update(['admin_device_token' => $newToken]);
+        
+        // Set the new cookie for the current device so it stays authorized!
+        cookie()->queue(cookie()->forever('admin_device_token', $newToken));
+        
+        SscHelper::logActivity($user->id, 'ADMIN_SESSIONS_REVOKED', 'Revoked all other active admin device sessions.');
+        
+        return redirect()->route('admin.settings')->with('success', 'All other active device sessions have been successfully terminated. They will be logged out on their next request.');
+    }
+
     public function addSchoolYear(Request $request)
     {
         $request->validate(['sy_label' => 'required|regex:/^\d{4}-\d{4}$/|unique:school_years,label']);
