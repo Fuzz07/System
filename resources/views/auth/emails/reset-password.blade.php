@@ -32,7 +32,7 @@
                                 <div style="display: inline-block; background-color: #fef3c7; border: 2px dashed #d97706; color: #d97706; letter-spacing: 6px; padding: 18px 40px; border-radius: 16px; font-size: 32px; font-weight: 800; font-family: monospace;">{{ $otp }}</div>
                             </div>
 
-                            <p style="font-size: 14px; line-height: 1.6; color: #64748b; margin-bottom: 24px;">This verification code is valid for **15 minutes**. If you did not initiate this request, you can safely ignore this email — your password will remain unchanged.</p>
+                            <p style="font-size: 14px; line-height: 1.6; color: #64748b; margin-bottom: 24px;">This verification code is valid for **3 minutes**. If you did not initiate this request, you can safely ignore this email — your password will remain unchanged.</p>
                             
                             <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;">
                         </td>

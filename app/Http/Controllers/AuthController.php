@@ -195,7 +195,7 @@ class AuthController extends Controller
             session([
                 'admin_login_user_id' => $user->id,
                 'admin_login_otp' => $otp,
-                'admin_login_otp_expires_at' => now()->addMinutes(10),
+                'admin_login_otp_expires_at' => now()->addMinutes(3),
                 'admin_login_latitude' => $request->input('latitude'),
                 'admin_login_longitude' => $request->input('longitude'),
             ]);
@@ -209,7 +209,7 @@ class AuthController extends Controller
                                 <h2 style='color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>SSC Admin Portal Verification</h2>
                                 <p style='color: #334155; font-size: 16px;'>You are attempting to log in to the SSC Admin Portal. Please use the following secure 6-digit verification code to complete your login:</p>
                                 <div style='background: #f1f5f9; padding: 15px; border-radius: 6px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e3a8a; margin: 20px 0;'>{$otp}</div>
-                                <p style='color: #64748b; font-size: 14px;'>This code is valid for 10 minutes. If you did not request this login attempt, please change your password and secure your account immediately.</p>
+                                <p style='color: #64748b; font-size: 14px;'>This code is valid for 3 minutes. If you did not request this login attempt, please change your password and secure your account immediately.</p>
                             </div>
                         ");
                 });
@@ -358,7 +358,11 @@ class AuthController extends Controller
 
 
         $otp = (string) rand(100000, 999999);
-        session(['register_otp' => $otp, 'register_email' => $request->email]);
+        session([
+            'register_otp' => $otp,
+            'register_email' => $request->email,
+            'register_otp_expires_at' => now()->addMinutes(3),
+        ]);
 
 
         try {
@@ -397,6 +401,15 @@ class AuthController extends Controller
 
         $sessionOtp = session('register_otp');
         $sessionEmail = session('register_email');
+        $expiresAt = session('register_otp_expires_at');
+
+        if ($expiresAt && now()->greaterThan($expiresAt)) {
+            session()->forget(['register_otp', 'register_email', 'register_otp_expires_at']);
+            return response()->json([
+                'success' => false,
+                'message' => 'Verification code has expired (valid for 3 minutes). Please request a new code.'
+            ]);
+        }
 
         if ($request->otp === $sessionOtp && $request->email === $sessionEmail) {
             session(['register_email_verified' => true]);
@@ -479,7 +492,11 @@ class AuthController extends Controller
 
 
         $otp = (string) rand(100000, 999999);
-        session(['reset_password_otp' => $otp, 'reset_password_email' => $request->email]);
+        session([
+            'reset_password_otp' => $otp,
+            'reset_password_email' => $request->email,
+            'reset_password_otp_expires_at' => now()->addMinutes(3),
+        ]);
 
 
         try {
@@ -515,6 +532,12 @@ class AuthController extends Controller
 
         $sessionOtp = session('reset_password_otp');
         $sessionEmail = session('reset_password_email');
+        $expiresAt = session('reset_password_otp_expires_at');
+
+        if ($expiresAt && now()->greaterThan($expiresAt)) {
+            session()->forget(['reset_password_otp', 'reset_password_email', 'reset_password_otp_expires_at']);
+            return back()->withErrors(['otp' => 'Verification code has expired (valid for 3 minutes). Please request a new code.'])->withInput();
+        }
 
         if ($request->otp !== $sessionOtp || $request->email !== $sessionEmail) {
             return back()->withErrors(['otp' => 'Invalid or expired verification code. Please check your email and try again.'])->withInput();
@@ -540,11 +563,14 @@ class AuthController extends Controller
 
     public function showAdminOtp()
     {
-        if (!session()->has('admin_login_otp') || !session()->has('admin_login_user_id')) {
-            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'Session expired. Please log in again.']);
+        $expiresAt = session('admin_login_otp_expires_at');
+        if (!session()->has('admin_login_otp') || !session()->has('admin_login_user_id') || ($expiresAt && now()->greaterThan($expiresAt))) {
+            session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_user_id', 'admin_login_latitude', 'admin_login_longitude']);
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'The verification code has expired. Please log in again.']);
         }
 
-        return view('auth.admin-otp');
+        $expiresTimestamp = $expiresAt ? $expiresAt->timestamp : now()->addMinutes(3)->timestamp;
+        return view('auth.admin-otp', compact('expiresTimestamp'));
     }
 
     public function verifyAdminOtp(Request $request)
@@ -686,7 +712,7 @@ class AuthController extends Controller
         session([
             'admin_login_user_id' => $user->id,
             'admin_login_otp' => $otp,
-            'admin_login_otp_expires_at' => now()->addMinutes(10),
+            'admin_login_otp_expires_at' => now()->addMinutes(3),
             'admin_login_latitude' => $requestData['latitude'],
             'admin_login_longitude' => $requestData['longitude'],
         ]);
@@ -700,7 +726,7 @@ class AuthController extends Controller
                             <h2 style='color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>SSC Admin Portal Verification</h2>
                             <p style='color: #334155; font-size: 16px;'>You are attempting to log in to the SSC Admin Portal. Please use the following secure 6-digit verification code to complete your login:</p>
                             <div style='background: #f1f5f9; padding: 15px; border-radius: 6px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e3a8a; margin: 20px 0;'>{$otp}</div>
-                            <p style='color: #64748b; font-size: 14px;'>This code is valid for 10 minutes. If you did not request this login attempt, please change your password immediately.</p>
+                            <p style='color: #64748b; font-size: 14px;'>This code is valid for 3 minutes. If you did not request this login attempt, please change your password immediately.</p>
                         </div>
                     ");
             });
