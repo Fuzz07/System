@@ -76,22 +76,9 @@ class AnnouncementsActivity : AppCompatActivity() {
 
         thread {
             try {
-                // Determine base URL from portal URL
-                var baseUrl = portalUrl
-                val pathsToRemove = setOf(
-                    "/login/student",
-                    "/login/auth/student",
-                    "/m/student/announcements",
-                    "/student/announcements",
-                    "/m/student/overview",
-                    "/student/dashboard",
-                    "/m/student",
-                    "/student"
-                )
-                for (path in pathsToRemove) {
-                    baseUrl = baseUrl.replace(path, "")
-                }
-                baseUrl = baseUrl.trimEnd('/')
+                // Determine base URL dynamically and robustly from portal URL
+                val parsedUrl = java.net.URL(portalUrl)
+                val baseUrl = "${parsedUrl.protocol}://${parsedUrl.host}" + if (parsedUrl.port != -1) ":${parsedUrl.port}" else ""
 
                 val url = URL("$baseUrl/student/api/announcements")
                 val conn = url.openConnection() as HttpURLConnection
@@ -132,6 +119,7 @@ class AnnouncementsActivity : AppCompatActivity() {
                         recyclerView.visibility = View.VISIBLE
                         swipeRefresh.isRefreshing = false
                         adapter.submitList(list)
+                        emptyText.text = "No announcements available."
                         emptyText.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
                     }
                 } else {
@@ -139,6 +127,8 @@ class AnnouncementsActivity : AppCompatActivity() {
                         skeletonLayout.visibility = View.GONE
                         recyclerView.visibility = View.VISIBLE
                         swipeRefresh.isRefreshing = false
+                        emptyText.text = "Failed to load announcements (Server error: ${conn.responseCode})."
+                        emptyText.visibility = View.VISIBLE
                     }
                 }
                 conn.disconnect()
@@ -148,6 +138,8 @@ class AnnouncementsActivity : AppCompatActivity() {
                     skeletonLayout.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
                     swipeRefresh.isRefreshing = false
+                    emptyText.text = "Failed to load announcements (Connection error)."
+                    emptyText.visibility = View.VISIBLE
                 }
             }
         }

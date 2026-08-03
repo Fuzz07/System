@@ -44,7 +44,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pollHandler: Handler
     private val pollingRunnable = object : Runnable {
         override fun run() {
-            fetchUnreadNotifications()
+            val currentUrl = webView.url ?: portalUrl
+            try {
+                val parsedUrl = java.net.URL(currentUrl)
+                val activeBaseUrl = "${parsedUrl.protocol}://${parsedUrl.host}" + if (parsedUrl.port != -1) ":${parsedUrl.port}" else ""
+                fetchUnreadNotifications(activeBaseUrl)
+            } catch (e: Exception) {
+                // Fail-safe fallback if URL parsing fails
+                fetchUnreadNotifications(baseUrl)
+            }
             pollHandler.postDelayed(this, POLL_INTERVAL_MS)
         }
     }
@@ -311,7 +319,14 @@ class MainActivity : AppCompatActivity() {
             if (task.isSuccessful) {
                 val token = task.result
                 android.util.Log.d("FCM_DEBUG", "FCM token received: $token")
-                sendFCMTokenToBackend(token)
+                val currentUrl = webView.url ?: portalUrl
+                try {
+                    val parsedUrl = java.net.URL(currentUrl)
+                    val activeBaseUrl = "${parsedUrl.protocol}://${parsedUrl.host}" + if (parsedUrl.port != -1) ":${parsedUrl.port}" else ""
+                    sendFCMTokenToBackend(token, activeBaseUrl)
+                } catch (e: Exception) {
+                    sendFCMTokenToBackend(token, baseUrl)
+                }
                 // Also store locally
                 val sharedPref = getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
                 sharedPref.edit().putString("fcm_token", token).apply()
@@ -355,14 +370,22 @@ class MainActivity : AppCompatActivity() {
         val sharedPref = getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
         val token = sharedPref.getString("fcm_token", null)
         if (!token.isNullOrEmpty()) {
-            sendFCMTokenToBackend(token)
+            val currentUrl = webView.url ?: portalUrl
+            try {
+                val parsedUrl = java.net.URL(currentUrl)
+                val activeBaseUrl = "${parsedUrl.protocol}://${parsedUrl.host}" + if (parsedUrl.port != -1) ":${parsedUrl.port}" else ""
+                sendFCMTokenToBackend(token, activeBaseUrl)
+            } catch (e: Exception) {
+                // Fail-safe fallback to standard baseUrl if URL parsing fails
+                sendFCMTokenToBackend(token, baseUrl)
+            }
         }
     }
 
-    private fun sendFCMTokenToBackend(token: String) {
+    private fun sendFCMTokenToBackend(token: String, activeBaseUrl: String) {
         Thread {
             try {
-                val url = java.net.URL("$baseUrl/student/api/device-token")
+                val url = java.net.URL("$activeBaseUrl/student/api/device-token")
                 val conn = url.openConnection() as java.net.HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -402,10 +425,10 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun fetchUnreadNotifications() {
+    private fun fetchUnreadNotifications(activeBaseUrl: String) {
         Thread {
             try {
-                val url = java.net.URL("$baseUrl/student/notifications/unread-count")
+                val url = java.net.URL("$activeBaseUrl/student/notifications/unread-count")
                 val conn = url.openConnection() as java.net.HttpURLConnection
                 conn.requestMethod = "GET"
                 conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10) SSCStudentApp/1.0")

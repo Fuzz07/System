@@ -5,6 +5,8 @@ namespace App\Helpers;
 use App\Models\ActivityLog;
 use App\Models\SchoolYear;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class SscHelper
 {
@@ -79,6 +81,47 @@ class SscHelper
     public static function isWithinPhilippines(float $latitude, float $longitude): bool
     {
         return ($latitude >= 4.0 && $latitude <= 21.5) && ($longitude >= 116.0 && $longitude <= 127.0);
+    }
+
+    /**
+     * Verifies if the client IP address originates from the Philippines (or is local/private).
+     */
+    public static function isIpInPhilippines(?string $ip): bool
+    {
+        if (empty($ip)) {
+            return true;
+        }
+
+        // Allow localhost & private networks (RFC 1918 / RFC 4193 / loopback)
+        if (
+            in_array($ip, ['127.0.0.1', '::1'], true) ||
+            filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false
+        ) {
+            return true;
+        }
+
+        // 1. Check Cloudflare / CDN header if present
+        $cfCountry = request()->header('CF-IPCountry') ?? request()->server('HTTP_CF_IPCOUNTRY');
+        if (!empty($cfCountry)) {
+            return strtoupper($cfCountry) === 'PH';
+        }
+
+        // 2. Server-side IP lookup with caching (24 hours per IP)
+        return Cache::remember("geo_ip_ph_{$ip}", 86400, function () use ($ip) {
+            try {
+                $response = Http::timeout(3)->get("http://ip-api.com/json/{$ip}?fields=status,countryCode");
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (($data['status'] ?? '') === 'success') {
+                        return strtoupper($data['countryCode'] ?? '') === 'PH';
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("IP Geolocation lookup failed for IP {$ip}: " . $e->getMessage());
+                return true;
+            }
+            return true;
+        });
     }
 
     /**

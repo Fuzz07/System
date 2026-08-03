@@ -83,21 +83,9 @@ class ChatbotActivity : AppCompatActivity() {
 
         thread {
             try {
-                var baseUrl = portalUrl
-                val pathsToRemove = setOf(
-                    "/login/student",
-                    "/login/auth/student",
-                    "/m/student/announcements",
-                    "/student/announcements",
-                    "/m/student/overview",
-                    "/student/dashboard",
-                    "/m/student",
-                    "/student"
-                )
-                for (path in pathsToRemove) {
-                    baseUrl = baseUrl.replace(path, "")
-                }
-                baseUrl = baseUrl.trimEnd('/')
+                // Determine base URL dynamically and robustly from portal URL
+                val parsedUrl = java.net.URL(portalUrl)
+                val baseUrl = "${parsedUrl.protocol}://${parsedUrl.host}" + if (parsedUrl.port != -1) ":${parsedUrl.port}" else ""
 
                 val url = URL("$baseUrl/student/chatbot/chat")
                 val conn = url.openConnection() as HttpURLConnection

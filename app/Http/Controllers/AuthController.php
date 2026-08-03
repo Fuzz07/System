@@ -49,11 +49,21 @@ class AuthController extends Controller
 
             $lat = (float) $request->input('latitude');
             $lng = (float) $request->input('longitude');
+            $ip  = $request->ip();
 
+            // 1. Verify client coordinates
             if (!SscHelper::isWithinPhilippines($lat, $lng)) {
                 SscHelper::logActivity(null, 'LOGIN_BLOCKED_GEO', "Access denied: Login attempt from outside the Philippines (Lat: {$lat}, Lng: {$lng}) for email: {$request->email}");
                 return back()->withErrors([
                     'email' => 'Access denied: You are attempting to log in from outside the Philippines.',
+                ])->withInput();
+            }
+
+            // 2. Verify server-side IP address to prevent HTTP body/script coordinate tampering bypasses
+            if (!SscHelper::isIpInPhilippines($ip)) {
+                SscHelper::logActivity(null, 'LOGIN_BLOCKED_GEO_SPOOF', "Access denied: IP {$ip} originates outside the Philippines despite submitted coordinates (Lat: {$lat}, Lng: {$lng}) for email: {$request->email}");
+                return back()->withErrors([
+                    'email' => 'Access denied: Your network IP address is located outside the Philippines.',
                 ])->withInput();
             }
         }
