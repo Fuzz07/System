@@ -25,6 +25,11 @@ class SettingsController extends Controller
     public function resetDevice()
     {
         $user = Auth::user();
+        
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('users', 'admin_device_token')) {
+            return redirect()->route('admin.settings')->with('danger', 'Error: The "admin_device_token" column is missing in your database. Please run "php artisan migrate" on your server first to enable device lock security.');
+        }
+
         $user->update(['admin_device_token' => null]);
         
         SscHelper::logActivity($user->id, 'ADMIN_DEVICE_RESET', 'Cleared registered device token. Ready for new device registration on next login.');
@@ -35,6 +40,10 @@ class SettingsController extends Controller
     public function logoutOthers()
     {
         $user = Auth::user();
+        
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('users', 'admin_device_token')) {
+            return redirect()->route('admin.settings')->with('danger', 'Error: The "admin_device_token" column is missing in your database. Please run "php artisan migrate" on your server first to enable session revocation.');
+        }
         
         // Regenerate the token
         $newToken = \Illuminate\Support\Str::random(60);
@@ -51,6 +60,10 @@ class SettingsController extends Controller
     public function registerCurrentDevice()
     {
         $user = Auth::user();
+        
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('users', 'admin_device_token')) {
+            return redirect()->route('admin.settings')->with('danger', 'Error: The "admin_device_token" column is missing in your database. Please run "php artisan migrate" on your server first to enable device registration.');
+        }
         
         // Generate a new secure device token
         $token = \Illuminate\Support\Str::random(60);
