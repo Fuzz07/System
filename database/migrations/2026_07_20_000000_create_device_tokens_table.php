@@ -11,18 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('device_tokens', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id')->index();
-            $table->string('fcm_token')->unique();
-            $table->string('device_type')->nullable(); // 'android', 'ios', 'web'
-            $table->string('device_name')->nullable(); // Device model (e.g., 'Samsung Galaxy S23')
-            $table->boolean('is_active')->default(true);
-            $table->timestamp('last_used_at')->nullable();
-            $table->timestamps();
+        if (!Schema::hasTable('device_tokens')) {
+            Schema::create('device_tokens', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('user_id')->index();
+                $table->string('fcm_token')->unique();
+                $table->string('device_type')->nullable(); // 'android', 'ios', 'web'
+                $table->string('device_name')->nullable(); // Device model (e.g., 'Samsung Galaxy S23')
+                $table->boolean('is_active')->default(true);
+                $table->timestamp('last_used_at')->nullable();
+                $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-        });
+                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            });
+        }
     }
 
     /**
