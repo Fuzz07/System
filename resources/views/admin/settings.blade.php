@@ -105,10 +105,16 @@
                         </form>
                     </div>
                 @else
-                    <div class="alert alert-warning d-flex align-items-center gap-2 mb-0" style="font-size: 0.82rem; border-radius: 6px; padding: 10px 14px; color: #854d0e; background-color: #fef9c3; border: 1px solid #fef08a;">
+                    <div class="alert alert-warning d-flex align-items-center gap-2 mb-3" style="font-size: 0.82rem; border-radius: 6px; padding: 10px 14px; color: #854d0e; background-color: #fef9c3; border: 1px solid #fef08a;">
                         <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.2rem; color: #ca8a04;"></i>
-                        <div><strong>No Registered Device:</strong> Your current device has not been registered as the exclusive primary device yet. The next device that successfully logs in via OTP will be locked in.</div>
+                        <div><strong>No Registered Device:</strong> Your current device has not been registered as the exclusive primary device yet. All devices can currently log in. The next login via OTP will lock that device in.</div>
                     </div>
+                    <form method="POST" action="{{ route('admin.settings.register_current_device') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-primary w-100" style="font-weight: 600;">
+                            <i class="bi bi-shield-plus"></i> Register & Lock This Device as Primary
+                        </button>
+                    </form>
                 @endif
             </div>
         </div>

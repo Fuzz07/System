@@ -48,6 +48,22 @@ class SettingsController extends Controller
         return redirect()->route('admin.settings')->with('success', 'All other active device sessions have been successfully terminated. They will be logged out on their next request.');
     }
 
+    public function registerCurrentDevice()
+    {
+        $user = Auth::user();
+        
+        // Generate a new secure device token
+        $token = \Illuminate\Support\Str::random(60);
+        $user->update(['admin_device_token' => $token]);
+        
+        // Save to browser forever cookie
+        cookie()->queue(cookie()->forever('admin_device_token', $token));
+        
+        SscHelper::logActivity($user->id, 'ADMIN_DEVICE_REGISTERED', 'Registered current device as primary device from Settings.');
+        
+        return redirect()->route('admin.settings')->with('success', 'Your current device has been successfully registered and locked in as your primary authorized device!');
+    }
+
     public function addSchoolYear(Request $request)
     {
         $request->validate(['sy_label' => 'required|regex:/^\d{4}-\d{4}$/|unique:school_years,label']);

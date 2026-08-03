@@ -264,4 +264,27 @@ class AdminLoginSecurityTest extends TestCase
         // Verify the response sets the newly regenerated token in current device cookie
         $settingsResponse->assertCookie('admin_device_token', $this->adminUser->admin_device_token);
         }
+
+        /**
+         * Test that an admin without a locked device can register and authorize
+         * their current device with a single click from settings.
+         */
+        public function test_register_current_device_from_settings_locks_in_device(): void
+        {
+            // 1. Ensure DB token is currently null (unassigned)
+            $this->assertNull($this->adminUser->admin_device_token);
+
+            // 2. Act as the admin and send the register request
+            $this->actingAs($this->adminUser);
+            $response = $this->post(route('admin.settings.register_current_device'));
+
+            // 3. Assert redirect and success message
+            $response->assertRedirect(route('admin.settings'));
+            $response->assertSessionHas('success');
+
+            // 4. Verify DB token is filled and cookie is issued
+            $this->adminUser->refresh();
+            $this->assertNotEmpty($this->adminUser->admin_device_token);
+            $response->assertCookie('admin_device_token', $this->adminUser->admin_device_token);
+        }
         }
