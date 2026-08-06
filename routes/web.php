@@ -504,4 +504,40 @@ Route::group([], function () use ($baseDomain) {
         Route::post('/voting', [Student\VotingController::class, 'storeMobile'])->name('voting.store');
         Route::get('/election-results', [Student\VotingController::class, 'resultsMobile'])->name('election.results');
     });
+
+    Route::get('/ssc-student-app.apk', function () {
+        $path = public_path('ssc-student-app.apk');
+        if (!file_exists($path)) {
+            abort(404);
+        }
+        return response()->download($path, 'ssc-student-app.apk', [
+            'Content-Type' => 'application/vnd.android.package-archive',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Content-Encoding' => 'none',
+        ]);
+    });
+
+    Route::get('/downloads/ssc-student-app.apk', function () {
+        $path = public_path('downloads/ssc-student-app.apk');
+        if (!file_exists($path)) {
+            abort(404);
+        }
+        return response()->download($path, 'ssc-student-app.apk', [
+            'Content-Type' => 'application/vnd.android.package-archive',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Content-Encoding' => 'none',
+        ]);
+    });
+
+    Route::get('/downloads/ssc-student-app-debug.apk', function () {
+        $path = public_path('downloads/ssc-student-app-debug.apk');
+        if (!file_exists($path)) {
+            abort(404);
+        }
+        return response()->download($path, 'ssc-student-app-debug.apk', [
+            'Content-Type' => 'application/vnd.android.package-archive',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Content-Encoding' => 'none',
+        ]);
+    });
 });
