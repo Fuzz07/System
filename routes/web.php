@@ -85,8 +85,8 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::get('/settings', [Admin\SettingsController::class, 'index'])->name('settings');
         Route::post('/settings/school-year', [Admin\SettingsController::class, 'addSchoolYear'])->name('settings.sy.add');
         Route::patch('/settings/school-year/{schoolYear}/activate', [Admin\SettingsController::class, 'activateSchoolYear'])->name('settings.sy.activate');
-        Route::delete('/settings/school-year/{schoolYear}', [Admin\SettingsController::class, 'deleteSchoolYear'])->name('settings.sy.delete');
-        Route::get('/settings/export', [Admin\SettingsController::class, 'export'])->name('settings.export');
+        Route::post('/settings/export/request-otp', [Admin\SettingsController::class, 'requestExportOtp'])->name('settings.export.request_otp');
+        Route::match(['get', 'post'], '/settings/export', [Admin\SettingsController::class, 'export'])->name('settings.export');
         Route::post('/settings/candidacy/toggle', [Admin\SettingsController::class, 'toggleCandidacy'])->name('settings.candidacy.toggle');
         Route::post('/settings/reset-device', [Admin\SettingsController::class, 'resetDevice'])->name('settings.reset_device');
         Route::post('/settings/logout-others', [Admin\SettingsController::class, 'logoutOthers'])->name('settings.logout_others');

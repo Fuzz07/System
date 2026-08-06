@@ -204,8 +204,56 @@ class SettingsController extends Controller
         return redirect()->route('admin.settings')->with('success', "Candidacy filing is now {$statusStr} and announcement has been auto-posted.");
     }
 
-    public function export()
+    public function requestExportOtp(Request $request)
     {
+        $user = Auth::user();
+        $otp = (string) rand(100000, 999999);
+
+        session([
+            'export_sql_otp' => $otp,
+            'export_sql_otp_expires_at' => now()->addMinutes(3),
+        ]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::send([], [], function ($message) use ($user, $otp) {
+                $message->to($user->email)
+                    ->subject('SQL Database Export Verification Code')
+                    ->html("
+                        <div style='font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #cbd5e1; border-radius: 8px;'>
+                            <h2 style='color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>SSC Admin Data Export Security</h2>
+                            <p style='color: #334155; font-size: 16px;'>You have requested to download a full SQL database backup of the SSC system. Please enter the following 6-digit security verification code to authorize this download:</p>
+                            <div style='background: #f1f5f9; padding: 15px; border-radius: 6px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e3a8a; margin: 20px 0;'>{$otp}</div>
+                            <p style='color: #64748b; font-size: 14px;'>This code is valid for 3 minutes. If you did not initiate this export request, please secure your admin account immediately.</p>
+                        </div>
+                    ");
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification code sent to ' . $user->email . '! Check your email inbox.',
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Export OTP email failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification code email. Please try again.',
+            ], 500);
+        }
+    }
+
+    public function export(Request $request)
+    {
+        $sessionOtp = session('export_sql_otp');
+        $expiresAt = session('export_sql_otp_expires_at');
+        $inputOtp = trim($request->input('otp', ''));
+
+        if (empty($sessionOtp) || empty($expiresAt) || now()->greaterThan($expiresAt) || $inputOtp !== $sessionOtp) {
+            return redirect()->route('admin.settings')->with('danger', 'Security Check Failed: Invalid or expired OTP verification code for SQL backup export.');
+        }
+
+        // Clear OTP session
+        session()->forget(['export_sql_otp', 'export_sql_otp_expires_at']);
+
         $database = DB::getDatabaseName();
         $tables = collect(DB::select('SHOW TABLES'))->map(function ($row) {
             return array_values((array) $row)[0];
@@ -243,7 +291,7 @@ class SettingsController extends Controller
 
         $sql .= "SET FOREIGN_KEY_CHECKS = 1;\n";
 
-        SscHelper::logActivity(Auth::id(), 'DATA_EXPORT', 'Exported raw SQL database backup');
+        SscHelper::logActivity(Auth::id(), 'DATA_EXPORT', 'Exported raw SQL database backup with OTP verification');
 
         return response($sql, 200, [
             'Content-Type' => 'application/sql; charset=utf-8',
