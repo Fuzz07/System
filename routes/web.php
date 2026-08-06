@@ -173,7 +173,7 @@ Route::domain('treasurer.' . $baseDomain)->group(function () {
 });
 
 // ─── Main Domain / Student Portal Routing ───
-Route::domain($baseDomain)->group(function () use ($baseDomain) {
+Route::group([], function () use ($baseDomain) {
     // ─── Public / Landing ───
     Route::get('/', function () {
         return view('welcome');

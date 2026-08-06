@@ -232,6 +232,7 @@ class AuthController extends Controller
         $isAndroidApp = str_contains(request()->userAgent() ?? '', 'SSCStudentApp');
         Auth::login($user, $isAndroidApp);
         $request->session()->regenerate();
+        $request->session()->save();
 
         $logDetails = "Logged in via {$portal} portal";
         if ($portal !== 'student') {

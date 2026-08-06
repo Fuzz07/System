@@ -100,14 +100,38 @@
             </table>
         </div>
         @if($logs->hasPages())
-            <div class="card-footer bg-white d-flex justify-content-between align-items-center py-2 px-3">
+            <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center py-2 px-3">
                 <div style="font-size: 0.8rem;" class="text-muted">
                     Showing {{ $logs->firstItem() }} to {{ $logs->lastItem() }} of {{ number_format($logs->total()) }} entries
                 </div>
                 <div>
-                    {{ $logs->links() }}
+                    {{ $logs->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         @endif
     </div>
+
+    <style>
+        .pagination {
+            margin-bottom: 0 !important;
+            font-size: 0.8rem;
+        }
+        .pagination .page-link {
+            padding: 4px 10px;
+            color: #475569;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary, #2563eb);
+            border-color: var(--primary, #2563eb);
+            color: #fff;
+        }
+        .pagination svg, svg.w-5.h-5, [class*="w-5"][class*="h-5"] {
+            width: 14px !important;
+            height: 14px !important;
+            max-width: 14px !important;
+            max-height: 14px !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+        }
+    </style>
 @endsection
