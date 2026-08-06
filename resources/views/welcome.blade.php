@@ -1468,6 +1468,28 @@
         });
     </script>
 
+    <script>
+        // Hide the "Install Android App" button if already running inside the SSC APK WebView.
+        // This is a client-side guard that pairs with the server-side @if() check.
+        (function () {
+            if (navigator.userAgent && navigator.userAgent.includes('SSCStudentApp')) {
+                // Hide all install/download APK buttons
+                document.querySelectorAll('a[href*=".apk"], a[href*="ssc-student-app"]').forEach(function (el) {
+                    el.style.display = 'none';
+                });
+                // Hide any element with text containing "Install Android App" or "Download APK"
+                document.querySelectorAll('.btn-outline-hero, [id*="apk"], [id*="android"]').forEach(function (el) {
+                    if (el.textContent && (el.textContent.includes('Install Android') || el.textContent.includes('Download APK'))) {
+                        el.style.display = 'none';
+                    }
+                });
+                // Hide the app download modal if it exists (shouldn't be rendered from server but safety net)
+                var modal = document.getElementById('appDownloadModal');
+                if (modal) { modal.remove(); }
+            }
+        })();
+    </script>
+
 </body>
 
 </html>

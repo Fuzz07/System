@@ -442,12 +442,15 @@ class AuthController extends Controller
         $redirect = null;
         if ($user->role === 'student') {
             $ua = request()->userAgent() ?? '';
-            $isMobile = preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua);
+            $isAndroidApp = str_contains($ua, 'SSCStudentApp');
+            $isMobile = $isAndroidApp || preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua);
             if ($isMobile) {
-                $redirect = redirect()->route('mobile.student.proposals');
+                // Use a relative path so the WebView/browser stays on the exact same host.
+                // Using route() generates an absolute URL that can change host and lose session cookies.
+                $redirect = redirect('/m/student/proposals');
             } else {
                 $redirect = redirect()->route('student.proposals');
-                if ($justLoggedIn) {
+                if ($justLoggedIn && !$isAndroidApp) {
                     $redirect = $redirect->with('show_app_download', true);
                 }
             }
