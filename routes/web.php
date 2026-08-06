@@ -369,10 +369,11 @@ Route::group([], function () use ($baseDomain) {
         Route::post('/feedback', function (\Illuminate\Http\Request $request) {
             $request->validate(['message' => 'required|string']);
             \App\Models\Feedback::create([
-                'user_id' => Auth::id(),
+                'student_id' => Auth::id(),
                 'message' => $request->message,
                 'status' => 'Pending',
             ]);
+            \App\Helpers\SscHelper::logActivity(Auth::id(), 'FEEDBACK_SUBMIT', 'Student submitted mobile feedback');
             return redirect()->route('mobile.student.feedback')->with('success', 'Thank you for your feedback! The SSC admin has been notified.');
         })->name('feedback.store');
 

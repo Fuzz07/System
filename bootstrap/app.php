@@ -72,6 +72,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             'student/chatbot/chat',
             'm/student/enrollment',
             'student/enrollment',
+            'student/api/device-token',
         ]);
 
         $middleware->web(append: [
