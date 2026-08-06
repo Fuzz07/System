@@ -1470,7 +1470,7 @@
 
     <script>
         // Hide the "Install Android App" button if already running inside the SSC APK WebView.
-        // This is a client-side guard that pairs with the server-side @if() check.
+        // This is a client-side guard that pairs with the server-side check.
         (function () {
             if (navigator.userAgent && navigator.userAgent.includes('SSCStudentApp')) {
                 // Hide all install/download APK buttons
