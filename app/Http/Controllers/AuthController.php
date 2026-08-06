@@ -229,8 +229,18 @@ class AuthController extends Controller
         }
 
 
-        $isAndroidApp = str_contains(request()->userAgent() ?? '', 'SSCStudentApp');
-        Auth::login($user, $isAndroidApp);
+        $ua = request()->userAgent() ?? '';
+        $isAndroidApp = str_contains($ua, 'SSCStudentApp');
+        $isMobile = $isAndroidApp || preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $ua);
+
+        // Always enable persistent "remember me" token for students and mobile users so WebView session recycling doesn't force re-login.
+        $remember = ($user->isStudent() || $isMobile || $isAndroidApp);
+        try {
+            Auth::login($user, $remember);
+        } catch (\Throwable $e) {
+            // Fallback in case remember_token column is missing or schema is updating
+            Auth::login($user, false);
+        }
         $request->session()->regenerate();
         $request->session()->save();
 

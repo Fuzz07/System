@@ -17,10 +17,10 @@ class User extends Authenticatable
         'first_name', 'middle_name', 'last_name', 'age', 'year_level',
         'fullname', 'email', 'password', 'role', 'department',
         'student_id', 'profile_pic', 'status', 'position', 'party',
-        'admin_device_token',
+        'admin_device_token', 'remember_token',
     ];
 
-    protected $hidden = ['password'];
+    protected $hidden = ['password', 'remember_token'];
 
     protected function casts(): array
     {
