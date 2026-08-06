@@ -281,4 +281,141 @@ class VotingController extends Controller
 
         return view('shared.election-results', compact('activeSy', 'candidatesByPosition'));
     }
+
+    public function indexMobile()
+    {
+        $student = Auth::user();
+        $activeSy = SchoolYear::where('is_active', 1)->first();
+
+        if (!$activeSy || !$activeSy->voting_open) {
+            return redirect()->route('mobile.student.proposals')->with('warning', 'Voting period is not active.');
+        }
+
+        $myVotes = Vote::with('candidacy.user')
+            ->where('user_id', $student->id)
+            ->where('school_year', $activeSy->label)
+            ->get()
+            ->keyBy('position');
+
+        $candidates = Candidacy::with('user')
+            ->where('school_year', $activeSy->label)
+            ->where('status', 'approved')
+            ->get();
+
+        $candidatesByPosition = [];
+        foreach ($candidates as $c) {
+            $candidatesByPosition[$c->position][] = $c;
+        }
+
+        return view('mobile.student.voting', compact('activeSy', 'myVotes', 'candidatesByPosition'));
+    }
+
+    public function storeMobile(Request $request)
+    {
+        $request->validate([
+            'candidacy_id' => 'required|integer|exists:candidacies,id',
+        ]);
+
+        $student = Auth::user();
+        $activeSy = SchoolYear::where('is_active', 1)->first();
+
+        if (!$activeSy || !$activeSy->voting_open) {
+            return redirect()->route('mobile.student.voting')->with('danger', 'Voting period is not active.');
+        }
+
+        $candidacy = Candidacy::where('id', $request->candidacy_id)
+            ->where('school_year', $activeSy->label)
+            ->where('status', 'approved')
+            ->first();
+
+        if (!$candidacy) {
+            return redirect()->route('mobile.student.voting')->with('danger', 'Selected candidate is invalid.');
+        }
+
+        // Verify duplicate votes
+        $voteExists = Vote::where('user_id', $student->id)
+            ->where('position', $candidacy->position)
+            ->where('school_year', $activeSy->label)
+            ->exists();
+
+        if ($voteExists) {
+            return redirect()->route('mobile.student.voting')->with('danger', 'You have already voted for this position.');
+        }
+
+        // Check if there is an existing ballot for this position
+        $ballot = StudentBallot::where('user_id', $student->id)
+            ->where('school_year', $activeSy->label)
+            ->where('position', $candidacy->position)
+            ->first();
+
+        if ($ballot && $ballot->submitted_at) {
+            return redirect()->route('mobile.student.voting')->with('danger', 'You have already submitted a ballot for this position.');
+        }
+
+        // Create or update student ballot
+        if ($ballot) {
+            $ballot->update([
+                'submitted_at' => now(),
+            ]);
+        } else {
+            StudentBallot::create([
+                'user_id' => $student->id,
+                'position' => $candidacy->position,
+                'school_year' => $activeSy->label,
+                'started_at' => now(),
+                'submitted_at' => now(),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+        }
+
+        // Create the vote with IP and User Agent logging
+        Vote::create([
+            'user_id' => $student->id,
+            'candidacy_id' => $candidacy->id,
+            'position' => $candidacy->position,
+            'school_year' => $activeSy->label,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        SscHelper::logActivity(
+            $student->id,
+            'STUDENT_VOTE_CAST',
+            "Cast mobile vote for {$candidacy->user->fullname} as {$candidacy->position} | IP: {$request->ip()}"
+        );
+
+        return redirect()->route('mobile.student.voting')->with('success', "Your vote for {$candidacy->position} has been securely cast!");
+    }
+
+    public function resultsMobile()
+    {
+        $activeSy = SchoolYear::where('is_active', 1)->first();
+
+        if (!$activeSy) {
+            return view('mobile.student.election-results', [
+                'activeSy' => null,
+                'candidatesByPosition' => [],
+            ]);
+        }
+
+        $candidates = Candidacy::with('user')
+            ->withCount('votes')
+            ->where('school_year', $activeSy->label)
+            ->where('status', 'approved')
+            ->get();
+
+        $candidatesByPosition = [];
+        foreach ($candidates as $c) {
+            $candidatesByPosition[$c->position][] = $c;
+        }
+
+        foreach ($candidatesByPosition as $pos => &$cands) {
+            usort($cands, function ($a, $b) {
+                return $b->votes_count <=> $a->votes_count;
+            });
+        }
+
+        return view('mobile.student.election-results', compact('activeSy', 'candidatesByPosition'));
+    }
 }

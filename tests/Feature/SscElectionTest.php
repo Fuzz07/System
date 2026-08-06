@@ -272,4 +272,114 @@ class SscElectionTest extends TestCase
             'title' => 'Official Election Results - SY 2026-2027',
         ]);
     }
+
+    public function test_student_can_access_mobile_voting_when_open(): void
+    {
+        $this->activeSy->update([
+            'candidacy_open' => false,
+            'voting_open' => true,
+            'voting_starts_at' => now(),
+            'voting_ends_at' => now()->addHours(8),
+        ]);
+
+        $this->actingAs($this->student1);
+
+        $response = $this->get(route('mobile.student.voting'));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('mobile.student.voting');
+        $response->assertViewHas('activeSy');
+        $response->assertViewHas('myVotes');
+        $response->assertViewHas('candidatesByPosition');
+    }
+
+    public function test_student_cannot_access_mobile_voting_when_closed(): void
+    {
+        $this->activeSy->update([
+            'candidacy_open' => true,
+            'voting_open' => false,
+        ]);
+
+        $this->actingAs($this->student1);
+
+        $response = $this->get(route('mobile.student.voting'));
+
+        $response->assertRedirect(route('mobile.student.proposals'));
+        $response->assertSessionHas('warning', 'Voting period is not active.');
+    }
+
+    public function test_student_can_cast_vote_on_mobile(): void
+    {
+        $this->activeSy->update([
+            'candidacy_open' => false,
+            'voting_open' => true,
+            'voting_starts_at' => now(),
+            'voting_ends_at' => now()->addHours(8),
+        ]);
+
+        $this->actingAs($this->student1);
+
+        $candidacy = Candidacy::where('user_id', $this->candidateUser->id)->first();
+
+        $response = $this->post(route('mobile.student.voting.store'), [
+            'candidacy_id' => $candidacy->id,
+        ]);
+
+        $response->assertRedirect(route('mobile.student.voting'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('votes', [
+            'user_id' => $this->student1->id,
+            'candidacy_id' => $candidacy->id,
+            'position' => 'SSC President',
+            'school_year' => '2026-2027',
+        ]);
+
+        $this->assertDatabaseHas('student_ballots', [
+            'user_id' => $this->student1->id,
+            'position' => 'SSC President',
+            'school_year' => '2026-2027',
+        ]);
+    }
+
+    public function test_student_cannot_cast_duplicate_vote_on_mobile(): void
+    {
+        $this->activeSy->update([
+            'candidacy_open' => false,
+            'voting_open' => true,
+            'voting_starts_at' => now(),
+            'voting_ends_at' => now()->addHours(8),
+        ]);
+
+        $candidacy = Candidacy::where('user_id', $this->candidateUser->id)->first();
+
+        // Create initial vote
+        Vote::create([
+            'user_id' => $this->student1->id,
+            'candidacy_id' => $candidacy->id,
+            'position' => 'SSC President',
+            'school_year' => '2026-2027',
+        ]);
+
+        $this->actingAs($this->student1);
+
+        $response = $this->post(route('mobile.student.voting.store'), [
+            'candidacy_id' => $candidacy->id,
+        ]);
+
+        $response->assertRedirect(route('mobile.student.voting'));
+        $response->assertSessionHas('danger', 'You have already voted for this position.');
+    }
+
+    public function test_student_can_access_mobile_results(): void
+    {
+        $this->actingAs($this->student1);
+
+        $response = $this->get(route('mobile.student.election.results'));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('mobile.student.election-results');
+        $response->assertViewHas('activeSy');
+        $response->assertViewHas('candidatesByPosition');
+    }
 }
