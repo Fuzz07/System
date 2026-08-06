@@ -78,44 +78,91 @@
         </div></div>
 
         <div class="card mt-4">
-            <div class="card-header-custom">
-                <span class="card-title">Admin Device Security & Restriction</span>
-            </div>
-            <div class="card-body-custom">
-                <p style="font-size: 0.85rem; color: #475569; line-height: 1.5; margin-bottom: 16px;">
-                    This administration portal is secured with primary device lock and multi-factor OTP authentication. Only the registered primary device is authorized to log in.
-                </p>
-                @if(Auth::user()->admin_device_token)
-                    <div class="alert alert-info d-flex align-items-center gap-2 mb-3" style="font-size: 0.82rem; border-radius: 6px; padding: 10px 14px; color: #0f172a; background-color: #f1f5f9; border: 1px solid #cbd5e1;">
-                        <i class="bi bi-shield-lock-fill" style="font-size: 1.2rem; color: var(--primary);"></i>
-                        <div><strong>Device Authorized:</strong> A primary device is currently registered for your account. All login attempts from other devices are blocked.</div>
-                    </div>
-                    <div class="d-flex flex-column gap-2">
-                        <form method="POST" action="{{ route('admin.settings.logout_others') }}" onsubmit="return confirm('Are you sure you want to terminate all other active device sessions? Any other browser currently logged in will be instantly signed out.')">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="font-weight: 600;">
-                                <i class="bi bi-box-arrow-right"></i> Log Out All Other Devices / Sessions
-                            </button>
-                        </form>
-                        <form method="POST" action="{{ route('admin.settings.reset_device') }}" onsubmit="return confirm('Are you sure you want to reset your registered device? You will need to log in and re-authorize a new device using OTP.')">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-danger w-100" style="font-weight: 600;">
-                                <i class="bi bi-arrow-counterclockwise"></i> Reset & De-authorize Device
-                            </button>
-                        </form>
-                    </div>
-                @else
-                    <div class="alert alert-warning d-flex align-items-center gap-2 mb-3" style="font-size: 0.82rem; border-radius: 6px; padding: 10px 14px; color: #854d0e; background-color: #fef9c3; border: 1px solid #fef08a;">
-                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.2rem; color: #ca8a04;"></i>
-                        <div><strong>No Registered Device:</strong> Your current device has not been registered as the exclusive primary device yet. All devices can currently log in. The next login via OTP will lock that device in.</div>
-                    </div>
-                    <form method="POST" action="{{ route('admin.settings.register_current_device') }}">
+            <div class="card-header-custom d-flex justify-content-between align-items-center">
+                <span class="card-title mb-0"><i class="bi bi-devices text-primary me-2"></i>Active Logged-in Devices</span>
+                @if(count($activeSessions) > 1)
+                    <form method="POST" action="{{ route('admin.settings.logout_others') }}" onsubmit="return confirm('Are you sure you want to terminate all other active device sessions? Any other device currently logged in will be instantly signed out.')">
                         @csrf
-                        <button type="submit" class="btn btn-sm btn-primary w-100" style="font-weight: 600;">
-                            <i class="bi bi-shield-plus"></i> Register & Lock This Device as Primary
+                        <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:0.75rem; font-weight: 600;">
+                            <i class="bi bi-box-arrow-right"></i> Log Out All Other Devices
                         </button>
                     </form>
                 @endif
+            </div>
+            <div class="card-body-custom">
+                <p style="font-size: 0.85rem; color: #475569; line-height: 1.5; margin-bottom: 16px;">
+                    Below is the list of active devices and browsers currently signed into your admin account. You can selectively log out any specific device.
+                </p>
+
+                @if(!empty($activeSessions) && count($activeSessions) > 0)
+                    <div class="list-group mb-3">
+                        @foreach($activeSessions as $session)
+                            <div class="list-group-item d-flex align-items-center justify-content-between p-3 mb-2" style="border-radius: 8px; border: 1px solid #e2e8f0; background-color: {{ $session->is_current ? '#f0fdf4' : '#ffffff' }};">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div style="width: 42px; height: 42px; border-radius: 8px; background: {{ $session->is_current ? '#dcfce7' : '#f1f5f9' }}; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi {{ $session->device_info['icon'] }}" style="font-size: 1.3rem; color: {{ $session->is_current ? '#16a34a' : '#3b82f6' }};"></i>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <strong style="font-size: 0.88rem; color: #0f172a;">{{ $session->device_info['label'] }}</strong>
+                                            @if($session->is_current)
+                                                <span class="badge bg-success" style="font-size: 0.68rem; font-weight: 600;"><i class="bi bi-check-circle-fill me-1"></i> Current Device</span>
+                                            @endif
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.78rem; margin-top: 2px;">
+                                            <i class="bi bi-globe me-1"></i> IP: <code>{{ $session->ip_address }}</code> &nbsp;•&nbsp; 
+                                            <i class="bi bi-clock-history me-1"></i> Active {{ $session->last_activity }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    @if(!$session->is_current)
+                                        <form method="POST" action="{{ route('admin.settings.logout_device', $session->id) }}" onsubmit="return confirm('Are you sure you want to log out this device ({{ $session->device_info['label'] }} - IP: {{ $session->ip_address }})?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" style="font-size: 0.75rem; font-weight: 600; padding: 4px 10px;">
+                                                <i class="bi bi-box-arrow-right me-1"></i> Log Out
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-muted" style="font-size: 0.75rem; font-weight: 600;"><i class="bi bi-shield-check text-success"></i> Active Session</span>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="alert alert-secondary text-center py-3 mb-3" style="font-size: 0.82rem;">
+                        No active database sessions tracked. (Database session driver active).
+                    </div>
+                @endif
+
+                <div class="border-top pt-3 mt-3">
+                    <h6 style="font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 8px;">Primary Device Restriction</h6>
+                    @if(Auth::user()->admin_device_token)
+                        <div class="alert alert-info d-flex align-items-center gap-2 mb-3" style="font-size: 0.82rem; border-radius: 6px; padding: 10px 14px; color: #0f172a; background-color: #f1f5f9; border: 1px solid #cbd5e1;">
+                            <i class="bi bi-shield-lock-fill" style="font-size: 1.2rem; color: var(--primary);"></i>
+                            <div><strong>Primary Device Token Active:</strong> Unrecognized devices will require multi-factor verification / approval before signing in.</div>
+                        </div>
+                        <form method="POST" action="{{ route('admin.settings.reset_device') }}" onsubmit="return confirm('Are you sure you want to reset your registered primary device token? You will need to re-authorize a new device using OTP.')">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-secondary w-100" style="font-weight: 600; font-size: 0.78rem;">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Primary Device Token Lock
+                            </button>
+                        </form>
+                    @else
+                        <div class="alert alert-warning d-flex align-items-center gap-2 mb-3" style="font-size: 0.82rem; border-radius: 6px; padding: 10px 14px; color: #854d0e; background-color: #fef9c3; border: 1px solid #fef08a;">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.2rem; color: #ca8a04;"></i>
+                            <div><strong>No Primary Device Lock:</strong> Your account does not have a primary device token locked in. Click below to lock this browser as primary.</div>
+                        </div>
+                        <form method="POST" action="{{ route('admin.settings.register_current_device') }}">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-primary w-100" style="font-weight: 600; font-size: 0.78rem;">
+                                <i class="bi bi-shield-plus me-1"></i> Register & Lock This Device as Primary
+                            </button>
+                        </form>
+                    @endif
+                </div>
             </div>
         </div>
     </div>

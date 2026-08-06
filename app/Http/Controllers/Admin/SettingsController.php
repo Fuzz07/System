@@ -19,7 +19,71 @@ class SettingsController extends Controller
         foreach ($tables as $t) {
             $dbStats[$t] = DB::table($t)->count();
         }
-        return view('admin.settings', compact('schoolYears', 'dbStats'));
+
+        $activeSessions = [];
+        if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+            $lifetime = config('session.lifetime', 120) * 60;
+            $cutoff = now()->timestamp - $lifetime;
+            $currentSessionId = session()->getId();
+
+            $dbSessions = DB::table('sessions')
+                ->where('user_id', Auth::id())
+                ->where('last_activity', '>=', $cutoff)
+                ->orderByDesc('last_activity')
+                ->get();
+
+            foreach ($dbSessions as $s) {
+                $parsedAgent = SscHelper::parseUserAgent($s->user_agent);
+                $activeSessions[] = (object) [
+                    'id' => $s->id,
+                    'ip_address' => $s->ip_address ?: 'Unknown IP',
+                    'user_agent' => $s->user_agent,
+                    'device_info' => $parsedAgent,
+                    'last_activity' => \Carbon\Carbon::createFromTimestamp($s->last_activity)->diffForHumans(),
+                    'last_activity_raw' => $s->last_activity,
+                    'is_current' => ($s->id === $currentSessionId),
+                ];
+            }
+        }
+
+        return view('admin.settings', compact('schoolYears', 'dbStats', 'activeSessions'));
+    }
+
+    public function logoutDevice(Request $request, string $sessionId)
+    {
+        $user = Auth::user();
+
+        if (!\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+            return redirect()->route('admin.settings')->with('danger', 'Sessions table does not exist.');
+        }
+
+        $sessionRow = DB::table('sessions')
+            ->where('id', $sessionId)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$sessionRow) {
+            return redirect()->route('admin.settings')->with('danger', 'Device session not found or already logged out.');
+        }
+
+        $isCurrent = ($sessionId === session()->getId());
+        $deviceInfo = SscHelper::parseUserAgent($sessionRow->user_agent);
+
+        DB::table('sessions')
+            ->where('id', $sessionId)
+            ->where('user_id', $user->id)
+            ->delete();
+
+        SscHelper::logActivity($user->id, 'ADMIN_DEVICE_LOGOUT', "Logged out device session: {$deviceInfo['label']} (IP: {$sessionRow->ip_address})");
+
+        if ($isCurrent) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect('/login')->with('info', 'You logged out your current device session.');
+        }
+
+        return redirect()->route('admin.settings')->with('success', "Device session '{$deviceInfo['label']}' has been successfully logged out.");
     }
 
     public function resetDevice()
@@ -51,10 +115,18 @@ class SettingsController extends Controller
         
         // Set the new cookie for the current device so it stays authorized!
         cookie()->queue(cookie()->forever('admin_device_token', $newToken));
+
+        // Delete other sessions from sessions table
+        if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+            DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->where('id', '!=', session()->getId())
+                ->delete();
+        }
         
         SscHelper::logActivity($user->id, 'ADMIN_SESSIONS_REVOKED', 'Revoked all other active admin device sessions.');
         
-        return redirect()->route('admin.settings')->with('success', 'All other active device sessions have been successfully terminated. They will be logged out on their next request.');
+        return redirect()->route('admin.settings')->with('success', 'All other active device sessions have been successfully terminated.');
     }
 
     public function registerCurrentDevice()

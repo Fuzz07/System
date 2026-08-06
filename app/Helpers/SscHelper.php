@@ -145,4 +145,70 @@ class SscHelper
 
         return $response['secure_url'];
     }
+
+    /**
+     * Parses a raw User-Agent header string to return OS, Browser, Device Type and Icon.
+     */
+    public static function parseUserAgent(?string $userAgent): array
+    {
+        if (empty($userAgent)) {
+            return [
+                'platform' => 'Unknown OS',
+                'browser' => 'Unknown Browser',
+                'device_type' => 'Desktop',
+                'icon' => 'bi-laptop',
+                'label' => 'Unknown Device',
+            ];
+        }
+
+        $platform = 'Unknown OS';
+        $browser = 'Unknown Browser';
+        $icon = 'bi-laptop';
+        $deviceType = 'Desktop';
+
+        // Platform detection
+        if (preg_match('/windows|win32|win64/i', $userAgent)) {
+            $platform = 'Windows';
+            $icon = 'bi-laptop';
+        } elseif (preg_match('/macintosh|mac os x/i', $userAgent)) {
+            $platform = 'macOS';
+            $icon = 'bi-laptop';
+        } elseif (preg_match('/iphone|ipad|ipod/i', $userAgent)) {
+            $platform = 'iOS';
+            $deviceType = 'Mobile';
+            $icon = 'bi-phone';
+        } elseif (preg_match('/android/i', $userAgent)) {
+            $platform = 'Android';
+            $deviceType = 'Mobile';
+            $icon = 'bi-phone';
+        } elseif (preg_match('/linux/i', $userAgent)) {
+            $platform = 'Linux';
+            $icon = 'bi-laptop';
+        }
+
+        // Browser & App detection
+        if (str_contains($userAgent, 'SSCStudentApp')) {
+            $browser = 'SSC Mobile App';
+            $icon = 'bi-phone-fill';
+            $deviceType = 'Mobile';
+        } elseif (preg_match('/edg/i', $userAgent)) {
+            $browser = 'Microsoft Edge';
+        } elseif (preg_match('/chrome|crios/i', $userAgent)) {
+            $browser = 'Google Chrome';
+        } elseif (preg_match('/firefox|fxios/i', $userAgent)) {
+            $browser = 'Mozilla Firefox';
+        } elseif (preg_match('/safari/i', $userAgent) && !preg_match('/chrome|crios/i', $userAgent)) {
+            $browser = 'Apple Safari';
+        } elseif (preg_match('/opera|opr/i', $userAgent)) {
+            $browser = 'Opera';
+        }
+
+        return [
+            'platform' => $platform,
+            'browser' => $browser,
+            'device_type' => $deviceType,
+            'icon' => $icon,
+            'label' => "{$platform} • {$browser}",
+        ];
+    }
 }
