@@ -317,7 +317,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ route('settings.export') }}">
+            <form method="POST" action="{{ route('admin.settings.export') }}">
                 @csrf
                 <div class="modal-body p-4 text-center">
                     <div class="mb-3">
@@ -365,7 +365,7 @@ function requestExportOtp() {
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending Code...';
     }
 
-    fetch("{{ route('settings.export.request_otp') }}", {
+    fetch("{{ route('admin.settings.export.request_otp') }}", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

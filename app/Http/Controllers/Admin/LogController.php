@@ -19,9 +19,9 @@ class LogController extends Controller
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('action', 'like', "%{$search}%")
-                  ->orWhere('details', 'like', "%{$search}%")
-                  ->orWhere('ip_address', 'like', "%{$search}%")
-                  ->orWhereHas('user', fn($u) => $u->where('fullname', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+                    ->orWhere('details', 'like', "%{$search}%")
+                    ->orWhere('ip_address', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn($u) => $u->where('fullname', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
             });
         }
 
@@ -37,7 +37,7 @@ class LogController extends Controller
             $query->where('action', $actionType);
         }
 
-        $logs = $query->orderByDesc('id')->paginate(25)->withQueryString();
+        $logs = $query->orderByDesc('id')->paginate(8)->withQueryString();
 
         $distinctActions = ActivityLog::select('action')
             ->distinct()
