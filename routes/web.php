@@ -360,10 +360,11 @@ Route::group([], function () use ($baseDomain) {
         })->name('announcements');
 
         Route::get('/feedback', function () {
-            $feedbackList = \App\Models\Feedback::where('user_id', Auth::id())
+            $feedbacks = \App\Models\Feedback::with('replier')
+                ->where('student_id', Auth::id())
                 ->orderByDesc('created_at')
                 ->get();
-            return view('mobile.student.feedback', compact('feedbackList'));
+            return view('mobile.student.feedback', compact('feedbacks'));
         })->name('feedback');
 
         Route::post('/feedback', function (\Illuminate\Http\Request $request) {
