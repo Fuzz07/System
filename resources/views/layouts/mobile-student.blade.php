@@ -161,6 +161,43 @@
     @stack('scripts')
 
 
+    <script>
+        // Automatic FCM Token Registration via Android Bridge
+        (function() {
+            try {
+                var fcmToken = null;
+                if (window.AndroidBridge && typeof window.AndroidBridge.getFcmToken === 'function') {
+                    fcmToken = window.AndroidBridge.getFcmToken();
+                }
+                if (fcmToken && fcmToken.length > 10) {
+                    var lastSentToken = sessionStorage.getItem('sent_fcm_token');
+                    if (lastSentToken !== fcmToken) {
+                        fetch('{{ route("student.api.device_token") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                fcm_token: fcmToken,
+                                device_type: 'android',
+                                device_name: 'SSC Mobile App'
+                            })
+                        }).then(function(res) {
+                            return res.json();
+                        }).then(function(data) {
+                            sessionStorage.setItem('sent_fcm_token', fcmToken);
+                            console.log('FCM Device Token registered:', data);
+                        }).catch(function(err) {
+                            console.error('FCM Token registration error:', err);
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('FCM Bridge error:', e);
+            }
+        })();
+    </script>
 </body>
 
 </html>

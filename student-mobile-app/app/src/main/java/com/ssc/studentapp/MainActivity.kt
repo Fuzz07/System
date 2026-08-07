@@ -18,6 +18,7 @@ import android.app.PendingIntent
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -115,6 +116,9 @@ class MainActivity : AppCompatActivity() {
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
         cookieManager.setAcceptThirdPartyCookies(webView, true)
+
+        // Expose JavaScript interface for automatic FCM token registration from web pages
+        webView.addJavascriptInterface(WebAppInterface(this), "AndroidBridge")
 
         // Setup WebViewClient
         webView.webViewClient = object : WebViewClient() {
@@ -382,10 +386,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    class WebAppInterface(private val context: Context) {
+        @JavascriptInterface
+        fun getFcmToken(): String {
+            val sharedPref = context.getSharedPreferences("fcm_prefs", Context.MODE_PRIVATE)
+            return sharedPref.getString("fcm_token", "") ?: ""
+        }
+    }
+
     private fun sendFCMTokenToBackend(token: String, activeBaseUrl: String) {
         Thread {
             try {
-                val url = java.net.URL("$activeBaseUrl/student/api/device-token")
+                val targetUrl = "$activeBaseUrl/student/api/device-token"
+                val url = java.net.URL(targetUrl)
                 val conn = url.openConnection() as java.net.HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
@@ -394,8 +407,12 @@ class MainActivity : AppCompatActivity() {
                 conn.readTimeout = 8000
                 conn.doOutput = true
 
-                // Forward cookies from WebView session so the API call is authenticated
-                val cookie = CookieManager.getInstance().getCookie(url.toString())
+                // Try fetching cookie from target URL, active base URL, or current WebView URL
+                val cm = CookieManager.getInstance()
+                var cookie = cm.getCookie(targetUrl)
+                if (cookie.isNullOrEmpty()) cookie = cm.getCookie(activeBaseUrl)
+                if (cookie.isNullOrEmpty()) cookie = cm.getCookie(webView.url ?: portalUrl)
+
                 if (!cookie.isNullOrEmpty()) {
                     conn.setRequestProperty("Cookie", cookie)
                 }
@@ -413,14 +430,10 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val code = conn.responseCode
-                if (code == 200 || code == 201) {
-                    // Token successfully sent to backend
-                } else {
-                    // Log error but don't disrupt user experience
-                }
+                android.util.Log.d("FCM_DEBUG", "FCM token POST response code: $code for token: ${token.take(15)}...")
                 conn.disconnect()
             } catch (e: Exception) {
-                // Silently handle network errors - FCM tokens can be sent later
+                android.util.Log.e("FCM_DEBUG", "Failed sending FCM token to backend", e)
             }
         }.start()
     }
