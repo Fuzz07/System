@@ -191,14 +191,16 @@
     overflow: hidden;
     opacity: 0;
     pointer-events: none;
+    visibility: hidden;
     transform: translateY(30px) scale(0.95);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
     border: 1px solid var(--chatbot-border);
   }
 
   .chatbot-window.active {
     opacity: 1;
     pointer-events: auto;
+    visibility: visible;
     transform: translateY(0) scale(1);
   }
 
@@ -596,6 +598,22 @@
       width: calc(100% - 32px);
     }
 
+    /* Hide the looping speech bubble on mobile screens to prevent constant pop-in/pop-out */
+    .chatbot-label {
+      display: none !important;
+    }
+
+    .chatbot-window {
+      position: absolute;
+      bottom: 80px;
+      right: 0;
+      width: 100%;
+      height: calc(70vh);
+      max-height: calc(100vh - (var(--nav-height, 64px) + var(--safe-bottom, 0px) + 32px));
+      border-radius: 24px;
+      z-index: 99999;
+    }
+
     /* When open on mobile, the window floats above the bottom nav instead of full-screen */
     .chatbot-window.active {
       position: absolute;
@@ -647,15 +665,17 @@
     let xOffset = 0, yOffset = 0;
     let hasMoved = false;
 
-    // Load saved position (desktop and mobile)
-    const savedPos = localStorage.getItem('chatbotPosition');
-    if (savedPos) {
-      try {
-        const pos = JSON.parse(savedPos);
-        xOffset = pos.x;
-        yOffset = pos.y;
-        container.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
-      } catch (e) {}
+    // Load saved position on desktop only to avoid drag-jump flashes on mobile page load
+    if (!isMobile()) {
+      const savedPos = localStorage.getItem('chatbotPosition');
+      if (savedPos) {
+        try {
+          const pos = JSON.parse(savedPos);
+          xOffset = pos.x;
+          yOffset = pos.y;
+          container.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+        } catch (e) {}
+      }
     }
 
     function getClientPos(e) {
@@ -698,7 +718,9 @@
       if (!isDragging) return;
       isDragging = false;
       toggleBtn.style.animation = 'chatbotPulse 3s infinite';
-      localStorage.setItem('chatbotPosition', JSON.stringify({ x: xOffset, y: yOffset }));
+      if (!isMobile()) {
+        localStorage.setItem('chatbotPosition', JSON.stringify({ x: xOffset, y: yOffset }));
+      }
     }
 
     // Pointer events for desktop and mobile drag support
