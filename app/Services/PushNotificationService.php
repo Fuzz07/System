@@ -90,22 +90,29 @@ class PushNotificationService
     private static function sendBatch($url, $tokens, $title, $body, $data, $accessToken)
     {
         try {
+            // FCM v1 requires all data values to be strings
+            $stringData = array_map('strval', array_merge($data, [
+                'timestamp' => now()->toIso8601String(),
+            ]));
+
             foreach ($tokens as $token) {
                 $message = [
                     'message' => [
-                        'token' => $token,
+                        'token'        => $token,
                         'notification' => [
                             'title' => $title,
-                            'body' => $body,
+                            'body'  => $body,
                         ],
-                        'data' => array_merge($data, [
-                            'timestamp' => now()->toIso8601String(),
-                        ]),
+                        'data' => $stringData,
                         'android' => [
                             'priority' => 'high',
                             'notification' => [
-                                'sound' => 'default',
-                                'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                                'sound'       => 'default',
+                                'channel_id'  => 'ssc_notifications',  // Must match channel created in SSCMessagingService.kt
+                                'visibility'  => 'PUBLIC',              // Show on lock screen
+                                'default_sound'    => true,
+                                'default_vibrate_timings' => true,
+                                // Note: do NOT use click_action: FLUTTER_NOTIFICATION_CLICK for native Android apps
                             ],
                         ],
                     ],
@@ -117,7 +124,8 @@ class PushNotificationService
 
                 if (!$response->successful()) {
                     Log::warning('FCM send failed', [
-                        'status' => $response->status(),
+                        'token'    => substr($token, 0, 20) . '...',
+                        'status'   => $response->status(),
                         'response' => $response->json(),
                     ]);
                 }
@@ -131,6 +139,7 @@ class PushNotificationService
             return false;
         }
     }
+
 
     /**
      * Get access token for Firebase Service Account.

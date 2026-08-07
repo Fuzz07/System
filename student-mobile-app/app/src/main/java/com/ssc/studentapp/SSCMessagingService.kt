@@ -32,32 +32,40 @@ class SSCMessagingService : FirebaseMessagingService() {
     }
 
     private fun sendNotification(title: String, messageBody: String, data: Map<String, String>) {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val intent = Intent(this, SplashActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra("notification_type", data["type"])
             putExtra("notification_id", data["id"])
         }
 
         val pendingIntent: PendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
+            this, System.currentTimeMillis().toInt(), intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val notificationId = System.currentTimeMillis().toInt()
+        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val notificationId  = System.currentTimeMillis().toInt()
+
         val notificationBuilder = NotificationCompat.Builder(this, NOTIF_CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(messageBody)
+            .setStyle(NotificationCompat.BigTextStyle()
+                .bigText(messageBody)
+                .setBigContentTitle(title))
             .setAutoCancel(true)
-            .setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI)
+            .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setSmallIcon(R.drawable.ic_launcher)  // Use the app's own launcher icon
 
         createNotificationChannel()
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(notificationId, notificationBuilder.build())
     }
+
 
     private fun handleDataMessage(data: Map<String, String>) {
         // Handle additional data payload processing if needed

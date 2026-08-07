@@ -287,8 +287,18 @@ class VotingController extends Controller
         $student = Auth::user();
         $activeSy = SchoolYear::where('is_active', 1)->first();
 
+        // Don't redirect — show a proper "election not active" state in the view
         if (!$activeSy || !$activeSy->voting_open) {
-            return redirect()->route('mobile.student.proposals')->with('warning', 'Voting period is not active.');
+            $hasApprovedCandidates = $activeSy
+                ? Candidacy::where('school_year', $activeSy->label)->where('status', 'approved')->exists()
+                : false;
+            return view('mobile.student.voting', [
+                'activeSy'             => $activeSy,
+                'myVotes'              => collect(),
+                'candidatesByPosition' => [],
+                'votingOpen'           => false,
+                'hasApprovedCandidates' => $hasApprovedCandidates,
+            ]);
         }
 
         $myVotes = Vote::with('candidacy.user')
@@ -307,7 +317,10 @@ class VotingController extends Controller
             $candidatesByPosition[$c->position][] = $c;
         }
 
-        return view('mobile.student.voting', compact('activeSy', 'myVotes', 'candidatesByPosition'));
+        return view('mobile.student.voting', compact('activeSy', 'myVotes', 'candidatesByPosition') + [
+            'votingOpen'            => true,
+            'hasApprovedCandidates' => !empty($candidatesByPosition),
+        ]);
     }
 
     public function storeMobile(Request $request)

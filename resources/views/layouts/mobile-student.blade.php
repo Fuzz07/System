@@ -10,6 +10,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="SSC Student">
+    @php
+        $__activeSyLayout = \App\Models\SchoolYear::where('is_active', 1)->first();
+        $__votingOpen = $__activeSyLayout && $__activeSyLayout->voting_open;
+        $__hasApprovedCandidates = $__activeSyLayout
+            ? \App\Models\Candidacy::where('school_year', $__activeSyLayout->label)->where('status', 'approved')->exists()
+            : false;
+        $__showVoteTab = $__votingOpen && $__hasApprovedCandidates;
+    @endphp
     <title>{{ $pageTitle ?? 'SSC' }} — Student App</title>
     <meta name="description" content="SSC Transparency and Budget Allocation — Student Portal">
     <link rel="icon" type="image/png" href="{{ asset('assets/images/ssc_logo.png') }}">
@@ -91,6 +99,22 @@
                 </div>
                 <div class="nav-tab-label">News</div>
             </a>
+
+            {{-- Voting Tab — only visible when elections are live --}}
+            @if($__showVoteTab)
+            <a href="{{ route('mobile.student.voting') }}"
+                class="nav-tab {{ request()->routeIs('mobile.student.voting') ? 'active' : '' }}"
+                id="tab-vote"
+                style="position: relative;">
+                <div class="nav-tab-icon" style="position: relative;">
+                    <i class="bi bi-box-ballot{{ request()->routeIs('mobile.student.voting') ? '-fill' : '' }}"></i>
+                    {{-- Live pulse badge --}}
+                    <span style="position: absolute; top: -2px; right: -4px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 1.5px solid #fff; animation: navLivePulse 1.5s infinite;"></span>
+                </div>
+                <div class="nav-tab-label" style="color: #ef4444; font-weight: 800;">Vote!</div>
+            </a>
+            @endif
+
             <a href="{{ route('mobile.student.officers') }}"
                 class="nav-tab {{ request()->routeIs('mobile.student.officers') ? 'active' : '' }}" id="tab-officers">
                 <div class="nav-tab-icon"><i
@@ -98,19 +122,19 @@
                 </div>
                 <div class="nav-tab-label">Officers</div>
             </a>
-            <a href="{{ route('mobile.student.enrollment') }}"
-                class="nav-tab {{ request()->routeIs('mobile.student.enrollment') ? 'active' : '' }}" id="tab-enrollment">
-                <div class="nav-tab-icon"><i
-                        class="bi bi-cash-stack{{ request()->routeIs('mobile.student.enrollment') ? '-fill' : '' }}"></i>
-                </div>
-                <div class="nav-tab-label">Enroll</div>
-            </a>
             <a href="{{ route('mobile.student.feedback') }}"
                 class="nav-tab {{ request()->routeIs('mobile.student.feedback') ? 'active' : '' }}" id="tab-feedback">
                 <div class="nav-tab-icon"><i
                         class="bi bi-chat-dots{{ request()->routeIs('mobile.student.feedback') ? '-fill' : '' }}"></i>
                 </div>
                 <div class="nav-tab-label">Feedback</div>
+            </a>
+            <a href="{{ route('mobile.student.enrollment') }}"
+                class="nav-tab {{ request()->routeIs('mobile.student.enrollment') ? 'active' : '' }}" id="tab-enrollment">
+                <div class="nav-tab-icon"><i
+                        class="bi bi-cash-stack{{ request()->routeIs('mobile.student.enrollment') ? '-fill' : '' }}"></i>
+                </div>
+                <div class="nav-tab-label">Enroll</div>
             </a>
             <form method="POST" action="{{ url('/logout') }}" style="flex:1;display:flex;">
                 @csrf
@@ -120,6 +144,13 @@
                 </button>
             </form>
         </nav>
+
+        <style>
+            @keyframes navLivePulse {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.4); opacity: 0.6; }
+            }
+        </style>
 
     </div>{{-- /.mobile-app --}}
 

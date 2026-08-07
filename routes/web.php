@@ -226,6 +226,9 @@ Route::group([], function () use ($baseDomain) {
         Route::get('/', [Student\DashboardController::class, 'index'])->name('overview');
         Route::post('/chatbot/chat', [Student\ChatbotController::class, 'chat'])->name('chatbot.chat');
         
+        Route::post('/api/device-token', [\App\Http\Controllers\DeviceTokenController::class, 'store'])->name('api.device_token');
+        Route::delete('/api/device-token', [\App\Http\Controllers\DeviceTokenController::class, 'destroy'])->name('api.device_token.destroy');
+        
         Route::get('/proposals', [Student\ProposalController::class, 'index'])->name('proposals');
         Route::get('/proposals/{proposal}', [Student\ProposalController::class, 'show'])->name('proposal.show');
         Route::post('/proposals/{proposal}/comment', [Student\ProposalController::class, 'comment'])->name('proposal.comment');

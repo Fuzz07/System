@@ -99,9 +99,9 @@
   /* Chatbot Label */
   .chatbot-label {
     position: absolute;
-    right: 100px;
+    right: 80px;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%) translateX(10px);
     background: var(--chatbot-primary-dark);
     color: #fff;
     padding: 8px 16px;
@@ -112,7 +112,7 @@
     box-shadow: var(--chatbot-shadow);
     pointer-events: none;
     opacity: 0;
-    animation: labelSlide 6s infinite;
+    transition: opacity 0.25s ease, transform 0.25s ease;
   }
 
   .chatbot-label::after {
@@ -126,15 +126,9 @@
     border-bottom: 6px solid transparent;
   }
 
-  @keyframes labelSlide {
-    0%, 15%, 85%, 100% {
-      opacity: 0;
-      transform: translateY(-50%) translateX(10px);
-    }
-    25%, 75% {
-      opacity: 1;
-      transform: translateY(-50%) translateX(0);
-    }
+  .chatbot-toggle-wrapper:hover .chatbot-label {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
   }
 
   /* Toggle Button Wrapper */
@@ -155,25 +149,12 @@
     font-size: 1.75rem;
     cursor: pointer;
     box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: chatbotPulse 3s infinite;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
 
   .chatbot-toggle:hover {
     transform: scale(1.08) rotate(5deg);
     box-shadow: 0 12px 40px rgba(37, 99, 235, 0.45);
-    animation-play-state: paused;
-  }
-
-  @keyframes chatbotPulse {
-    0%, 100% {
-      transform: scale(1);
-      box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3);
-    }
-    50% {
-      transform: scale(1.06);
-      box-shadow: 0 12px 40px rgba(37, 99, 235, 0.38);
-    }
   }
 
   /* Chat Window */
@@ -697,7 +678,6 @@
       if (isHeader || isToggle) {
         isDragging = true;
         hasMoved = false;
-        if (isToggle) toggleBtn.style.animation = 'none';
       }
     }
 
@@ -717,7 +697,6 @@
     function dragEnd() {
       if (!isDragging) return;
       isDragging = false;
-      toggleBtn.style.animation = 'chatbotPulse 3s infinite';
       if (!isMobile()) {
         localStorage.setItem('chatbotPosition', JSON.stringify({ x: xOffset, y: yOffset }));
       }
@@ -729,6 +708,12 @@
     document.addEventListener('pointermove', drag, { passive: false });
     document.addEventListener('pointerup', dragEnd);
     document.addEventListener('pointercancel', dragEnd);
+
+    // --- Restore Open/Close State Across Refresh & Navigation ---
+    const storedState = sessionStorage.getItem('chatbotWindowState');
+    if (storedState === 'open' && !navigator.userAgent.includes('SSCStudentApp')) {
+      openChatbot(false);
+    }
 
     // --- Toggle chatbot window ---
     toggleBtn.addEventListener('click', (e) => {
@@ -745,17 +730,19 @@
       isActive ? closeChatbot() : openChatbot();
     });
 
-    function openChatbot() {
+    function openChatbot(focusInput = true) {
       chatWindow.classList.add('active');
       container.classList.add('chatbot-open');
       toggleIcon.className = 'bi bi-chevron-down';
-      setTimeout(() => chatbotInput.focus(), 100);
+      sessionStorage.setItem('chatbotWindowState', 'open');
+      if (focusInput) setTimeout(() => chatbotInput.focus(), 100);
     }
 
     function closeChatbot() {
       chatWindow.classList.remove('active');
       container.classList.remove('chatbot-open');
       toggleIcon.className = 'bi bi-robot';
+      sessionStorage.setItem('chatbotWindowState', 'closed');
     }
 
     closeBtn.addEventListener('click', (e) => {

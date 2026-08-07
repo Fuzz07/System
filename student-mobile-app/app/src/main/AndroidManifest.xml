@@ -28,6 +28,20 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- FCM: Default notification channel for background / killed-app notifications -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="ssc_notifications" />
+        <!-- FCM: Default notification icon (shown in status bar when app is killed) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_launcher" />
+        <!-- FCM: Default notification color -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/indigo_600" />
+
         
         <activity
             android:name=".SplashActivity"

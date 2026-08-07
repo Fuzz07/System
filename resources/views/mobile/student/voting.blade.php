@@ -3,27 +3,92 @@
 @section('content')
 @php
     $student = Auth::user();
+    $votingOpen = $votingOpen ?? false;
 @endphp
+
+{{-- ===== ELECTION NOT ACTIVE STATE ===== --}}
+@if(!$votingOpen)
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 32px 24px; text-align: center;">
+    <div style="width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(79,70,229,0.12);">
+        <i class="bi bi-calendar-x" style="font-size: 2.4rem; color: #6366f1;"></i>
+    </div>
+    <h2 style="font-size: 1.25rem; font-weight: 800; color: #1e1b4b; margin-bottom: 10px; letter-spacing: -0.5px;">No Active Election</h2>
+    <p style="font-size: 0.84rem; color: #64748b; line-height: 1.6; max-width: 280px; margin-bottom: 28px;">
+        @if(!$activeSy)
+            No active school year has been set yet. Please check back later.
+        @elseif($hasApprovedCandidates ?? false)
+            Candidates have been approved but voting is not yet open. The SSC Admin will announce when elections start.
+        @else
+            Voting is currently not open for <strong>{{ $activeSy->label }}</strong>. The SSC Admin will announce when elections begin.
+        @endif
+    </p>
+
+    @if($activeSy)
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; width: 100%; max-width: 320px; margin-bottom: 20px;">
+        <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 10px;">Current School Year</div>
+        <div style="font-size: 1rem; font-weight: 700; color: #1e293b;">{{ $activeSy->label }}</div>
+        <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; background: {{ $activeSy->voting_open ? '#dcfce7' : '#fef3c7' }}; color: {{ $activeSy->voting_open ? '#16a34a' : '#b45309' }}; font-weight: 700;">
+                <i class="bi bi-{{ $activeSy->voting_open ? 'check-circle-fill' : 'clock' }}"></i>
+                Elections: {{ $activeSy->voting_open ? 'Open' : 'Not Yet Open' }}
+            </span>
+            @if($hasApprovedCandidates ?? false)
+            <span style="font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; background: #ede9fe; color: #6d28d9; font-weight: 700;">
+                <i class="bi bi-people-fill"></i> Candidates Ready
+            </span>
+            @endif
+        </div>
+    </div>
+    @endif
+
+    <a href="{{ route('mobile.student.election.results') }}"
+        style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 0.82rem; font-weight: 700; color: #6366f1; border: 1.5px solid #c7d2fe; border-radius: 12px; padding: 10px 20px; background: #f0f0ff;">
+        <i class="bi bi-bar-chart-fill"></i> View Past Election Results
+    </a>
+</div>
+
+{{-- ===== VOTING ACTIVE STATE ===== --}}
+@else
 <div style="padding: 12px 16px;">
     @if(!$activeSy)
         <div class="m-alert m-alert-danger">
             <i class="bi bi-exclamation-triangle-fill"></i> No active school year set.
         </div>
     @else
-        <div style="background: rgba(79, 70, 229, 0.08); border-radius: 14px; padding: 12px 14px; margin-bottom: 18px; font-size: 0.78rem; color: var(--primary-dark); line-height: 1.4;">
-            <strong>Election SY {{ $activeSy->label }}</strong><br>
-            Please read the platforms of the candidates. You may cast one vote per position.
+        {{-- Election Header --}}
+        <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: 16px; padding: 16px; margin-bottom: 18px; color: #fff;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <span style="font-size: 1.5rem;">🗳️</span>
+                <div>
+                    <div style="font-size: 0.88rem; font-weight: 800; letter-spacing: -0.3px;">SSC Elections Are Live!</div>
+                    <div style="font-size: 0.7rem; opacity: 0.85;">School Year {{ $activeSy->label }}</div>
+                </div>
+            </div>
+            <div style="font-size: 0.72rem; opacity: 0.9; line-height: 1.4;">
+                Please review each candidate's platform carefully. You may cast <strong>one vote per position</strong>.
+            </div>
         </div>
 
+        {{-- All-voted summary --}}
         @php
             $positionsOrder = [
-                'SSC President',
-                'SSC Vice President',
-                'SSC Secretary',
-                'SSC Treasurer',
+                'SSC President', 'SSC Vice President', 'SSC Secretary', 'SSC Treasurer',
                 $student->department . ' Representative'
             ];
+            $allVoted = collect($positionsOrder)->every(fn($p) => isset($myVotes[$p]) || empty($candidatesByPosition[$p]));
         @endphp
+
+        @if($allVoted)
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 14px; padding: 16px; margin-bottom: 18px; color: #fff; text-align: center;">
+            <i class="bi bi-patch-check-fill" style="font-size: 2rem; margin-bottom: 8px; display: block;"></i>
+            <div style="font-size: 0.92rem; font-weight: 800; margin-bottom: 4px;">You've Voted on All Positions!</div>
+            <div style="font-size: 0.72rem; opacity: 0.9;">Thank you for participating in the SSC Election.</div>
+            <a href="{{ route('mobile.student.election.results') }}"
+                style="display: inline-block; margin-top: 12px; font-size: 0.76rem; font-weight: 700; color: #fff; border: 1.5px solid rgba(255,255,255,0.5); border-radius: 8px; padding: 6px 16px; text-decoration: none;">
+                <i class="bi bi-bar-chart"></i> View Live Results
+            </a>
+        </div>
+        @endif
 
         @foreach($positionsOrder as $pos)
             <div class="m-card elevated" style="padding: 16px; margin-bottom: 18px;">
@@ -84,10 +149,11 @@
                         </div>
                     @endif
                 @endif
-            </div>
+            </div>{{-- m-card --}}
         @endforeach
-    @endif
-</div>
+    @endif {{-- activeSy --}}
+</div>{{-- padding wrapper --}}
+@endif {{-- @else (votingOpen) --}}
 
 {{-- Mobile Custom Voting Overlay --}}
 <div id="mobileVotingModal" style="display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: flex-end; justify-content: center;">
