@@ -346,6 +346,16 @@ class AuthController extends Controller
             ]);
         }
 
+        // ── Eligibility Whitelist Check ──────────────────────────────────────
+        if (config('ssc.enforce_eligibility_whitelist', true)) {
+            if (!\App\Models\EligibleStudent::where('email', strtolower(trim($request->email)))->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your Microsoft 365 account is not on the eligible students list. Please contact the SSC admin to have your account added before registering.',
+                ]);
+            }
+        }
+
 
         try {
             $msResponse = Http::timeout(6)

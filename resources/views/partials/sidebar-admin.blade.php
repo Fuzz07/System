@@ -31,6 +31,9 @@
     <span class="nav-icon"><i class="bi bi-person-lines-fill"></i></span> Manage Students
     @if(($pendingStudents ?? 0) > 0)<span class="badge-count">{{ $pendingStudents }}</span>@endif
 </a>
+<a href="{{ route('admin.eligible_students.index') }}" class="nav-link {{ request()->routeIs('admin.eligible_students*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-shield-check"></i></span> Eligible Students
+</a>
 <a href="{{ route('admin.candidacies') }}" class="nav-link {{ request()->routeIs('admin.candidacies') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-clipboard-check"></i></span> Candidacy Filings
 </a>

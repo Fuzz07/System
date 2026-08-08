@@ -26,7 +26,12 @@ return [
     // GCash number to display in student payment instructions
     'gcash_number' => env('SSC_GCASH_NUMBER', ''),
     // Bank / InstaPay details for admin enrollment payments
-    'bank_name' => env('SSC_BANK_NAME', 'Landbank of the Philippines'),
-    'bank_account_name' => env('SSC_BANK_ACCOUNT_NAME', 'MCC Supreme Student Council'),
+    'bank_name'           => env('SSC_BANK_NAME', 'Landbank of the Philippines'),
+    'bank_account_name'   => env('SSC_BANK_ACCOUNT_NAME', 'MCC Supreme Student Council'),
     'bank_account_number' => env('SSC_BANK_ACCOUNT_NUMBER', '1234-5678-90'),
+
+    // Student registration eligibility whitelist.
+    // When enabled, only emails pre-approved in the eligible_students table
+    // may proceed through the OTP / registration flow.
+    'enforce_eligibility_whitelist' => env('ENFORCE_ELIGIBILITY_WHITELIST', true),
 ];

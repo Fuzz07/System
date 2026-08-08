@@ -99,6 +99,12 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::post('/election/announce', [Admin\CandidacyController::class, 'announceResults'])->name('election.announce');
         Route::delete('/candidacies/{candidacy}', [Admin\CandidacyController::class, 'destroy'])->name('candidacy.destroy');
         Route::get('/election-results', [Admin\CandidacyController::class, 'results'])->name('election.results');
+
+        // Eligible Students Whitelist
+        Route::get('/eligible-students', [Admin\EligibleStudentController::class, 'index'])->name('eligible_students.index');
+        Route::post('/eligible-students', [Admin\EligibleStudentController::class, 'store'])->name('eligible_students.store');
+        Route::post('/eligible-students/import', [Admin\EligibleStudentController::class, 'import'])->name('eligible_students.import');
+        Route::delete('/eligible-students/{eligible}', [Admin\EligibleStudentController::class, 'destroy'])->name('eligible_students.destroy');
     });
 });
 
