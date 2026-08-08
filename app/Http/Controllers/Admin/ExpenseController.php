@@ -24,7 +24,7 @@ class ExpenseController extends Controller
         if ($status && in_array($status, ['Pending', 'Approved', 'Rejected'], true)) {
             $query->where('status', $status);
         }
-        $expenses = $query->orderByDesc('created_at')->get();
+        $expenses = $query->orderByDesc('created_at')->paginate(8);
 
         return view('admin.expenses', compact('expenses', 'search', 'status'));
     }

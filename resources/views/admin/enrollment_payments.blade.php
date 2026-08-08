@@ -109,6 +109,7 @@
                     </tbody>
                 </table>
             </div>
+            {{ $students->withQueryString()->links('partials.pagination') }}
         </div>
     </div>
 </div>

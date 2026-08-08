@@ -90,7 +90,9 @@
     <tr><td colspan="7" class="text-center py-4 text-muted">No users found.</td></tr>
     @endforelse
     </tbody>
-</table></div></div>
+</table></div>
+{{ $users->withQueryString()->links('partials.pagination') }}
+</div>
 
 {{-- Add User Modal --}}
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">

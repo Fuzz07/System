@@ -17,7 +17,7 @@
     <tbody>
     @forelse($proposals as $i => $p)
     <tr>
-        <td style="color:#a0aec0;font-size:.8rem;">{{ $i+1 }}</td>
+        <td style="color:#a0aec0;font-size:.8rem;">{{ $proposals->firstItem() + $loop->index }}</td>
         <td><div style="font-weight:700;color:var(--navy-900);">{{ $p->project_title }}</div><div style="font-size:.75rem;color:#718096;">{{ Str::limit($p->description, 80) }}</div></td>
         <td style="font-size:.82rem;">{{ $p->officer->fullname ?? 'N/A' }}</td>
         <td>{!! \App\Helpers\SscHelper::formatCurrency($p->requested_budget) !!}</td>
@@ -39,10 +39,12 @@
     <tr><td colspan="8" class="text-center py-4 text-muted">No proposals found.</td></tr>
     @endforelse
     </tbody>
-</table></div></div>
+</table></div>
+{{ $proposals->withQueryString()->links('partials.pagination') }}
+</div>
 
 {{-- Review Modals --}}
-@foreach($proposals->where('status', 'Pending') as $p)
+@foreach($proposals->getCollection()->where('status', 'Pending') as $p)
 <div class="modal fade" id="reviewModal{{ $p->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog"><div class="modal-content" style="border-radius:var(--radius);border:none;">
         <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;">Review: {{ $p->project_title }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

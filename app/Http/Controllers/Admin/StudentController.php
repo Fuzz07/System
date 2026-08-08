@@ -43,7 +43,7 @@ class StudentController extends Controller
             $query->where('year_level', $yearLevel);
         }
 
-        $users = $query->orderByDesc('created_at')->get();
+        $users = $query->orderByDesc('created_at')->paginate(8);
 
         $departments = User::where('role', 'student')->select('department')->distinct()->pluck('department');
         $years = User::where('role', 'student')->select('year_level')->distinct()->pluck('year_level');

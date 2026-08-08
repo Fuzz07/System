@@ -47,6 +47,10 @@
     </div>
 </div>
 
+<div class="card mt-3" style="border:none; background:#fff; border-radius:var(--radius); box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+    {{ $announcements->withQueryString()->links('partials.pagination') }}
+</div>
+
 {{-- Post Announcement Modal --}}
 <div class="modal fade" id="annModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">

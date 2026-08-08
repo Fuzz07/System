@@ -55,7 +55,7 @@ class EnrollmentPaymentController extends Controller
             });
         }
 
-        $students = $students->orderBy('fullname')->get();
+        $students = $students->orderBy('fullname')->paginate(8);
 
         $departments = User::where('role', 'student')->select('department')->distinct()->pluck('department');
         $years = User::where('role', 'student')->select('year_level')->distinct()->pluck('year_level');

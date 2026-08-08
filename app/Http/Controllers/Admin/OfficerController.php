@@ -27,7 +27,7 @@ class OfficerController extends Controller
         if ($roleFilter && in_array($roleFilter, self::MANAGED_ROLES, true)) {
             $query->where('role', $roleFilter);
         }
-        $users = $query->orderByDesc('created_at')->get();
+        $users = $query->orderByDesc('created_at')->paginate(8);
 
         return view('admin.officers', compact('users', 'search', 'roleFilter'));
     }

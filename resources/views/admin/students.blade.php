@@ -1,10 +1,6 @@
 @extends('layouts.app')
 @section('sidebar-nav') @include('partials.sidebar-admin') @endsection
 
-@section('sidebar-nav')
-    @include('layouts.app')
-@endsection
-
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -92,6 +88,7 @@
                     </tbody>
                 </table>
             </div>
+            {{ $users->withQueryString()->links('partials.pagination') }}
         </div>
     </div>
 </div>

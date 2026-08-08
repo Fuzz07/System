@@ -17,7 +17,7 @@
     <tbody>
     @forelse($expenses as $i => $ex)
     <tr>
-        <td style="color:#a0aec0;font-size:.8rem;">{{ $i+1 }}</td>
+        <td style="color:#a0aec0;font-size:.8rem;">{{ $expenses->firstItem() + $loop->index }}</td>
         <td><div style="font-weight:700;">{{ $ex->expense_title }}</div><div style="font-size:.75rem;color:#718096;">{{ Str::limit($ex->description, 60) }}</div></td>
         <td style="font-size:.82rem;">{{ $ex->officer->fullname ?? 'N/A' }}</td>
         <td><span class="badge bg-primary" style="font-size:.7rem;">{{ $ex->budget->title ?? 'N/A' }}</span></td>
@@ -34,9 +34,11 @@
     <tr><td colspan="8" class="text-center py-4 text-muted">No expenses found.</td></tr>
     @endforelse
     </tbody>
-</table></div></div>
+</table></div>
+{{ $expenses->withQueryString()->links('partials.pagination') }}
+</div>
 
-@foreach($expenses->where('status', 'Pending') as $ex)
+@foreach($expenses->getCollection()->where('status', 'Pending') as $ex)
 <div class="modal fade" id="reviewExpense{{ $ex->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog"><div class="modal-content" style="border-radius:var(--radius);border:none;">
         <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;">{{ $ex->expense_title }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

@@ -23,7 +23,7 @@ class ProposalController extends Controller
         if ($status && in_array($status, ['Pending', 'Approved', 'Rejected'], true)) {
             $query->where('status', $status);
         }
-        $proposals = $query->orderByDesc('created_at')->get();
+        $proposals = $query->orderByDesc('created_at')->paginate(8);
 
         return view('admin.proposals', compact('proposals', 'search', 'status'));
     }
