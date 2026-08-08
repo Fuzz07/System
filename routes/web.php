@@ -190,8 +190,8 @@ Route::group([], function () use ($baseDomain) {
     Route::get('/login/auth/{portal}', [AuthController::class, 'showLogin'])->name('login.portal');
     Route::post('/login/auth/{portal}', [AuthController::class, 'login'])->name('login.submit.portal');
 
-    Route::get('/login/student', [AuthController::class, 'showLogin'])->name('login.student');
-    Route::post('/login/student', [AuthController::class, 'login'])->name('login.student.submit');
+    Route::get('/login/student', [AuthController::class, 'showLogin'])->defaults('portal', 'student')->name('login.student');
+    Route::post('/login/student', [AuthController::class, 'login'])->defaults('portal', 'student')->name('login.student.submit');
 
     Route::get('/login/{portal?}', function ($portal = null) {
         if ($portal) {

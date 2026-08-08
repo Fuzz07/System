@@ -162,7 +162,7 @@
         </form>
 
         <div class="text-center mt-3">
-            <a href="{{ route('login', 'student') }}" class="text-muted" style="font-size:.82rem;text-decoration:none;">
+            <a href="{{ route('login.student') }}" class="text-muted" style="font-size:.82rem;text-decoration:none;">
                 <i class="bi bi-arrow-left"></i> Already have an account? Login
             </a>
         </div>

@@ -22,13 +22,19 @@ class AuthController extends Controller
 
     private const DECAY_SECONDS = 600;
 
-    public function showLogin(string $portal = 'student')
+    public function showLogin(Request $request, string $portal = 'student')
     {
+        $portal = $request->route('portal') ?? $portal ?? 'student';
+        if (!in_array($portal, ['admin', 'treasurer', 'officer', 'student', 'dean'])) {
+            $portal = 'student';
+        }
+
         if (Auth::check()) {
             return $this->redirectByRole(Auth::user());
         }
         return view('auth.login', compact('portal'));
     }
+
 
     public function login(Request $request)
     {

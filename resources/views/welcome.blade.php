@@ -1109,7 +1109,7 @@
             <a href="#features" class="nav-link">Features</a>
             <a href="#officers" class="nav-link">Officers</a>
 
-            <a href="{{ route('login', 'student') }}" class="nav-cta">
+            <a href="{{ route('login.student') }}" class="nav-cta">
                 <i class="bi bi-box-arrow-in-right"></i> Student Login
             </a>
         </div>
@@ -1131,7 +1131,7 @@
                     Community College — empowering students through open governance and real-time accountability.
                 </p>
                 <div class="hero-actions">
-                    <a href="{{ route('login', 'student') }}" class="btn-primary-hero" id="hero-student-login">
+                    <a href="{{ route('login.student') }}" class="btn-primary-hero" id="hero-student-login">
                         <i class="bi bi-mortarboard-fill"></i> Access Student Portal
                     </a>
                     @if(!str_contains(request()->userAgent() ?? '', 'SSCStudentApp'))
@@ -1376,7 +1376,7 @@
             <p class="cta-subtitle">Sign into your portal and become part of a more open, accountable, and participatory
                 student council system.</p>
             <div class="cta-buttons">
-                <a href="{{ route('login', 'student') }}" class="btn-primary-hero" id="cta-student-login">
+                <a href="{{ route('login.student') }}" class="btn-primary-hero" id="cta-student-login">
                     <i class="bi bi-mortarboard-fill"></i> Student Login
                 </a>
                 <a href="{{ route('register') }}" class="btn-outline-hero"

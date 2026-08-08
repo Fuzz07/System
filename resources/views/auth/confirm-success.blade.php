@@ -127,7 +127,7 @@
             </p>
         </div>
 
-        <a href="{{ route('login', 'student') }}" class="action-button">
+        <a href="{{ route('login.student') }}" class="action-button">
             <i class="bi bi-box-arrow-in-right"></i> Return to Login Portal
         </a>
     </div>
