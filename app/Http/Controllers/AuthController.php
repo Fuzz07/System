@@ -30,10 +30,29 @@ class AuthController extends Controller
         }
 
         if (Auth::check()) {
-            return $this->redirectByRole(Auth::user());
+            $user = Auth::user();
+            $allowedRoles = match ($portal) {
+                'admin' => ['admin'],
+                'treasurer' => ['treasurer'],
+                'officer' => ['officer', 'treasurer'],
+                'student' => ['student'],
+                'dean' => ['dean'],
+                default => ['student'],
+            };
+
+            if (in_array($user->role, $allowedRoles)) {
+                return $this->redirectByRole($user);
+            }
+
+            // User is logged in as a different role, log them out to allow logging into the requested portal
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
         }
+
         return view('auth.login', compact('portal'));
     }
+
 
 
     public function login(Request $request)
