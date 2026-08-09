@@ -1135,7 +1135,7 @@
                         <i class="bi bi-mortarboard-fill"></i> Access Student Portal
                     </a>
                     @if(!str_contains(request()->userAgent() ?? '', 'SSCStudentApp'))
-                        <a href="/ssc-student-app.apk" class="btn-outline-hero"
+                        <a href="/ssc-student-app.apk?v=1.2" class="btn-outline-hero"
                             style="border-color: var(--primary-light); color: var(--primary-light);">
                             <i class="bi bi-android2"></i> Install Android App
                         </a>

@@ -159,7 +159,7 @@
                             </div>
                             
                             <div class="mb-3">
-                                <a href="{{ asset('downloads/ssc-student-app.apk') }}" download class="btn w-100 py-3 fw-bold text-white shadow" style="background: linear-gradient(135deg, #e34f26 0%, #d13f19 100%); border: none; border-radius: 14px; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s;">
+                                <a href="{{ asset('downloads/ssc-student-app.apk') }}?v=1.2" download class="btn w-100 py-3 fw-bold text-white shadow" style="background: linear-gradient(135deg, #e34f26 0%, #d13f19 100%); border: none; border-radius: 14px; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s;">
                                     <i class="bi bi-android2 me-2"></i> Download APK Direct
                                 </a>
                             </div>
@@ -187,7 +187,7 @@
             });
             
             // Generate dynamic QR code URL
-            var downloadUrl = window.location.origin + '/downloads/ssc-student-app.apk';
+            var downloadUrl = window.location.origin + '/downloads/ssc-student-app.apk?v=1.2';
             var qrImg = document.getElementById('appDownloadQr');
             if (qrImg) {
                 qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(downloadUrl);
