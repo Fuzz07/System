@@ -17,10 +17,10 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
    
-    private const MAX_ATTEMPTS = 5;
+    private const MAX_ATTEMPTS = 3;
 
 
-    private const DECAY_SECONDS = 600;
+    private const DECAY_SECONDS = 300;
 
     public function showLogin(Request $request, string $portal = 'student')
     {

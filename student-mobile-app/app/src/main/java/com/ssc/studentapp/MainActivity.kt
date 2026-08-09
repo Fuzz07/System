@@ -205,18 +205,18 @@ class MainActivity : AppCompatActivity() {
                 // and the error is a genuine connection failure (not a HTTP error like 404)
                 if (request?.isForMainFrame == true) {
                     val errorCode = error?.errorCode ?: -1
-                    // Only treat network-level errors as offline (not HTTP errors)
+                    // Only connection failures are network errors. Redirect, generic WebView,
+                    // and I/O errors can occur while the phone is fully online.
                     val networkErrors = setOf(
                         -2,   // ERROR_HOST_LOOKUP (DNS failure)
                         -6,   // ERROR_CONNECT (connection refused)
-                        -8,   // ERROR_TIMEOUT
-                        -15,  // ERROR_UNKNOWN
-                        -10,  // ERROR_IO
-                        -12   // ERROR_REDIRECT_LOOP
+                        -8    // ERROR_TIMEOUT
                     )
                     if (errorCode in networkErrors) {
                         swipeRefresh.isRefreshing = false
-                        startActivity(Intent(this@MainActivity, OfflineActivity::class.java))
+                        if (!isNetworkAvailable()) {
+                            startActivity(Intent(this@MainActivity, OfflineActivity::class.java))
+                        }
                     }
                 }
             }
@@ -514,11 +514,6 @@ class MainActivity : AppCompatActivity() {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return when {
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-            activeNetwork.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
-            else -> false
-        }
+        return activeNetwork.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 }
