@@ -37,13 +37,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "PORTAL_URL", "\"https://supremestudentcouncil.com/login/student\"")
+        buildConfigField("String", "PORTAL_URL", "\"https://mccsupremestudentcouncil.com/login/student\"")
         buildConfigField("String", "APP_HOST", "\"supremestudentcouncil.com\"")
     }
 
     buildTypes {
         debug {
-            buildConfigField("String", "PORTAL_URL", "\"https://supremestudentcouncil.com/login/student\"")
+            buildConfigField("String", "PORTAL_URL", "\"https://mccsupremestudentcouncil.com/login/student\"")
             buildConfigField("String", "APP_HOST", "\"supremestudentcouncil.com\"")
         }
         release {
@@ -52,7 +52,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "PORTAL_URL", "\"https://supremestudentcouncil.com/login/student\"")
+            buildConfigField("String", "PORTAL_URL", "\"https://mccsupremestudentcouncil.com/login/student\"")
             buildConfigField("String", "APP_HOST", "\"supremestudentcouncil.com\"")
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
