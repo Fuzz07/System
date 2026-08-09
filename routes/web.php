@@ -316,9 +316,9 @@ Route::group([], function () use ($baseDomain) {
         Route::get('/notifications', [Student\NotificationController::class, 'index'])->name('notifications.index');
         Route::get('/notifications/unread-count', [Student\NotificationController::class, 'unreadCount'])->name('notifications.unread');
         
-        Route::post('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'store'])->name('device-token.store');
-        Route::delete('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'destroy'])->name('device-token.destroy');
-        Route::get('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'index'])->name('device-token.index');
+        Route::post('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'store'])->name('api.device_token');
+        Route::delete('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'destroy'])->name('api.device_token.destroy');
+        Route::get('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'index'])->name('api.device_token.index');
         
         Route::get('/enrollment', [Student\EnrollmentController::class, 'index'])->name('enrollment.index');
         Route::post('/enrollment', [Student\EnrollmentController::class, 'store'])->name('enrollment.store');
