@@ -397,7 +397,7 @@ Route::group([], function () use ($baseDomain) {
 
         Route::get('/enrollment', function () {
             $student = Auth::user();
-            $currentSy = config('ssc.current_school_year');
+            $currentSy = \App\Helpers\SscHelper::getActiveSchoolYear();
             $payment = \App\Models\EnrollmentPayment::where('user_id', $student->id)
                 ->where('semester', $currentSy)
                 ->orderByDesc('created_at')
@@ -409,7 +409,7 @@ Route::group([], function () use ($baseDomain) {
         Route::post('/enrollment', function (\Illuminate\Http\Request $request) {
             $student = Auth::user();
             $amount = config('ssc.enrollment_fee_amount', 50);
-            $currentSy = config('ssc.current_school_year');
+            $currentSy = \App\Helpers\SscHelper::getActiveSchoolYear();
             $request->validate(['payment_method' => 'nullable|in:gcash,instapay']);
             $method = $request->input('payment_method', 'gcash');
             $prefix = $method === 'instapay' ? 'INSTAPAY-' : 'GCASH-';

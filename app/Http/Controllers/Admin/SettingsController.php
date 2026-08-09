@@ -160,8 +160,29 @@ class SettingsController extends Controller
     {
         SchoolYear::query()->update(['is_active' => 0]);
         $schoolYear->update(['is_active' => 1]);
+
+        // ── Keep SSC_CURRENT_SCHOOL_YEAR .env key in sync ──────────────────
+        // This ensures any code still reading config('ssc.current_school_year')
+        // (e.g. legacy references) stays consistent with the DB-driven active SY.
+        $envPath = base_path('.env');
+        if (file_exists($envPath)) {
+            $envContent = file_get_contents($envPath);
+            $newLabel   = $schoolYear->label;
+
+            if (str_contains($envContent, 'SSC_CURRENT_SCHOOL_YEAR=')) {
+                $envContent = preg_replace(
+                    '/^SSC_CURRENT_SCHOOL_YEAR=.*/m',
+                    'SSC_CURRENT_SCHOOL_YEAR=' . $newLabel,
+                    $envContent
+                );
+            } else {
+                $envContent .= "\nSSC_CURRENT_SCHOOL_YEAR=" . $newLabel . "\n";
+            }
+            file_put_contents($envPath, $envContent);
+        }
+
         SscHelper::logActivity(Auth::id(), 'SETTINGS_CHANGE', "Changed active school year to {$schoolYear->label}");
-        return redirect()->route('admin.settings')->with('success', 'Active school year updated.');
+        return redirect()->route('admin.settings')->with('success', "Active school year updated to {$schoolYear->label}. Enrollment payments will now reset for all students under the new semester.");
     }
 
     public function deleteSchoolYear(SchoolYear $schoolYear)

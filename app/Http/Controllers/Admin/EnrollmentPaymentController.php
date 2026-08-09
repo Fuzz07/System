@@ -19,7 +19,7 @@ class EnrollmentPaymentController extends Controller
         $dept = $request->input('department');
         $year = $request->input('year_level');
         $status = $request->input('status', 'all');
-        $currentSy = config('ssc.current_school_year');
+        $currentSy = SscHelper::getActiveSchoolYear();
 
         $students = User::where('role', 'student')
             ->with(['enrollmentPayments' => function ($q) use ($currentSy) {
@@ -93,7 +93,7 @@ class EnrollmentPaymentController extends Controller
 
     public function markPaidWalkIn(User $student)
     {
-        $currentSy = config('ssc.current_school_year');
+        $currentSy = SscHelper::getActiveSchoolYear();
         $amount = config('ssc.enrollment_fee_amount', 50);
 
         $payment = EnrollmentPayment::where('user_id', $student->id)
@@ -186,7 +186,7 @@ class EnrollmentPaymentController extends Controller
     protected function addEnrollmentBudget(EnrollmentPayment $payment)
     {
         $budget = Budget::firstOrCreate(
-            ['title' => 'Enrollment Fees', 'school_year' => config('ssc.current_school_year') ?? 'default'],
+            ['title' => 'Enrollment Fees', 'school_year' => SscHelper::getActiveSchoolYear()],
             ['department' => 'General', 'allocated_amount' => 0, 'remaining_balance' => 0, 'status' => 'Pending', 'created_by' => Auth::id()]
         );
 

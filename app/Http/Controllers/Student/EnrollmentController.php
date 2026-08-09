@@ -7,13 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\EnrollmentPayment;
+use App\Helpers\SscHelper;
 
 class EnrollmentController extends Controller
 {
     public function index()
     {
         $student = Auth::user();
-        $currentSy = config('ssc.current_school_year');
+        $currentSy = SscHelper::getActiveSchoolYear();
 
         $payment = EnrollmentPayment::where('user_id', $student->id)
             ->where('semester', $currentSy)
@@ -29,7 +30,7 @@ class EnrollmentController extends Controller
     {
         $student = Auth::user();
         $amount = config('ssc.enrollment_fee_amount', 50);
-        $currentSy = config('ssc.current_school_year');
+        $currentSy = SscHelper::getActiveSchoolYear();
 
         $request->validate([
             'payment_method' => 'nullable|in:gcash,instapay',
