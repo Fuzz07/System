@@ -56,6 +56,8 @@ android {
             buildConfigField("String", "APP_HOST", "\"mccsupremestudentcouncil.com\"")
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
             }
         }
     }
