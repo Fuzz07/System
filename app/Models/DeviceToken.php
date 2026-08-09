@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DeviceToken extends Model
 {
-    protected $fillable = ['user_id', 'fcm_token', 'device_type', 'device_name', 'is_active'];
+    protected $fillable = ['user_id', 'fcm_token', 'device_type', 'device_name', 'is_active', 'last_used_at'];
 
     protected $casts = [
         'is_active' => 'boolean',
