@@ -19,13 +19,28 @@ android {
     compileSdk = 33
 
     signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+            isV1SigningEnabled = true
+            isV2SigningEnabled = true
+        }
         create("release") {
             if (keystorePropertiesFile.exists()) {
                 storeFile = file(keystoreProperties["storeFile"] as String)
                 storePassword = keystoreProperties["storePassword"] as String
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
+            } else {
+                storeFile = file("debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
             }
+            isV1SigningEnabled = true
+            isV2SigningEnabled = true
         }
     }
 
@@ -54,11 +69,7 @@ android {
             )
             buildConfigField("String", "PORTAL_URL", "\"https://mccsupremestudentcouncil.com/login/student\"")
             buildConfigField("String", "APP_HOST", "\"mccsupremestudentcouncil.com\"")
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            } else {
-                signingConfig = signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
