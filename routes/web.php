@@ -523,7 +523,6 @@ Route::group([], function () use ($baseDomain) {
         return response()->download($path, 'ssc-student-app.apk', [
             'Content-Type' => 'application/vnd.android.package-archive',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-            'Content-Encoding' => 'none',
         ]);
     });
 
@@ -535,7 +534,6 @@ Route::group([], function () use ($baseDomain) {
         return response()->download($path, 'ssc-student-app.apk', [
             'Content-Type' => 'application/vnd.android.package-archive',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-            'Content-Encoding' => 'none',
         ]);
     });
 
@@ -547,7 +545,6 @@ Route::group([], function () use ($baseDomain) {
         return response()->download($path, 'ssc-student-app-debug.apk', [
             'Content-Type' => 'application/vnd.android.package-archive',
             'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-            'Content-Encoding' => 'none',
         ]);
     });
 });

@@ -23,3 +23,8 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+<IfModule mod_deflate.c>
+    # Prevent Gzip/Deflate compression for Android APKs
+    SetEnvIfNoCase Request_URI \.apk$ no-gzip dont-vary
+</IfModule>

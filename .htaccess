@@ -5,3 +5,8 @@
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ public/$1 [L,QSA]
 </IfModule>
+
+<IfModule mod_deflate.c>
+    # Prevent Gzip/Deflate compression for Android APKs
+    SetEnvIfNoCase Request_URI \.apk$ no-gzip dont-vary
+</IfModule>
