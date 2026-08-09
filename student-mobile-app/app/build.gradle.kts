@@ -38,13 +38,13 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "PORTAL_URL", "\"https://mccsupremestudentcouncil.com/login/student\"")
-        buildConfigField("String", "APP_HOST", "\"supremestudentcouncil.com\"")
+        buildConfigField("String", "APP_HOST", "\"mccsupremestudentcouncil.com\"")
     }
 
     buildTypes {
         debug {
             buildConfigField("String", "PORTAL_URL", "\"https://mccsupremestudentcouncil.com/login/student\"")
-            buildConfigField("String", "APP_HOST", "\"supremestudentcouncil.com\"")
+            buildConfigField("String", "APP_HOST", "\"mccsupremestudentcouncil.com\"")
         }
         release {
             isMinifyEnabled = false
@@ -53,7 +53,7 @@ android {
                 "proguard-rules.pro"
             )
             buildConfigField("String", "PORTAL_URL", "\"https://mccsupremestudentcouncil.com/login/student\"")
-            buildConfigField("String", "APP_HOST", "\"supremestudentcouncil.com\"")
+            buildConfigField("String", "APP_HOST", "\"mccsupremestudentcouncil.com\"")
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
