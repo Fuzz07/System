@@ -35,6 +35,8 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.firebase.messaging.FirebaseMessaging
 import android.os.Build
 import android.Manifest
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 class MainActivity : AppCompatActivity() {
 
@@ -416,6 +418,19 @@ class MainActivity : AppCompatActivity() {
 
                 if (!cookie.isNullOrEmpty()) {
                     conn.setRequestProperty("Cookie", cookie)
+
+                    // Laravel requires the CSRF cookie value in a request header.
+                    cookie.split(";")
+                        .map { it.trim() }
+                        .firstOrNull { it.startsWith("XSRF-TOKEN=") }
+                        ?.substringAfter("=")
+                        ?.let { encodedToken ->
+                            val csrfToken = URLDecoder.decode(
+                                encodedToken,
+                                StandardCharsets.UTF_8.name()
+                            )
+                            conn.setRequestProperty("X-XSRF-TOKEN", csrfToken)
+                        }
                 }
 
                 // Send FCM token in request body
@@ -432,6 +447,10 @@ class MainActivity : AppCompatActivity() {
 
                 val code = conn.responseCode
                 android.util.Log.d("FCM_DEBUG", "FCM token POST response code: $code for token: ${token.take(15)}...")
+                if (code !in 200..299) {
+                    val errorBody = conn.errorStream?.bufferedReader()?.use { it.readText() }
+                    android.util.Log.e("FCM_DEBUG", "Device token registration failed ($code): $errorBody")
+                }
                 conn.disconnect()
             } catch (e: Exception) {
                 android.util.Log.e("FCM_DEBUG", "Failed sending FCM token to backend", e)

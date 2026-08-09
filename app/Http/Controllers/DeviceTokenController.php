@@ -25,34 +25,25 @@ class DeviceTokenController extends Controller
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        // Check if token already exists for this user
-        $existingToken = DeviceToken::where('fcm_token', $request->fcm_token)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if ($existingToken) {
-            // Update the existing token
-            $existingToken->update([
-                'device_type' => $request->device_type,
-                'device_name' => $request->device_name,
-                'is_active' => true,
-            ]);
-            return response()->json(['message' => 'Device token updated', 'data' => $existingToken], 200);
-        }
-
-        // Check if this token exists for another user and deactivate it
-        DeviceToken::where('fcm_token', $request->fcm_token)->update(['is_active' => false]);
-
-        // Create new device token
-        $deviceToken = DeviceToken::create([
+        // A Firebase token uniquely identifies one app installation. Reassign the
+        // existing row when another student signs in on the same device.
+        $deviceToken = DeviceToken::updateOrCreate(
+            ['fcm_token' => $request->fcm_token],
+            [
             'user_id' => $user->id,
-            'fcm_token' => $request->fcm_token,
             'device_type' => $request->device_type,
             'device_name' => $request->device_name,
             'is_active' => true,
-        ]);
+            'last_used_at' => now(),
+            ]
+        );
 
-        return response()->json(['message' => 'Device token registered', 'data' => $deviceToken], 201);
+        return response()->json([
+            'message' => $deviceToken->wasRecentlyCreated
+                ? 'Device token registered'
+                : 'Device token updated',
+            'data' => $deviceToken,
+        ], $deviceToken->wasRecentlyCreated ? 201 : 200);
     }
 
     /**
