@@ -299,6 +299,15 @@ class AuthController extends Controller
             'password.min' => 'Password must be at least 8 characters.',
         ]);
 
+        // ── Eligibility Whitelist Check ──────────────────────────────────────
+        if (config('ssc.enforce_eligibility_whitelist', true)) {
+            if (!\App\Models\EligibleStudent::where('email', strtolower(trim($request->email)))->exists()) {
+                return back()->withErrors([
+                    'email' => 'This Microsoft 365 account is not eligible to register. Please contact the SSC admin to have your account added to the eligible list.',
+                ])->withInput();
+            }
+        }
+
         $sessionVerified = session('register_email_verified');
         $sessionEmail = session('register_email');
 
@@ -376,7 +385,7 @@ class AuthController extends Controller
             if (!\App\Models\EligibleStudent::where('email', strtolower(trim($request->email)))->exists()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Your Microsoft 365 account is not on the eligible students list. Please contact the SSC admin to have your account added before registering.',
+                    'message' => 'This Microsoft 365 account is not eligible to register. Please contact the SSC admin to have your account added to the eligible list.',
                 ]);
             }
         }
