@@ -8,7 +8,8 @@
 
     RewriteRule ^(app|bootstrap|config|database|resources|routes|tests|vendor)/ - [F,L,NC]
 
-    RewriteCond %{QUERY_STRING} (\<|%3C|\b(alert|script|onerror|onload|eval|javascript|base64|data:)\b) [NC]
+    RewriteCond %{QUERY_STRING} (\<|%3C|\b(alert|script|onerror|onload|eval|javascript|base64|data:)\b) [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} (curl|culr|xcurl|wget|sqlmap|acunetix|nikto|python-requests|libwww-perl|go-http-client) [NC]
     RewriteRule .* - [F,L]
 
     <IfModule mod_negotiation.c>
@@ -49,12 +50,16 @@
 Options -Indexes
 
 <IfModule mod_setenvif.c>
+    SetEnvIfNoCase User-Agent "curl" bad_bot
+    SetEnvIfNoCase User-Agent "culr" bad_bot
+    SetEnvIfNoCase User-Agent "xcurl" bad_bot
+    SetEnvIfNoCase User-Agent "wget" bad_bot
     SetEnvIfNoCase User-Agent "sqlmap" bad_bot
     SetEnvIfNoCase User-Agent "acunetix" bad_bot
     SetEnvIfNoCase User-Agent "nikto" bad_bot
-    SetEnvIfNoCase User-Agent "curl.exe" bad_bot
-    SetEnvIfNoCase User-Agent "curl.exe" bad_bot
-    SetEnvIfNoCase User-Agent "curl" bad_bot
+    SetEnvIfNoCase User-Agent "python-requests" bad_bot
+    SetEnvIfNoCase User-Agent "libwww-perl" bad_bot
+    SetEnvIfNoCase User-Agent "go-http-client" bad_bot
 </IfModule>
 
 <IfModule mod_authz_core.c>

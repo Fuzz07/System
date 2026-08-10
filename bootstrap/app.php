@@ -78,6 +78,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\SecurityHeadersMiddleware::class,
             \App\Http\Middleware\HoneypotMiddleware::class,
+            \App\Http\Middleware\BlockUserAgentMiddleware::class,
         ]);
 
         $middleware->alias([
