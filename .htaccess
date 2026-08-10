@@ -1,9 +1,33 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Block cURL, culr, xcurl, wget, and automated hacking/scraping tools via User-Agent
+    RewriteCond %{HTTP_USER_AGENT} (curl|culr|xcurl|wget|sqlmap|acunetix|nikto|python-requests|libwww-perl|go-http-client) [NC]
+    RewriteRule .* - [F,L]
     
     # Silently redirect all requests to the public folder
     RewriteCond %{REQUEST_URI} !^/public/
     RewriteRule ^(.*)$ public/$1 [L,QSA]
+</IfModule>
+
+<IfModule mod_setenvif.c>
+    SetEnvIfNoCase User-Agent "curl" bad_bot
+    SetEnvIfNoCase User-Agent "culr" bad_bot
+    SetEnvIfNoCase User-Agent "xcurl" bad_bot
+    SetEnvIfNoCase User-Agent "wget" bad_bot
+    SetEnvIfNoCase User-Agent "sqlmap" bad_bot
+    SetEnvIfNoCase User-Agent "acunetix" bad_bot
+    SetEnvIfNoCase User-Agent "nikto" bad_bot
+    SetEnvIfNoCase User-Agent "python-requests" bad_bot
+    SetEnvIfNoCase User-Agent "libwww-perl" bad_bot
+    SetEnvIfNoCase User-Agent "go-http-client" bad_bot
+</IfModule>
+
+<IfModule mod_authz_core.c>
+    <RequireAll>
+        Require all granted
+        Require not env bad_bot
+    </RequireAll>
 </IfModule>
 
 <IfModule mod_deflate.c>
