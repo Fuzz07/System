@@ -1,30 +1,63 @@
+
+
 <IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    RewriteRule ^(\.env|\.htaccess|\.htpasswd|composer\.json|composer\.lock|artisan|package\.json|webpack\.mix\.js)$ - [F,L,NC]
+
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|tests|vendor)/ - [F,L,NC]
+
+    RewriteCond %{QUERY_STRING} (\<|%3C|\b(alert|script|onerror|onload|eval|javascript|base64|data:)\b) [NC]
+    RewriteRule .* - [F,L]
+
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
-    RewriteEngine On
+    RewriteCond %{THE_REQUEST} \s/+index\.php
+    RewriteRule ^index\.php$ - [R=404,L]
 
-    
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+    RewriteCond %{THE_REQUEST} "^[A-Z]{3,}\s/+public(?:/|$|\s|\?)" [NC,OR]
+    RewriteCond %{THE_REQUEST} "^[A-Z]{3,}\s/+public_html(?:/|$|\s|\?)" [NC]
+    RewriteRule ^ - [R=404,L]
 
-   
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+
+
 </IfModule>
 
-<IfModule mod_deflate.c>
-    # Prevent Gzip/Deflate compression for Android APKs
-    SetEnvIfNoCase Request_URI \.apk$ no-gzip dont-vary
+
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "no-referrer"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https:; img-src 'self' data: https:; font-src 'self' data: https:; frame-src 'self' https://www.google.com https://www.gstatic.com https://www.recaptcha.net; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
+    Header always set Permissions-Policy "accelerometer=(), camera=(), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), fullscreen=(self)"
+   # Header always set Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https:; object-src 'none';"
+    Header always set access-Control-Allow-Origin "https://mcc-pes.com"
+    Header always set Access-Control-Allow-Credentials "true"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH,  DELETE, OPTIONS"
+
+</IfModule>
+
+Options -Indexes
+
+<IfModule mod_setenvif.c>
+    SetEnvIfNoCase User-Agent "sqlmap" bad_bot
+    SetEnvIfNoCase User-Agent "acunetix" bad_bot
+    SetEnvIfNoCase User-Agent "nikto" bad_bot
+    SetEnvIfNoCase User-Agent "curl" bad_bot
+</IfModule>
+
+<IfModule mod_authz_core.c>
+    <RequireAll>
+        Require all granted
+        Require not env bad_bot
+    </RequireAll>
 </IfModule>
