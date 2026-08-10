@@ -355,3 +355,51 @@ function togglePasswordVisibility(inputId, btn) {
   }
 }
 
+// ============================================================
+// Security Guard: Prevent Right-Click & Developer Tools
+// ============================================================
+
+(function () {
+  // 1. Disable Right Click Context Menu
+  document.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    return false;
+  }, false);
+
+  // 2. Disable Keyboard Shortcuts for DevTools & Source View
+  document.addEventListener('keydown', function (e) {
+    const key = e.key ? e.key.toLowerCase() : '';
+    const keyCode = e.keyCode || e.which;
+
+    // F12 key (DevTools)
+    if (key === 'f12' || keyCode === 123) {
+      e.preventDefault();
+      return false;
+    }
+
+    // Ctrl+Shift+I / J / C / K (Inspect / Console / Selector)
+    if (e.ctrlKey && e.shiftKey && ['i', 'j', 'c', 'k'].includes(key)) {
+      e.preventDefault();
+      return false;
+    }
+
+    // Cmd+Option+I / J / C / K (macOS DevTools)
+    if (e.metaKey && e.altKey && ['i', 'j', 'c', 'k'].includes(key)) {
+      e.preventDefault();
+      return false;
+    }
+
+    // Ctrl+U / Cmd+U (View Page Source)
+    if ((e.ctrlKey || e.metaKey) && key === 'u') {
+      e.preventDefault();
+      return false;
+    }
+
+    // Ctrl+S / Cmd+S (Save Page)
+    if ((e.ctrlKey || e.metaKey) && key === 's') {
+      e.preventDefault();
+      return false;
+    }
+  }, false);
+})();
+
