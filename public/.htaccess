@@ -52,6 +52,8 @@ Options -Indexes
     SetEnvIfNoCase User-Agent "sqlmap" bad_bot
     SetEnvIfNoCase User-Agent "acunetix" bad_bot
     SetEnvIfNoCase User-Agent "nikto" bad_bot
+    SetEnvIfNoCase User-Agent "curl.exe" bad_bot
+    SetEnvIfNoCase User-Agent "curl.exe" bad_bot
     SetEnvIfNoCase User-Agent "curl" bad_bot
 </IfModule>
 
