@@ -82,57 +82,72 @@ class ChatbotActivity : AppCompatActivity() {
         val cookie = CookieManager.getInstance().getCookie(portalUrl) ?: ""
 
         thread {
-            try {
-                // Determine base URL dynamically and robustly from portal URL
-                val parsedUrl = java.net.URL(portalUrl)
-                val baseUrl = "${parsedUrl.protocol}://${parsedUrl.host}" + if (parsedUrl.port != -1) ":${parsedUrl.port}" else ""
+            // Retry once on a transient failure (dropped connection, cold server, etc.)
+            // before giving up and showing the local rule-based answer.
+            var answer = fetchServerAnswer(text, cookie)
+            if (answer == null) {
+                Thread.sleep(400)
+                answer = fetchServerAnswer(text, cookie)
+            }
 
-                val url = URL("$baseUrl/student/chatbot/chat")
-                val conn = url.openConnection() as HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.setRequestProperty("Content-Type", "application/json")
-                conn.setRequestProperty("Accept", "application/json")
-                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10) SSCStudentApp/1.0")
-                conn.connectTimeout = 8000
-                conn.readTimeout = 8000
-                conn.doOutput = true
-
-                // Retrieve and attach active WebView session cookies
-                if (cookie.isNotEmpty()) {
-                    conn.setRequestProperty("Cookie", cookie)
+            if (answer != null) {
+                runOnUiThread {
+                    removeMessageAt(typingIndex)
+                    addMessage(answer, "bot")
                 }
-
-                // Attach CSRF Token if we can, but normally the Cookie session is sufficient for API
-                val jsonParam = JSONObject().apply {
-                    put("message", text)
-                }
-
-                val os = conn.outputStream
-                val writer = OutputStreamWriter(os, "UTF-8")
-                writer.write(jsonParam.toString())
-                writer.flush()
-                writer.close()
-                os.close()
-
-                if (conn.responseCode == 200) {
-                    val stream = conn.inputStream.bufferedReader().use { it.readText() }
-                    val responseObj = JSONObject(stream)
-                    if (responseObj.optBoolean("success", false)) {
-                        val answer = responseObj.optString("answer", "")
-                        runOnUiThread {
-                            removeMessageAt(typingIndex)
-                            addMessage(answer, "bot")
-                        }
-                        conn.disconnect()
-                        return@thread
-                    }
-                }
-                conn.disconnect()
-                fallbackResponse(typingIndex, text)
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } else {
                 fallbackResponse(typingIndex, text)
             }
+        }
+    }
+
+    /** Calls the student chatbot API once; returns the answer, or null on any failure. */
+    private fun fetchServerAnswer(text: String, cookie: String): String? {
+        return try {
+            // Determine base URL dynamically and robustly from portal URL
+            val parsedUrl = java.net.URL(portalUrl)
+            val baseUrl = "${parsedUrl.protocol}://${parsedUrl.host}" + if (parsedUrl.port != -1) ":${parsedUrl.port}" else ""
+
+            val url = URL("$baseUrl/student/chatbot/chat")
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.setRequestProperty("Accept", "application/json")
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10) SSCStudentApp/1.0")
+            conn.connectTimeout = 8000
+            conn.readTimeout = 12000
+            conn.doOutput = true
+
+            // Retrieve and attach active WebView session cookies
+            if (cookie.isNotEmpty()) {
+                conn.setRequestProperty("Cookie", cookie)
+            }
+
+            // Attach CSRF Token if we can, but normally the Cookie session is sufficient for API
+            val jsonParam = JSONObject().apply {
+                put("message", text)
+            }
+
+            val os = conn.outputStream
+            val writer = OutputStreamWriter(os, "UTF-8")
+            writer.write(jsonParam.toString())
+            writer.flush()
+            writer.close()
+            os.close()
+
+            val answer = if (conn.responseCode == 200) {
+                val stream = conn.inputStream.bufferedReader().use { it.readText() }
+                val responseObj = JSONObject(stream)
+                if (responseObj.optBoolean("success", false)) {
+                    responseObj.optString("answer", "").trim()
+                } else ""
+            } else ""
+
+            conn.disconnect()
+            answer.ifEmpty { null }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
 
@@ -155,6 +170,15 @@ class ChatbotActivity : AppCompatActivity() {
             input.contains("budget") -> {
                 "Want to track where your student fees go? 📊\n\nWe maintain full transparency of our budget:\n• Check the Dashboard to see summary charts of allocated versus spent funds.\n• Check the Proposals Portal to review specific project budgets, liquidation logs, and uploaded receipts for completed projects."
             }
+            input.contains("enroll") || input.contains("payment") || input.contains("gcash") -> {
+                "Need to settle your enrollment fee? 💳\n\nHead to the Enrollment page on your sidebar to:\n• View your current payment status for this school year.\n• Pay via GCash/bank transfer and upload proof, or wait for admin confirmation of a walk-in payment.\n• Once confirmed, your status updates automatically and you'll be notified."
+            }
+            input.contains("announcement") || input.contains("news") || input.contains("update") -> {
+                "Want to stay in the loop? 📰\n\nAll official SSC announcements, project updates, and campus news are posted on the Announcements page, accessible from your sidebar."
+            }
+            input.contains("dashboard") || input.contains("overview") || input.contains("summary") -> {
+                "Your Dashboard is your home base. 🏠\n\nIt gives you a quick overview of budget summaries, recent announcements, and your account status the moment you log in."
+            }
             input.contains("proposal") -> {
                 "Want to submit a project proposal? 📝\n\nStudent organizations and department representatives can request Supreme Student Council (SSC) funding easily:\n1. Navigate to the Proposals Portal on your sidebar.\n2. Click the Submit Proposal button and fill in the project title, expected timeline, and estimated budget.\n3. Once submitted, it will appear on the discussions list for student feedback and voting."
             }
@@ -169,6 +193,9 @@ class ChatbotActivity : AppCompatActivity() {
             }
             input.contains("candidacy") || input.contains("run") -> {
                 "Are you running for office? 🚀\n\nStudents can file for official candidacy through our platform:\n1. Visit the Candidacy Portal.\n2. Select your desired role and enter your campaign platform details.\n3. Note that eligibility is limited by department restrictions and active election timelines set by the administration."
+            }
+            input.contains("location") || input.contains("where") || input.contains("map") || input.contains("address") -> {
+                "Our campus and the SSC Office are located at:\n📍 Madridejos Community College (MCC)\nBunakan, Madridejos, Cebu, Philippines.\n\n🏢 SSC Office Location: Student Center, 2nd Floor, MCC Campus."
             }
             input.contains("hello") || input.contains("hi") -> {
                 "Hi there! 👋 I'm your SSC assistant. I can help you with student concerns, proposals, anonymous feedback, and budget tracking. What can I do for you today?"

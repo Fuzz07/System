@@ -123,5 +123,3 @@
     @endforelse
 </div>
 @endsection
-
-@section('chatbot') @include('partials.chatbot') @endsection

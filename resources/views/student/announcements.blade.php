@@ -45,5 +45,3 @@
 <div class="text-center py-5 text-muted"><i class="bi bi-megaphone" style="font-size:3rem;opacity:.2;"></i><div class="mt-3">No announcements yet.</div></div>
 @endforelse
 @endsection
-
-@section('chatbot') @include('partials.chatbot') @endsection

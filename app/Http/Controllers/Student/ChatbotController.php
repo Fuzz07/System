@@ -31,15 +31,21 @@ class ChatbotController extends Controller
             ]);
         }
 
-        // 2. Attempt OpenAI Completion
+        // 2. Attempt OpenAI Completion, retrying transient failures before giving up
         try {
             $systemPrompt = $this->buildSystemPrompt();
-            
-            $response = Http::timeout(8)
+
+            $response = Http::timeout(12)
+                ->retry(2, 300, function ($exception) {
+                    // Only retry network hiccups / server-side errors, not bad requests (4xx)
+                    return $exception instanceof \Illuminate\Http\Client\ConnectionException
+                        || ($exception instanceof \Illuminate\Http\Client\RequestException
+                            && $exception->response->status() >= 500);
+                }, throw: false)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $apiKey,
                 ])->post('https://api.openai.com/v1/chat/completions', [
-                    'model' => 'gpt-3.5-turbo',
+                    'model' => 'gpt-4o-mini',
                     'messages' => [
                         [
                             'role' => 'system',
@@ -50,22 +56,26 @@ class ChatbotController extends Controller
                             'content' => $userMessage
                         ]
                     ],
-                    'temperature' => 0.7,
+                    'temperature' => 0.5,
                     'max_tokens' => 500,
                 ]);
 
             if ($response->successful()) {
-                $answer = $response->json('choices.0.message.content');
-                return response()->json([
-                    'success' => true,
-                    'answer'  => $answer
+                $answer = trim((string) $response->json('choices.0.message.content'));
+                if ($answer !== '') {
+                    return response()->json([
+                        'success' => true,
+                        'answer'  => $answer
+                    ]);
+                }
+
+                Log::warning('OpenAI Chatbot returned an empty answer, utilizing fallback responder.');
+            } else {
+                Log::warning('OpenAI Chatbot API failed, utilizing fallback responder.', [
+                    'status' => $response->status(),
+                    'error'  => $response->body()
                 ]);
             }
-
-            Log::warning('OpenAI Chatbot API failed, utilizing fallback responder.', [
-                'status' => $response->status(),
-                'error'  => $response->body()
-            ]);
         } catch (\Exception $e) {
             Log::error('OpenAI Chatbot exception caught, utilizing fallback responder.', [
                 'message' => $e->getMessage()
@@ -85,6 +95,18 @@ class ChatbotController extends Controller
 
         if (str_contains($normalized, 'budget') || str_contains($normalized, 'fund') || str_contains($normalized, 'transparency')) {
             return "Want to track where your student fees go? 📊\n\nWe maintain full transparency of our budget:\n• Check the Summary Dashboard to see real-time charts of allocated versus spent funds.\n• Check the Proposals Portal to review specific project budgets, liquidation logs, and uploaded receipts for completed projects.";
+        }
+
+        if (str_contains($normalized, 'enroll') || str_contains($normalized, 'payment') || str_contains($normalized, 'pay ') || str_contains($normalized, 'gcash')) {
+            return "Need to settle your enrollment fee? 💳\n\nHead to the Enrollment page on your sidebar to:\n• View your current payment status for this school year.\n• Pay via GCash/bank transfer and upload proof, or wait for admin confirmation of a walk-in payment.\n• Once confirmed, your status updates automatically and you'll be notified.";
+        }
+
+        if (str_contains($normalized, 'announcement') || str_contains($normalized, 'news') || str_contains($normalized, 'update')) {
+            return "Want to stay in the loop? 📰\n\nAll official SSC announcements, project updates, and campus news are posted on the Announcements page, accessible from your sidebar.";
+        }
+
+        if (str_contains($normalized, 'dashboard') || str_contains($normalized, 'overview') || str_contains($normalized, 'summary')) {
+            return "Your Dashboard is your home base. 🏠\n\nIt gives you a quick overview of budget summaries, recent announcements, and your account status the moment you log in.";
         }
 
         if (str_contains($normalized, 'proposal') || str_contains($normalized, 'project') || str_contains($normalized, 'submit')) {

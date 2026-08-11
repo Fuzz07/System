@@ -15,19 +15,15 @@
       <div class="header-top-row">
         <div class="header-logo" style="display: flex; align-items: center; gap: 8px;">
           <img src="{{ asset('assets/images/ssc_logo.png') }}" alt="SSC Logo" style="width: 30px; height: 30px; object-fit: contain;">
-          <span class="logo-text">SSC Help</span>
+          <span class="logo-text">SSC Assistant</span>
         </div>
-        <div class="header-avatars">
-          <div class="avatar-group">
-            <img class="avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Officer 1">
-            <img class="avatar-img" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" alt="Officer 2">
-            <img class="avatar-img" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Officer 3">
-            <span class="online-badge"></span>
-          </div>
+        <div class="header-status">
+          <span class="status-dot"></span> Online
         </div>
         <button class="chatbot-close-btn" id="chatbotClose"><i class="bi bi-x-lg"></i></button>
       </div>
-      <h2 class="home-welcome-text">Hi there 👋<br>How can we help?</h2>
+      <h2 class="home-welcome-text">Hi there 👋</h2>
+      <p class="home-welcome-sub">How can we help you today?</p>
     </div>
 
     <!-- Messages Log -->
@@ -242,38 +238,24 @@
     letter-spacing: -0.5px;
   }
 
-  .avatar-group {
+  .header-status {
     display: flex;
     align-items: center;
-    position: relative;
-    padding-right: 6px;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.12);
+    padding: 5px 12px;
+    border-radius: 20px;
   }
 
-  .avatar-img {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid #1e3a8a;
-    margin-left: -10px;
-    object-fit: cover;
-    transition: transform 0.2s;
-    background: #e2e8f0;
-  }
-
-  .avatar-img:first-child {
-    margin-left: 0;
-  }
-
-  .online-badge {
-    position: absolute;
-    bottom: 1px;
-    right: 2px;
-    width: 10px;
-    height: 10px;
+  .status-dot {
+    width: 8px;
+    height: 8px;
     background-color: var(--chatbot-success);
     border-radius: 50%;
-    border: 2px solid #1e3a8a;
-    z-index: 11;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
   }
 
   .home-welcome-text {
@@ -282,6 +264,13 @@
     line-height: 1.3;
     margin: 0;
     letter-spacing: -0.5px;
+  }
+
+  .home-welcome-sub {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 4px 0 0;
   }
 
   /* Chat Messages Area */
@@ -792,10 +781,11 @@
       messagesContainer.appendChild(typingDiv);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-      // Try Laravel OpenAI Backend first, fallback to rule-based on failure
+      // Try the Laravel/OpenAI backend first, always falling back to the local
+      // rule-based responder so the widget never leaves the user without an answer.
       const chatRoute = "{{ Route::has('student.chatbot.chat') ? route('student.chatbot.chat') : '' }}";
       if (chatRoute) {
-        fetch(chatRoute, {
+        fetchWithTimeout(chatRoute, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -803,7 +793,7 @@
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
           },
           body: JSON.stringify({ message: text })
-        })
+        }, 15000)
         .then(res => res.json())
         .then(data => {
           typingDiv.remove();
@@ -813,7 +803,7 @@
             addMessage(getBotResponse(text.toLowerCase()), 'bot');
           }
         })
-        .catch(err => {
+        .catch(() => {
           typingDiv.remove();
           addMessage(getBotResponse(text.toLowerCase()), 'bot');
         });
@@ -825,6 +815,14 @@
       }
     }
 
+    // Wraps fetch() with a hard timeout so a stalled network never leaves the
+    // "typing..." indicator stuck on screen — it fails fast into the local fallback.
+    function fetchWithTimeout(url, options, timeoutMs) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+    }
+
     sendBtn.addEventListener('click', () => handleSend());
     chatbotInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') handleSend();
@@ -832,7 +830,13 @@
 
     function getBotResponse(input) {
       const responses = {
-        'budget': "Want to track where your student fees go? 📊\n\nWe maintain full transparency of our budget:\n• Visit the <a href='{{ route('student.proposals') }}' class='chat-link'>Dashboard</a> to see summary charts of allocated versus spent funds.\n• Check the <a href='{{ route('student.proposals') }}' class='chat-link'>Proposals Portal</a> to review specific project budgets, liquidation logs, and uploaded receipts for completed projects.",
+        'budget': "Want to track where your student fees go? 📊\n\nWe maintain full transparency of our budget:\n• Visit the <a href='{{ route('student.overview') }}' class='chat-link'>Dashboard</a> to see summary charts of allocated versus spent funds.\n• Check the <a href='{{ route('student.proposals') }}' class='chat-link'>Proposals Portal</a> to review specific project budgets, liquidation logs, and uploaded receipts for completed projects.",
+        'dashboard': "Your <a href='{{ route('student.overview') }}' class='chat-link'>Dashboard</a> is your home base. 🏠\n\nIt gives you a quick overview of budget summaries, recent announcements, and your account status the moment you log in.",
+        'overview': "Your <a href='{{ route('student.overview') }}' class='chat-link'>Dashboard</a> is your home base. 🏠\n\nIt gives you a quick overview of budget summaries, recent announcements, and your account status the moment you log in.",
+        'enroll': "Need to settle your enrollment fee? 💳\n\nHead to the <a href='{{ route('student.enrollment.index') }}' class='chat-link'>Enrollment</a> page on your sidebar to:\n• View your current payment status for this school year.\n• Pay via GCash/bank transfer and upload proof, or wait for admin confirmation of a walk-in payment.\n• Once confirmed, your status updates automatically and you'll be notified.",
+        'payment': "Need to settle your enrollment fee? 💳\n\nHead to the <a href='{{ route('student.enrollment.index') }}' class='chat-link'>Enrollment</a> page on your sidebar to:\n• View your current payment status for this school year.\n• Pay via GCash/bank transfer and upload proof, or wait for admin confirmation of a walk-in payment.\n• Once confirmed, your status updates automatically and you'll be notified.",
+        'announcement': "Want to stay in the loop? 📰\n\nAll official SSC announcements, project updates, and campus news are posted on the <a href='{{ route('student.announcements') }}' class='chat-link'>Announcements</a> page, accessible from your sidebar.",
+        'news': "Want to stay in the loop? 📰\n\nAll official SSC announcements, project updates, and campus news are posted on the <a href='{{ route('student.announcements') }}' class='chat-link'>Announcements</a> page, accessible from your sidebar.",
         'proposal': "Want to submit a project proposal? 📝\n\nStudent organizations and department representatives can request Supreme Student Council (SSC) funding easily:\n1. Navigate to the <a href='{{ route('student.proposals') }}' class='chat-link'>Proposals Portal</a> on your sidebar.\n2. Click the <b>Submit Proposal</b> button and fill in the project title, expected timeline, and estimated budget.\n3. Once submitted, it will appear on the discussions list for student feedback and voting.\n4. The SSC Board will review and vote on official approval.",
         'feedback': "Your voice is essential to build a better campus! 💬\n\nTo share feedback, suggestions, or concerns with the council:\n1. Open the <a href='{{ route('student.feedback') }}' class='chat-link'>Student Feedback Wall</a>.\n2. Write your message and choose the type (Suggestion, Inquiry, or Concern).\n3. Check <b>Submit Anonymously</b> to keep your identity private if preferred.\n4. All submissions are read and addressed directly by the SSC Executive Committee.",
         'contact': "Let's stay connected! 📞\n\nYou can reach the SSC officers through our official channels:\n• <b>Email:</b> <a href='mailto:ssc.official@mcclawis.edu.ph' class='chat-link'>ssc.official@mcclawis.edu.ph</a>\n• <b>Facebook:</b> <a href='https://www.facebook.com/share/17N13YJMUC/' target='_blank' class='chat-link'>SSC Official Page</a>\n• <b>Office:</b> Student Center, 2nd Floor, MCC Campus\n• <b>Office Hours:</b> Mon-Fri | 8:00 AM – 5:00 PM",

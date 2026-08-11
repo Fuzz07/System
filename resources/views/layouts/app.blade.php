@@ -199,7 +199,11 @@
     </script>
     @endif
 
-    @yield('chatbot')
+    @auth
+        @if(Auth::user()->isStudent())
+            @include('partials.chatbot')
+        @endif
+    @endauth
     @include('partials.logout-modal')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
