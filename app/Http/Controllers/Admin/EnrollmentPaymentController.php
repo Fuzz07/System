@@ -59,8 +59,9 @@ class EnrollmentPaymentController extends Controller
 
         $departments = User::where('role', 'student')->select('department')->distinct()->pluck('department');
         $years = User::where('role', 'student')->select('year_level')->distinct()->pluck('year_level');
+        $distribution = $this->departmentDistribution($currentSy);
 
-        return view('admin.enrollment_payments', compact('students', 'search', 'dept', 'year', 'status', 'departments', 'years', 'currentSy'));
+        return view('admin.enrollment_payments', compact('students', 'search', 'dept', 'year', 'status', 'departments', 'years', 'currentSy', 'distribution'));
     }
 
     public function markPaid(EnrollmentPayment $payment, Request $request)
@@ -100,6 +101,11 @@ class EnrollmentPaymentController extends Controller
             ->where('semester', $currentSy)
             ->latest()
             ->first();
+
+        if ($payment && $payment->status === 'paid') {
+            // Guard against crediting the same fee to the department twice.
+            return redirect()->back()->with('info', 'This student is already marked paid for ' . $currentSy . '.');
+        }
 
         if (! $payment) {
             $payment = EnrollmentPayment::create([
@@ -183,11 +189,21 @@ class EnrollmentPaymentController extends Controller
         return redirect()->back()->with('success', 'Payment proof rejected.');
     }
 
+    /**
+     * Credit the fee to the paying student's own department budget, so each
+     * department accumulates (and later spends) only what it collected.
+     */
     protected function addEnrollmentBudget(EnrollmentPayment $payment)
     {
+        $department = Budget::normalizeDepartment($payment->user?->department);
+
         $budget = Budget::firstOrCreate(
-            ['title' => 'Enrollment Fees', 'school_year' => SscHelper::getActiveSchoolYear()],
-            ['department' => 'General', 'allocated_amount' => 0, 'remaining_balance' => 0, 'status' => 'Pending', 'created_by' => Auth::id()]
+            [
+                'title'       => Budget::enrollmentTitleFor($department),
+                'department'  => $department,
+                'school_year' => SscHelper::getActiveSchoolYear(),
+            ],
+            ['allocated_amount' => 0, 'remaining_balance' => 0, 'status' => 'Pending', 'created_by' => Auth::id()]
         );
 
         $budget->allocated_amount += $payment->amount;
@@ -195,5 +211,79 @@ class EnrollmentPaymentController extends Controller
         $budget->save();
 
         return $budget;
+    }
+
+    /**
+     * Per-department view of the enrollment collection: head counts from the
+     * student roster, cash from the payments, and the matching budget row.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    protected function departmentDistribution(string $schoolYear): array
+    {
+        $rows = [];
+
+        $studentRows = User::where('role', 'student')
+            ->groupBy('department')
+            ->selectRaw('department, COUNT(*) as total')
+            ->get();
+
+        foreach ($studentRows as $row) {
+            $key = Budget::normalizeDepartment($row->department);
+            $rows[$key] ??= $this->emptyDistributionRow($key);
+            $rows[$key]['students'] += (int) $row->total;
+        }
+
+        $paymentRows = EnrollmentPayment::query()
+            ->join('users', 'users.id', '=', 'enrollment_payments.user_id')
+            ->where('enrollment_payments.semester', $schoolYear)
+            ->whereIn('enrollment_payments.status', ['paid', 'pending'])
+            ->groupBy('users.department', 'enrollment_payments.status')
+            ->selectRaw('users.department as department, enrollment_payments.status as status, COUNT(*) as total, SUM(enrollment_payments.amount) as amount')
+            ->get();
+
+        foreach ($paymentRows as $row) {
+            $key = Budget::normalizeDepartment($row->department);
+            $rows[$key] ??= $this->emptyDistributionRow($key);
+
+            if ($row->status === 'paid') {
+                $rows[$key]['paid'] += (int) $row->total;
+                $rows[$key]['collected'] += (float) $row->amount;
+            } else {
+                $rows[$key]['pending'] += (int) $row->total;
+            }
+        }
+
+        $budgets = Budget::enrollmentFees()->where('school_year', $schoolYear)->get();
+
+        foreach ($budgets as $budget) {
+            // Keeps the legacy pooled row visible until it is split or removed.
+            $key = Budget::normalizeDepartment($budget->department);
+            $rows[$key] ??= $this->emptyDistributionRow($key);
+            $rows[$key]['allocated'] += (float) $budget->allocated_amount;
+            $rows[$key]['remaining'] += (float) $budget->remaining_balance;
+        }
+
+        foreach ($rows as $key => $row) {
+            $rows[$key]['unpaid'] = max(0, $row['students'] - $row['paid'] - $row['pending']);
+        }
+
+        ksort($rows);
+
+        return $rows;
+    }
+
+    protected function emptyDistributionRow(string $department): array
+    {
+        return [
+            'department' => $department,
+            'students'   => 0,
+            'paid'       => 0,
+            'pending'    => 0,
+            'unpaid'     => 0,
+            'collected'  => 0.0,
+            'allocated'  => 0.0,
+            'remaining'  => 0.0,
+        ];
     }
 }

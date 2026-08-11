@@ -7,6 +7,91 @@
         <h4 class="mb-0">Enrollment Payments</h4>
     </div>
 
+    @php
+        $totals = ['students' => 0, 'paid' => 0, 'pending' => 0, 'unpaid' => 0, 'collected' => 0, 'allocated' => 0, 'remaining' => 0];
+        foreach ($distribution as $row) {
+            foreach ($totals as $key => $value) { $totals[$key] += $row[$key]; }
+        }
+    @endphp
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="mb-0">Budget Distribution by Department</h6>
+                    <small class="text-muted">Enrollment fees collected for {{ $currentSy }}, credited to each department's own budget.</small>
+                </div>
+                <a href="{{ route('admin.budgets') }}" class="btn btn-sm btn-outline-primary">Open Budgets</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th class="text-end">Students</th>
+                            <th class="text-end">Paid</th>
+                            <th class="text-end">Pending</th>
+                            <th class="text-end">Unpaid</th>
+                            <th class="text-end">Collected</th>
+                            <th class="text-end">Budget Allocated</th>
+                            <th class="text-end">Budget Remaining</th>
+                            <th style="width:120px;">Collection Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($distribution as $row)
+                        @php
+                            $rate = $row['students'] > 0 ? round($row['paid'] / $row['students'] * 100) : 0;
+                            $mismatch = abs($row['collected'] - $row['allocated']) >= 0.01;
+                        @endphp
+                        <tr>
+                            <td class="fw-semibold">
+                                {{ $row['department'] }}
+                                @if($mismatch)
+                                    <i class="bi bi-exclamation-triangle-fill text-warning ms-1"
+                                       title="Collected payments and the department budget do not match. Run: php artisan ssc:split-enrollment-budgets --apply"></i>
+                                @endif
+                            </td>
+                            <td class="text-end">{{ $row['students'] }}</td>
+                            <td class="text-end text-success">{{ $row['paid'] }}</td>
+                            <td class="text-end text-warning">{{ $row['pending'] }}</td>
+                            <td class="text-end text-muted">{{ $row['unpaid'] }}</td>
+                            <td class="text-end">{!! \App\Helpers\SscHelper::formatCurrency($row['collected']) !!}</td>
+                            <td class="text-end">{!! \App\Helpers\SscHelper::formatCurrency($row['allocated']) !!}</td>
+                            <td class="text-end">{!! \App\Helpers\SscHelper::formatCurrency($row['remaining']) !!}</td>
+                            <td>
+                                <div class="progress" style="height:6px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ $rate }}%"
+                                         aria-valuenow="{{ $rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <small class="text-muted">{{ $rate }}%</small>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="9" class="text-center text-muted py-3">No departments to summarize yet.</td></tr>
+                        @endforelse
+                    </tbody>
+                    @if(count($distribution))
+                    <tfoot>
+                        <tr class="fw-bold border-top">
+                            <td>All Departments</td>
+                            <td class="text-end">{{ $totals['students'] }}</td>
+                            <td class="text-end">{{ $totals['paid'] }}</td>
+                            <td class="text-end">{{ $totals['pending'] }}</td>
+                            <td class="text-end">{{ $totals['unpaid'] }}</td>
+                            <td class="text-end">{!! \App\Helpers\SscHelper::formatCurrency($totals['collected']) !!}</td>
+                            <td class="text-end">{!! \App\Helpers\SscHelper::formatCurrency($totals['allocated']) !!}</td>
+                            <td class="text-end">{!! \App\Helpers\SscHelper::formatCurrency($totals['remaining']) !!}</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                    @endif
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <form class="row g-2 mb-3" method="GET">
