@@ -57,8 +57,8 @@
 
         <form method="POST" action="{{ $fallbackRoute }}" class="mb-3">
             @csrf
-            <button type="submit" class="btn btn-outline-primary w-100 py-2.5" style="font-weight: 600; font-size: 0.85rem; border-radius: var(--radius-sm);">
-                <i class="bi bi-envelope-at"></i> Verify with Email OTP instead
+            <button type="submit" class="btn btn-primary w-100 py-2.5" style="font-weight: 600; font-size: 0.85rem; border-radius: var(--radius-sm);">
+                <i class="bi bi-envelope-at"></i> Continue with Email Verification
             </button>
         </form>
 
