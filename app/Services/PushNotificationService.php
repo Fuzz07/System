@@ -95,25 +95,38 @@ class PushNotificationService
                 'timestamp' => now()->toIso8601String(),
             ]));
 
+            $imageUrl = $data['image_url'] ?? null;
+
             foreach ($tokens as $token) {
+                $notification = [
+                    'title' => $title,
+                    'body'  => $body,
+                ];
+                $androidNotification = [
+                    'sound'       => 'default',
+                    'channel_id'  => 'ssc_notifications',  // Must match channel created in SSCMessagingService.kt
+                    'visibility'  => 'PUBLIC',              // Show on lock screen
+                    'default_sound'    => true,
+                    'default_vibrate_timings' => true,
+                    // Note: do NOT use click_action: FLUTTER_NOTIFICATION_CLICK for native Android apps
+                ];
+
+                // When set, Android automatically renders this as a big-picture
+                // notification (expanded image) even while the app is backgrounded
+                // or fully killed — no extra client code needed for that case.
+                if (!empty($imageUrl)) {
+                    $notification['image'] = $imageUrl;
+                    $androidNotification['image'] = $imageUrl;
+                }
+
                 $message = [
                     'message' => [
                         'token'        => $token,
-                        'notification' => [
-                            'title' => $title,
-                            'body'  => $body,
-                        ],
+                        'notification' => $notification,
                         'data' => $stringData,
                         'android' => [
                             'priority' => 'high',
-                            'notification' => [
-                                'sound'       => 'default',
-                                'channel_id'  => 'ssc_notifications',  // Must match channel created in SSCMessagingService.kt
-                                'visibility'  => 'PUBLIC',              // Show on lock screen
-                                'default_sound'    => true,
-                                'default_vibrate_timings' => true,
-                                // Note: do NOT use click_action: FLUTTER_NOTIFICATION_CLICK for native Android apps
-                            ],
+                            'notification' => $androidNotification,
                         ],
                     ],
                 ];
