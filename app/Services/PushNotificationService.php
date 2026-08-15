@@ -159,15 +159,16 @@ class PushNotificationService
                 // Fallback: Try to decode from base64 environment variable
                 $keyBase64 = env('FIREBASE_SERVICE_ACCOUNT_KEY_B64');
                 if ($keyBase64) {
-                    $keyContent = base64_decode($keyBase64, true);
+                    $keyContent = self::decodeServiceAccountBase64($keyBase64);
                     if ($keyContent) {
                         $serviceAccount = json_decode($keyContent, true);
                         if ($serviceAccount) {
                             return self::getAccessTokenFromArray($serviceAccount);
                         }
                     }
+                    Log::error('FIREBASE_SERVICE_ACCOUNT_KEY_B64 is set but could not be decoded into a valid service account JSON.');
                 }
-                
+
                 Log::error('Firebase service account key not found', ['path' => $keyPath]);
                 return null;
             }
@@ -226,6 +227,24 @@ class PushNotificationService
             ]);
             return null;
         }
+    }
+
+    /**
+     * Decode a base64-encoded service account JSON, tolerating the stray
+     * PEM armor / CRLF line breaks that tools like Windows' `certutil -encode`
+     * add (which otherwise makes strict base64_decode() fail silently).
+     */
+    private static function decodeServiceAccountBase64(string $keyBase64): ?string
+    {
+        $lines = preg_split('/\r\n|\r|\n/', $keyBase64);
+        $clean = implode('', array_filter($lines, function ($line) {
+            $line = trim($line);
+            return $line !== '' && !str_contains($line, 'CERTIFICATE') && !str_contains($line, 'PRIVATE KEY');
+        }));
+
+        $decoded = base64_decode($clean, true);
+
+        return $decoded !== false ? $decoded : null;
     }
 
     /**
