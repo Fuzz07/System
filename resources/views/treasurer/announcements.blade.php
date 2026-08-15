@@ -10,31 +10,32 @@
   </div>
 </div>
 
-<div class="d-flex gap-2 mb-4">
-    <a href="{{ route('treasurer.announcements') }}" class="btn btn-sm {{ !$category ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">All</a>
-    @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
-    <a href="{{ route('treasurer.announcements', ['category' => $value]) }}" class="btn btn-sm {{ $category === $value ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">{{ $label }}</a>
-    @endforeach
+<div class="category-filter-bar">
+    <a href="{{ route('treasurer.announcements') }}" class="{{ !$category ? 'active' : '' }}"><i class="bi bi-grid"></i> All</a>
+    <a href="{{ route('treasurer.announcements', ['category' => 'general']) }}" class="{{ $category === 'general' ? 'active' : '' }}"><i class="bi bi-megaphone"></i> General</a>
+    <a href="{{ route('treasurer.announcements', ['category' => 'lost_item']) }}" class="{{ $category === 'lost_item' ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
 </div>
 
 @forelse ($announcements as $a)
-  <div class="announcement-card transition hover-shadow mb-4" style="border-radius:18px; padding:28px; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-    <div class="d-flex justify-content-between align-items-start mb-3">
-      <div style="flex:1;">
-        <span class="badge {{ $a->category === 'lost_item' ? 'bg-warning text-dark' : 'bg-info text-dark' }}" style="font-size:0.65rem; text-transform:uppercase; font-weight:700;">{{ $a->category_label }}</span>
-        <h2 style="font-size:1.1rem; font-weight:700; color:var(--navy); margin:6px 0 0;">{{ $a->title }}</h2>
+  <div class="announcement-card {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
+    <div class="d-flex justify-content-between align-items-start gap-3">
+      <div style="flex:1; min-width:0;">
+        <span class="announcement-chip {{ $a->category === 'lost_item' ? 'category-lost' : 'category-general' }}">
+            <i class="bi {{ $a->category === 'lost_item' ? 'bi-search' : 'bi-megaphone' }}"></i> {{ $a->category_label }}
+        </span>
+        <h2 class="announcement-title" style="font-size:1.1rem;">{{ $a->title }}</h2>
       </div>
-      <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 px-3 py-2" style="font-size:0.7rem; border-radius: 12px;">
+      <span class="announcement-chip role" style="flex-shrink:0;">
         <i class="bi bi-calendar3"></i> {{ $a->created_at->format('M d, Y') }}
       </span>
     </div>
 
-    <div style="font-size:.9rem; color:#4a5568; line-height:1.7; margin-bottom:20px;">
+    <div class="announcement-body">
       {{ Str::limit($a->content, 250) }}
     </div>
 
     <div class="d-flex justify-content-between align-items-center">
-      <div style="font-size:.75rem; color:#a0aec0; display:flex; align-items:center; gap:12px;">
+      <div style="font-size:.78rem; color:var(--slate-400); display:flex; align-items:center; gap:14px;">
         <span><i class="bi bi-person-circle"></i> {{ $a->author->fullname ?? 'SSC Admin' }}</span>
         <span><i class="bi bi-clock"></i> {!! \App\Helpers\SscHelper::timeAgo($a->created_at) !!}</span>
       </div>
@@ -56,7 +57,9 @@
           <div class="text-center mb-4">
             <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:60px; height:60px; font-size:1.75rem;">
               <i class="bi bi-megaphone"></i></div>
-            <span class="badge {{ $a->category === 'lost_item' ? 'bg-warning text-dark' : 'bg-info text-dark' }}" style="font-size:0.65rem; text-transform:uppercase; font-weight:700;">{{ $a->category_label }}</span>
+            <span class="announcement-chip {{ $a->category === 'lost_item' ? 'category-lost' : 'category-general' }}">
+                <i class="bi {{ $a->category === 'lost_item' ? 'bi-search' : 'bi-megaphone' }}"></i> {{ $a->category_label }}
+            </span>
             <h2 class="fw-bold text-dark h3 px-md-5 mt-2">{{ $a->title }}</h2>
             <div class="text-muted small mt-2">
               <i class="bi bi-person"></i> {{ $a->author->fullname ?? 'SSC Admin' }} &bull;
@@ -87,9 +90,11 @@
     </div>
   </div>
 @empty
-  <div class="text-center py-5 text-muted">
-    <i class="bi bi-megaphone" style="font-size:3rem; opacity:.2;"></i>
-    <div class="mt-3">No announcements yet.</div>
+  <div class="card text-center" style="border-radius:var(--radius); border:1px solid var(--slate-200); box-shadow:none;">
+    <div class="card-body-custom py-5">
+        <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:56px; height:56px; font-size:1.6rem;"><i class="bi bi-megaphone"></i></div>
+        <div class="fw-bold" style="color:var(--slate-800);">{{ $category ? 'No ' . (\App\Models\Announcement::CATEGORIES[$category] ?? 'matching') . ' announcements yet.' : 'No announcements yet.' }}</div>
+    </div>
   </div>
 @endforelse
 @endsection

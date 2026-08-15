@@ -6,31 +6,33 @@
     <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#annModal"><i class="bi bi-megaphone"></i> New Announcement</button>
 </div>
 
-<div class="d-flex gap-2 mb-3">
-    <a href="{{ route('officer.announcements') }}" class="btn btn-sm {{ !$category ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">All</a>
-    @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
-    <a href="{{ route('officer.announcements', ['category' => $value]) }}" class="btn btn-sm {{ $category === $value ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">{{ $label }}</a>
-    @endforeach
+<div class="category-filter-bar">
+    <a href="{{ route('officer.announcements') }}" class="{{ !$category ? 'active' : '' }}"><i class="bi bi-grid"></i> All</a>
+    <a href="{{ route('officer.announcements', ['category' => 'general']) }}" class="{{ $category === 'general' ? 'active' : '' }}"><i class="bi bi-megaphone"></i> General</a>
+    <a href="{{ route('officer.announcements', ['category' => 'lost_item']) }}" class="{{ $category === 'lost_item' ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
 </div>
 
 @forelse($announcements as $a)
-<div class="announcement-card d-flex justify-content-between align-items-start">
-    <div style="flex:1;">
-        <div class="d-flex align-items-center gap-2 mb-1">
-            <span class="badge {{ $a->category === 'lost_item' ? 'bg-warning text-dark' : 'bg-info text-dark' }}" style="font-size:0.62rem; text-transform:uppercase; font-weight:700;">{{ $a->category_label }}</span>
-            <div style="font-weight:700;font-size:.95rem;color:var(--navy-900);">{{ $a->title }}</div>
-        </div>
+<div class="announcement-card d-flex justify-content-between align-items-start gap-3 {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
+    <div style="flex:1; min-width:0;">
+        <span class="announcement-chip {{ $a->category === 'lost_item' ? 'category-lost' : 'category-general' }}">
+            <i class="bi {{ $a->category === 'lost_item' ? 'bi-search' : 'bi-megaphone' }}"></i> {{ $a->category_label }}
+        </span>
+        <div class="announcement-title" style="font-size:0.98rem; margin:8px 0 10px;">{{ $a->title }}</div>
         @if($a->image_path)
-        <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="max-width:100%; max-height:220px; border-radius:10px; margin-bottom:8px; object-fit:cover;">
+        <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" class="announcement-image" style="max-height:220px;">
         @endif
-        <div style="font-size:.85rem;color:#4a5568;margin-bottom:8px;line-height:1.7;">{!! nl2br(e($a->content)) !!}</div>
-        <div style="font-size:.72rem;color:#a0aec0;"><i class="bi bi-person"></i> {{ $a->author->fullname ?? 'SSC' }} &bull; <i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</div>
+        <div class="announcement-body" style="margin-bottom:12px;">{!! nl2br(e($a->content)) !!}</div>
+        <div class="announcement-meta" style="border-top:none; padding-top:0;">
+            <span><i class="bi bi-person"></i> {{ $a->author->fullname ?? 'SSC' }}</span>
+            <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
+        </div>
     </div>
     @if($a->created_by === Auth::id())
-    <div class="d-flex gap-2 ms-3">
-        <button type="button" class="btn btn-outline-secondary btn-sm" style="font-size:.72rem;" data-bs-toggle="modal" data-bs-target="#editAnnModal{{ $a->id }}"><i class="bi bi-pencil"></i></button>
+    <div class="announcement-actions">
+        <button type="button" class="btn-icon-sm" data-bs-toggle="modal" data-bs-target="#editAnnModal{{ $a->id }}" title="Edit"><i class="bi bi-pencil"></i></button>
         <form method="POST" action="{{ route('officer.announcements.destroy', $a) }}" onsubmit="return confirm('Delete this announcement?')">@csrf @method('DELETE')
-            <button class="btn btn-outline-danger btn-sm" style="font-size:.72rem;"><i class="bi bi-trash"></i></button>
+            <button class="btn-icon-sm danger" title="Delete"><i class="bi bi-trash"></i></button>
         </form>
     </div>
     @endif
@@ -78,7 +80,12 @@
     </form>
 </div></div></div>
 @empty
-<div class="text-center py-5 text-muted"><i class="bi bi-megaphone" style="font-size:2rem;opacity:.2;"></i><div class="mt-2">No announcements yet.</div></div>
+<div class="card text-center" style="border-radius:var(--radius); border:1px solid var(--slate-200); box-shadow:none;">
+    <div class="card-body-custom py-5">
+        <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:56px; height:56px; font-size:1.6rem;"><i class="bi bi-megaphone"></i></div>
+        <div class="fw-bold" style="color:var(--slate-800);">{{ $category ? 'No ' . (\App\Models\Announcement::CATEGORIES[$category] ?? 'matching') . ' announcements yet.' : 'No announcements yet.' }}</div>
+    </div>
+</div>
 @endforelse
 
 <div class="modal fade" id="annModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--radius);border:none;">

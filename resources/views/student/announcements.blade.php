@@ -4,28 +4,29 @@
 @section('content')
 <div class="page-header"><div><h1>Announcements</h1><p>Official announcements from the Supreme Student Council</p></div></div>
 
-<div class="d-flex gap-2 mb-4">
-    <a href="{{ route('student.announcements') }}" class="btn btn-sm {{ !$category ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">All</a>
-    @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
-    <a href="{{ route('student.announcements', ['category' => $value]) }}" class="btn btn-sm {{ $category === $value ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">{{ $label }}</a>
-    @endforeach
+<div class="category-filter-bar">
+    <a href="{{ route('student.announcements') }}" class="{{ !$category ? 'active' : '' }}"><i class="bi bi-grid"></i> All</a>
+    <a href="{{ route('student.announcements', ['category' => 'general']) }}" class="{{ $category === 'general' ? 'active' : '' }}"><i class="bi bi-megaphone"></i> General</a>
+    <a href="{{ route('student.announcements', ['category' => 'lost_item']) }}" class="{{ $category === 'lost_item' ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
 </div>
 
 @forelse($announcements as $a)
-<div class="announcement-card transition hover-shadow" style="border-radius:18px;padding:28px;">
-    <div class="d-flex justify-content-between align-items-start mb-3">
-        <div style="flex:1;">
-            <span class="badge {{ $a->category === 'lost_item' ? 'bg-warning text-dark' : 'bg-info text-dark' }}" style="font-size:0.65rem; text-transform:uppercase; font-weight:700; margin-bottom:8px;">{{ $a->category_label }}</span>
-            <h2 style="font-size:1.1rem;font-weight:700;color:var(--navy-900);margin:6px 0 0;">{{ $a->title }}</h2>
+<div class="announcement-card {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
+    <div class="d-flex justify-content-between align-items-start gap-3">
+        <div style="flex:1; min-width:0;">
+            <span class="announcement-chip {{ $a->category === 'lost_item' ? 'category-lost' : 'category-general' }}">
+                <i class="bi {{ $a->category === 'lost_item' ? 'bi-search' : 'bi-megaphone' }}"></i> {{ $a->category_label }}
+            </span>
+            <h2 class="announcement-title" style="font-size:1.1rem;">{{ $a->title }}</h2>
         </div>
-        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 px-3 py-2" style="font-size:0.7rem;"><i class="bi bi-calendar3"></i> {{ $a->created_at?->format('M d, Y') }}</span>
+        <span class="announcement-chip role" style="flex-shrink:0;"><i class="bi bi-calendar3"></i> {{ $a->created_at?->format('M d, Y') }}</span>
     </div>
     @if($a->image_path)
-    <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="width:100%; max-height:260px; border-radius:14px; margin-bottom:16px; object-fit:cover;">
+    <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" class="announcement-image" style="max-height:260px;">
     @endif
-    <div style="font-size:.9rem;color:#4a5568;line-height:1.7;margin-bottom:20px;">{!! nl2br(e(Str::limit($a->content, 250))) !!}</div>
+    <div class="announcement-body">{!! nl2br(e(Str::limit($a->content, 250))) !!}</div>
     <div class="d-flex justify-content-between align-items-center">
-        <div style="font-size:.75rem;color:#a0aec0;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:.78rem;color:var(--slate-400);display:flex;align-items:center;gap:14px;">
             <span><i class="bi bi-person-circle"></i> {{ $a->author->fullname ?? 'SSC Admin' }}</span>
             <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
             @if($a->category === 'lost_item')
@@ -42,7 +43,9 @@
         <div class="modal-body p-4 p-md-5 pt-0">
             <div class="text-center mb-4">
                 <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:60px;height:60px;font-size:1.75rem;"><i class="bi bi-megaphone"></i></div>
-                <span class="badge {{ $a->category === 'lost_item' ? 'bg-warning text-dark' : 'bg-info text-dark' }}" style="font-size:0.65rem; text-transform:uppercase; font-weight:700;">{{ $a->category_label }}</span>
+                <span class="announcement-chip {{ $a->category === 'lost_item' ? 'category-lost' : 'category-general' }}">
+                    <i class="bi {{ $a->category === 'lost_item' ? 'bi-search' : 'bi-megaphone' }}"></i> {{ $a->category_label }}
+                </span>
                 <h2 class="fw-bold text-dark h3 px-md-5 mt-2">{{ $a->title }}</h2>
                 <div class="text-muted small mt-2"><i class="bi bi-person"></i> {{ $a->author->fullname ?? 'SSC Admin' }} &bull; <i class="bi bi-calendar3"></i> {{ $a->created_at?->format('F d, Y') }}</div>
             </div>
@@ -92,6 +95,12 @@
     </div></div>
 </div>
 @empty
-<div class="text-center py-5 text-muted"><i class="bi bi-megaphone" style="font-size:3rem;opacity:.2;"></i><div class="mt-3">No announcements yet.</div></div>
+<div class="card text-center" style="border-radius:var(--radius); border:1px solid var(--slate-200); box-shadow:none;">
+    <div class="card-body-custom py-5">
+        <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:56px; height:56px; font-size:1.6rem;"><i class="bi bi-megaphone"></i></div>
+        <div class="fw-bold" style="color:var(--slate-800);">{{ $category ? 'No ' . (\App\Models\Announcement::CATEGORIES[$category] ?? 'matching') . ' announcements yet.' : 'No announcements yet.' }}</div>
+        <p class="text-muted mb-0 mt-1" style="font-size:0.85rem;">Check back later for updates from the SSC.</p>
+    </div>
+</div>
 @endforelse
 @endsection
