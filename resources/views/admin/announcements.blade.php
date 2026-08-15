@@ -13,10 +13,10 @@
     <a href="{{ route('admin.announcements', ['category' => 'lost_item']) }}" class="{{ $category === 'lost_item' ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
 </div>
 
-<div class="row">
-    <div class="col-12">
+<div class="row g-4">
         @forelse($announcements as $a)
-        <div class="announcement-card d-flex justify-content-between align-items-start gap-3 {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
+        <div class="col-12 col-md-6">
+        <div class="announcement-card d-flex justify-content-between align-items-start gap-3 h-100 {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
             <div style="flex:1; min-width:0;">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="announcement-chip role">{{ $a->author?->role ?? 'SSC Admin' }}</span>
@@ -108,7 +108,9 @@
                 </div>
             </div>
         </div>
+        </div>
         @empty
+        <div class="col-12">
         <div class="card text-center" style="border-radius:var(--radius); border:1px solid var(--slate-200); box-shadow:none;">
             <div class="card-body-custom py-5">
                 <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:56px; height:56px; font-size:1.6rem;"><i class="bi bi-megaphone"></i></div>
@@ -116,8 +118,8 @@
                 <p class="text-muted mb-0 mt-1" style="font-size:0.85rem;">Be the first to post an announcement using the button above.</p>
             </div>
         </div>
+        </div>
         @endforelse
-    </div>
 </div>
 
 <div class="card mt-3" style="border:none; background:#fff; border-radius:var(--radius); box-shadow:0 1px 3px rgba(0,0,0,0.04);">

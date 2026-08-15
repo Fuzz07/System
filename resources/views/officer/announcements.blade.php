@@ -12,8 +12,10 @@
     <a href="{{ route('officer.announcements', ['category' => 'lost_item']) }}" class="{{ $category === 'lost_item' ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
 </div>
 
+<div class="row g-4">
 @forelse($announcements as $a)
-<div class="announcement-card d-flex justify-content-between align-items-start gap-3 {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
+<div class="col-12 col-md-6">
+<div class="announcement-card d-flex justify-content-between align-items-start gap-3 h-100 {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
     <div style="flex:1; min-width:0;">
         <span class="announcement-chip {{ $a->category === 'lost_item' ? 'category-lost' : 'category-general' }}">
             <i class="bi {{ $a->category === 'lost_item' ? 'bi-search' : 'bi-megaphone' }}"></i> {{ $a->category_label }}
@@ -79,14 +81,18 @@
         <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn-primary-custom"><i class="bi bi-check2"></i> Save Changes</button></div>
     </form>
 </div></div></div>
+</div>
 @empty
+<div class="col-12">
 <div class="card text-center" style="border-radius:var(--radius); border:1px solid var(--slate-200); box-shadow:none;">
     <div class="card-body-custom py-5">
         <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:56px; height:56px; font-size:1.6rem;"><i class="bi bi-megaphone"></i></div>
         <div class="fw-bold" style="color:var(--slate-800);">{{ $category ? 'No ' . (\App\Models\Announcement::CATEGORIES[$category] ?? 'matching') . ' announcements yet.' : 'No announcements yet.' }}</div>
     </div>
 </div>
+</div>
 @endforelse
+</div>
 
 <div class="modal fade" id="annModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--radius);border:none;">
     <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;"><i class="bi bi-megaphone"></i> New Announcement</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

@@ -16,8 +16,10 @@
     <a href="{{ route('treasurer.announcements', ['category' => 'lost_item']) }}" class="{{ $category === 'lost_item' ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
 </div>
 
+<div class="row g-4">
 @forelse ($announcements as $a)
-  <div class="announcement-card {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
+  <div class="col-12 col-md-6">
+  <div class="announcement-card h-100 d-flex flex-column {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
     <div class="d-flex justify-content-between align-items-start gap-3">
       <div style="flex:1; min-width:0;">
         <span class="announcement-chip {{ $a->category === 'lost_item' ? 'category-lost' : 'category-general' }}">
@@ -34,7 +36,7 @@
       {{ Str::limit($a->content, 250) }}
     </div>
 
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mt-auto">
       <div style="font-size:.78rem; color:var(--slate-400); display:flex; align-items:center; gap:14px;">
         <span><i class="bi bi-person-circle"></i> {{ $a->author->fullname ?? 'SSC Admin' }}</span>
         <span><i class="bi bi-clock"></i> {!! \App\Helpers\SscHelper::timeAgo($a->created_at) !!}</span>
@@ -89,12 +91,16 @@
       </div>
     </div>
   </div>
+  </div>
 @empty
+  <div class="col-12">
   <div class="card text-center" style="border-radius:var(--radius); border:1px solid var(--slate-200); box-shadow:none;">
     <div class="card-body-custom py-5">
         <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:56px; height:56px; font-size:1.6rem;"><i class="bi bi-megaphone"></i></div>
         <div class="fw-bold" style="color:var(--slate-800);">{{ $category ? 'No ' . (\App\Models\Announcement::CATEGORIES[$category] ?? 'matching') . ' announcements yet.' : 'No announcements yet.' }}</div>
     </div>
   </div>
+  </div>
 @endforelse
+</div>
 @endsection
