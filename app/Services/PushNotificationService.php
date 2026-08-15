@@ -289,13 +289,16 @@ class PushNotificationService
     public static function sendAnnouncementNotification($announcement)
     {
         try {
-            $title = 'New Announcement';
-            $body = $announcement->title;
-            
+            $title = $announcement->title;
+            $body = $announcement->content;
+
             $data = [
                 'type' => 'announcement',
                 'id' => $announcement->id,
-                'author' => $announcement->author->name ?? 'SSC',
+                'title' => $announcement->title,
+                'content' => $announcement->content,
+                'image_url' => $announcement->image_path ? \App\Helpers\SscHelper::getUploadUrl($announcement->image_path) : '',
+                'author' => $announcement->author->fullname ?? 'SSC',
             ];
 
             // Send to all students
