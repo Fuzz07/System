@@ -7,48 +7,43 @@
     <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#annModal"><i class="bi bi-megaphone"></i> Post Announcement</button>
 </div>
 
-<div class="d-flex gap-2 mb-3">
-    <a href="{{ route('admin.announcements') }}" class="btn btn-sm {{ !$category ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">All</a>
-    @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
-    <a href="{{ route('admin.announcements', ['category' => $value]) }}" class="btn btn-sm {{ $category === $value ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">{{ $label }}</a>
-    @endforeach
+<div class="category-filter-bar">
+    <a href="{{ route('admin.announcements') }}" class="{{ !$category ? 'active' : '' }}"><i class="bi bi-grid"></i> All</a>
+    <a href="{{ route('admin.announcements', ['category' => 'general']) }}" class="{{ $category === 'general' ? 'active' : '' }}"><i class="bi bi-megaphone"></i> General</a>
+    <a href="{{ route('admin.announcements', ['category' => 'lost_item']) }}" class="{{ $category === 'lost_item' ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
 </div>
 
 <div class="row">
     <div class="col-12">
         @forelse($announcements as $a)
-        <div class="announcement-card d-flex justify-content-between align-items-start p-4 mb-3" style="background:#fff; border-radius:var(--radius); border:1px solid #e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-            <div style="flex:1;">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="badge {{ $a->author?->role === 'admin' ? 'bg-primary' : 'bg-secondary' }}" style="font-size:0.65rem; text-transform:uppercase; font-weight:700;">
-                        {{ $a->author?->role ?? 'SSC Admin' }}
+        <div class="announcement-card d-flex justify-content-between align-items-start gap-3 {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
+            <div style="flex:1; min-width:0;">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="announcement-chip role">{{ $a->author?->role ?? 'SSC Admin' }}</span>
+                    <span class="announcement-chip {{ $a->category === 'lost_item' ? 'category-lost' : 'category-general' }}">
+                        <i class="bi {{ $a->category === 'lost_item' ? 'bi-search' : 'bi-megaphone' }}"></i> {{ $a->category_label }}
                     </span>
-                    <span class="badge {{ $a->category === 'lost_item' ? 'bg-warning text-dark' : 'bg-info text-dark' }}" style="font-size:0.65rem; text-transform:uppercase; font-weight:700;">
-                        {{ $a->category_label }}
-                    </span>
-                    <span style="font-weight:700; font-size:1.05rem; color:#0f172a;">{{ $a->title }}</span>
                 </div>
+                <div class="announcement-title">{{ $a->title }}</div>
                 @if($a->image_path)
-                <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="max-width:100%; max-height:280px; border-radius:10px; margin-bottom:12px; object-fit:cover;">
+                <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" class="announcement-image">
                 @endif
-                <div style="font-size:0.9rem; color:#475569; margin-bottom:12px; line-height:1.7; white-space:pre-line;">{!! nl2br(e($a->content)) !!}</div>
-                <div style="font-size:0.75rem; color:#94a3b8;" class="d-flex align-items-center gap-3">
+                <div class="announcement-body">{!! nl2br(e($a->content)) !!}</div>
+                <div class="announcement-meta">
                     <span><i class="bi bi-person"></i> {{ $a->author->fullname ?? 'System' }}</span>
-                    <span>&bull;</span>
                     <span><i class="bi bi-envelope"></i> {{ $a->author->email ?? '—' }}</span>
-                    <span>&bull;</span>
                     <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
                 </div>
             </div>
-            <div class="d-flex gap-2 ms-3">
-                <button type="button" class="btn btn-outline-secondary btn-sm" style="font-size:0.75rem; border-radius:6px; padding:6px 10px;" data-bs-toggle="modal" data-bs-target="#editAnnModal{{ $a->id }}" title="Edit Announcement">
-                    <i class="bi bi-pencil"></i> Edit
+            <div class="announcement-actions">
+                <button type="button" class="btn-icon-sm" data-bs-toggle="modal" data-bs-target="#editAnnModal{{ $a->id }}" title="Edit Announcement">
+                    <i class="bi bi-pencil"></i>
                 </button>
                 <form method="POST" action="{{ route('admin.announcements.destroy', $a) }}" onsubmit="return confirm('Delete this announcement permanently?')">
                     @csrf
                     @method('DELETE')
-                    <button class="btn btn-outline-danger btn-sm" style="font-size:0.75rem; border-radius:6px; padding:6px 10px;" title="Delete Announcement">
-                        <i class="bi bi-trash"></i> Delete
+                    <button class="btn-icon-sm danger" title="Delete Announcement">
+                        <i class="bi bi-trash"></i>
                     </button>
                 </form>
             </div>
@@ -114,10 +109,10 @@
             </div>
         </div>
         @empty
-        <div class="card p-5 text-center text-muted" style="border-radius:var(--radius); border:none;">
-            <div class="card-body-custom">
-                <i class="bi bi-megaphone" style="font-size:3rem; opacity:0.15; color:#475569;"></i>
-                <div class="mt-3 fw-semibold">No announcements have been posted yet.</div>
+        <div class="card text-center" style="border-radius:var(--radius); border:1px solid var(--slate-200); box-shadow:none;">
+            <div class="card-body-custom py-5">
+                <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:56px; height:56px; font-size:1.6rem;"><i class="bi bi-megaphone"></i></div>
+                <div class="fw-bold" style="color:var(--slate-800);">{{ $category ? 'No ' . (\App\Models\Announcement::CATEGORIES[$category] ?? 'matching') . ' announcements yet.' : 'No announcements have been posted yet.' }}</div>
                 <p class="text-muted mb-0 mt-1" style="font-size:0.85rem;">Be the first to post an announcement using the button above.</p>
             </div>
         </div>
