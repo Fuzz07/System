@@ -58,6 +58,7 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
 
         Route::get('/announcements', [Admin\AnnouncementController::class, 'index'])->name('announcements');
         Route::post('/announcements', [Admin\AnnouncementController::class, 'store'])->name('announcements.store');
+        Route::put('/announcements/{announcement}', [Admin\AnnouncementController::class, 'update'])->name('announcements.update');
         Route::delete('/announcements/{announcement}', [Admin\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
 
         Route::get('/officers', [Admin\OfficerController::class, 'index'])->name('officers');
@@ -133,6 +134,7 @@ Route::domain('officer.' . $baseDomain)->group(function () {
 
         Route::get('/announcements', [Officer\AnnouncementController::class, 'index'])->name('announcements');
         Route::post('/announcements', [Officer\AnnouncementController::class, 'store'])->name('announcements.store');
+        Route::put('/announcements/{announcement}', [Officer\AnnouncementController::class, 'update'])->name('announcements.update');
         Route::delete('/announcements/{announcement}', [Officer\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
 
         Route::get('/liquidation', [Officer\LiquidationController::class, 'index'])->name('liquidation');
@@ -251,6 +253,8 @@ Route::group([], function () use ($baseDomain) {
                         'title' => $a->title,
                         'content' => $a->content,
                         'image_url' => $a->image_path ? \App\Helpers\SscHelper::getUploadUrl($a->image_path) : null,
+                        'category' => $a->category,
+                        'category_label' => $a->category_label,
                         'author' => $a->author->fullname ?? 'SSC Admin',
                         'date' => $a->created_at?->format('M d, Y'),
                         'time_ago' => $a->created_at?->diffForHumans(),
@@ -362,11 +366,16 @@ Route::group([], function () use ($baseDomain) {
             return redirect()->route('mobile.student.proposal.show', $proposal)->with('success', 'Comment added.');
         })->name('proposal.comment');
 
-        Route::get('/announcements', function () {
-            $announcements = \App\Models\Announcement::with(['author', 'proposal'])
-                ->orderByDesc('created_at')
-                ->get();
-            return view('mobile.student.announcements', compact('announcements'));
+        Route::get('/announcements', function (\Illuminate\Http\Request $request) {
+            $category = $request->input('category');
+
+            $query = \App\Models\Announcement::with(['author', 'proposal'])->orderByDesc('created_at');
+            if ($category) {
+                $query->where('category', $category);
+            }
+            $announcements = $query->get();
+
+            return view('mobile.student.announcements', compact('announcements', 'category'));
         })->name('announcements');
 
         Route::get('/feedback', function () {

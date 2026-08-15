@@ -10,10 +10,20 @@
   </div>
 </div>
 
+<div class="d-flex gap-2 mb-4">
+    <a href="{{ route('treasurer.announcements') }}" class="btn btn-sm {{ !$category ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">All</a>
+    @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
+    <a href="{{ route('treasurer.announcements', ['category' => $value]) }}" class="btn btn-sm {{ $category === $value ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">{{ $label }}</a>
+    @endforeach
+</div>
+
 @forelse ($announcements as $a)
   <div class="announcement-card transition hover-shadow mb-4" style="border-radius:18px; padding:28px; background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <div class="d-flex justify-content-between align-items-start mb-3">
-      <h2 style="font-size:1.1rem; font-weight:700; color:var(--navy); margin-bottom:0; flex:1;">{{ $a->title }}</h2>
+      <div style="flex:1;">
+        <span class="badge {{ $a->category === 'lost_item' ? 'bg-warning text-dark' : 'bg-info text-dark' }}" style="font-size:0.65rem; text-transform:uppercase; font-weight:700;">{{ $a->category_label }}</span>
+        <h2 style="font-size:1.1rem; font-weight:700; color:var(--navy); margin:6px 0 0;">{{ $a->title }}</h2>
+      </div>
       <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 px-3 py-2" style="font-size:0.7rem; border-radius: 12px;">
         <i class="bi bi-calendar3"></i> {{ $a->created_at->format('M d, Y') }}
       </span>
@@ -46,7 +56,8 @@
           <div class="text-center mb-4">
             <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:60px; height:60px; font-size:1.75rem;">
               <i class="bi bi-megaphone"></i></div>
-            <h2 class="fw-bold text-dark h3 px-md-5">{{ $a->title }}</h2>
+            <span class="badge {{ $a->category === 'lost_item' ? 'bg-warning text-dark' : 'bg-info text-dark' }}" style="font-size:0.65rem; text-transform:uppercase; font-weight:700;">{{ $a->category_label }}</span>
+            <h2 class="fw-bold text-dark h3 px-md-5 mt-2">{{ $a->title }}</h2>
             <div class="text-muted small mt-2">
               <i class="bi bi-person"></i> {{ $a->author->fullname ?? 'SSC Admin' }} &bull;
               <i class="bi bi-calendar3"></i> {{ $a->created_at->format('F d, Y') }}

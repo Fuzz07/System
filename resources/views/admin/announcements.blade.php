@@ -7,6 +7,13 @@
     <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#annModal"><i class="bi bi-megaphone"></i> Post Announcement</button>
 </div>
 
+<div class="d-flex gap-2 mb-3">
+    <a href="{{ route('admin.announcements') }}" class="btn btn-sm {{ !$category ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">All</a>
+    @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
+    <a href="{{ route('admin.announcements', ['category' => $value]) }}" class="btn btn-sm {{ $category === $value ? 'btn-primary-custom' : 'btn-outline-secondary' }}" style="border-radius:20px; font-size:0.8rem; padding:6px 16px;">{{ $label }}</a>
+    @endforeach
+</div>
+
 <div class="row">
     <div class="col-12">
         @forelse($announcements as $a)
@@ -15,6 +22,9 @@
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <span class="badge {{ $a->author?->role === 'admin' ? 'bg-primary' : 'bg-secondary' }}" style="font-size:0.65rem; text-transform:uppercase; font-weight:700;">
                         {{ $a->author?->role ?? 'SSC Admin' }}
+                    </span>
+                    <span class="badge {{ $a->category === 'lost_item' ? 'bg-warning text-dark' : 'bg-info text-dark' }}" style="font-size:0.65rem; text-transform:uppercase; font-weight:700;">
+                        {{ $a->category_label }}
                     </span>
                     <span style="font-weight:700; font-size:1.05rem; color:#0f172a;">{{ $a->title }}</span>
                 </div>
@@ -30,13 +40,69 @@
                     <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
                 </div>
             </div>
-            <form method="POST" action="{{ route('admin.announcements.destroy', $a) }}" class="ms-3" onsubmit="return confirm('Delete this announcement permanently?')">
-                @csrf
-                @method('DELETE')
-                <button class="btn btn-outline-danger btn-sm" style="font-size:0.75rem; border-radius:6px; padding:6px 10px;" title="Delete Announcement">
-                    <i class="bi bi-trash"></i> Delete
+            <div class="d-flex gap-2 ms-3">
+                <button type="button" class="btn btn-outline-secondary btn-sm" style="font-size:0.75rem; border-radius:6px; padding:6px 10px;" data-bs-toggle="modal" data-bs-target="#editAnnModal{{ $a->id }}" title="Edit Announcement">
+                    <i class="bi bi-pencil"></i> Edit
                 </button>
-            </form>
+                <form method="POST" action="{{ route('admin.announcements.destroy', $a) }}" onsubmit="return confirm('Delete this announcement permanently?')">
+                    @csrf
+                    @method('DELETE')
+                    <button class="btn btn-outline-danger btn-sm" style="font-size:0.75rem; border-radius:6px; padding:6px 10px;" title="Delete Announcement">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {{-- Edit Announcement Modal --}}
+        <div class="modal fade" id="editAnnModal{{ $a->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" style="border-radius:var(--radius); border:none; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+                    <div class="modal-header modal-header-custom">
+                        <h5 class="modal-title" style="font-weight:700;"><i class="bi bi-pencil"></i> Edit Announcement</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);"></button>
+                    </div>
+                    <form method="POST" action="{{ route('admin.announcements.update', $a) }}" enctype="multipart/form-data">
+                        @csrf
+                        @method('PUT')
+                        <div class="modal-body p-4">
+                            <div class="mb-4">
+                                <label class="form-label-custom">Announcement Title <span class="text-danger">*</span></label>
+                                <input type="text" name="title" class="form-control-custom" value="{{ $a->title }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-custom">Category</label>
+                                <select name="category" class="form-control-custom">
+                                    @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
+                                    <option value="{{ $value }}" {{ $a->category === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-custom">Content Body <span class="text-danger">*</span></label>
+                                <textarea name="content" class="form-control-custom" rows="8" required style="resize:vertical;">{{ $a->content }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label-custom">Photo (optional)</label>
+                                @if($a->image_path)
+                                <div class="d-flex align-items-center gap-3 mb-2">
+                                    <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="max-height:80px; border-radius:8px;">
+                                    <label style="font-size:0.8rem; color:#64748b;">
+                                        <input type="checkbox" name="remove_image" value="1"> Remove current photo
+                                    </label>
+                                </div>
+                                @endif
+                                <input type="file" name="image" class="form-control-custom" accept="image/*">
+                                <div class="form-text" style="font-size:0.75rem;color:#94a3b8;">Upload a new photo to replace the current one. JPG, PNG or WEBP, up to 5MB.</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius:var(--radius-sm);">Cancel</button>
+                            <button type="submit" class="btn-primary-custom" style="padding:10px 18px;"><i class="bi bi-check2"></i> Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
         @empty
         <div class="card p-5 text-center text-muted" style="border-radius:var(--radius); border:none;">
@@ -68,6 +134,14 @@
                     <div class="mb-4">
                         <label class="form-label-custom">Announcement Title <span class="text-danger">*</span></label>
                         <input type="text" name="title" class="form-control-custom" placeholder="e.g. Notice on Semester Enrollment Fee Extensions" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Category</label>
+                        <select name="category" class="form-control-custom">
+                            @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label-custom">Content Body <span class="text-danger">*</span></label>

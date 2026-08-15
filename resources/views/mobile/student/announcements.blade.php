@@ -13,6 +13,13 @@
         <div class="hero-banner-sub" style="color: rgba(255,255,255,0.85);">Official updates from the SSC</div>
     </div>
 
+    <div style="display: flex; gap: 8px; padding: 0 16px 4px; overflow-x: auto;">
+        <a href="{{ route('mobile.student.announcements') }}" style="flex-shrink:0; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 16px; border-radius:20px; {{ !$category ? 'background:var(--indigo-600); color:#fff;' : 'background:#f1f5f9; color:#475569;' }}">All</a>
+        @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
+        <a href="{{ route('mobile.student.announcements', ['category' => $value]) }}" style="flex-shrink:0; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 16px; border-radius:20px; {{ $category === $value ? 'background:var(--indigo-600); color:#fff;' : 'background:#f1f5f9; color:#475569;' }}">{{ $label }}</a>
+        @endforeach
+    </div>
+
     @forelse($announcements as $a)
         {{-- Announcement Card --}}
         <div class="ann-card ripple" onclick="openAnn({{ $a->id }})" style="margin: 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.02); overflow: hidden; background: #fff;">
@@ -25,6 +32,7 @@
                         <i class="bi bi-info-circle-fill"></i>
                     </div>
                     <div>
+                        <span style="display:inline-block; font-size: 0.65rem; text-transform:uppercase; font-weight:700; padding:2px 8px; border-radius:8px; margin-bottom:4px; {{ $a->category === 'lost_item' ? 'background:#fef3c7; color:#92400e;' : 'background:#e0f2fe; color:#075985;' }}">{{ $a->category_label }}</span>
                         <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b; line-height: 1.3;">{{ $a->title }}</div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">
                             {{ $a->created_at?->format('M d, Y') }} &bull; {{ $a->created_at?->diffForHumans() }}
@@ -56,6 +64,7 @@
                     <div style="width:64px;height:64px;border-radius:20px;background:rgba(79,70,229,0.1);color:var(--primary);font-size:1.75rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
                         <i class="bi bi-megaphone-fill"></i>
                     </div>
+                    <span style="display:inline-block; font-size: 0.65rem; text-transform:uppercase; font-weight:700; padding:3px 10px; border-radius:8px; margin-bottom:8px; {{ $a->category === 'lost_item' ? 'background:#fef3c7; color:#92400e;' : 'background:#e0f2fe; color:#075985;' }}">{{ $a->category_label }}</span>
                     <div style="font-size:1.25rem;font-weight:800;color:#0f172a;line-height:1.4;margin-bottom:8px;">
                         {{ $a->title }}</div>
                     <div style="font-size:0.85rem;color:#64748b; font-weight: 500;">

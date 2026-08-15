@@ -171,9 +171,16 @@ class ReleaseController extends Controller
         ));
     }
 
-    public function announcements()
+    public function announcements(Request $request)
     {
-        $announcements = Announcement::with(['author', 'proposal'])->orderByDesc('created_at')->get();
-        return view('treasurer.announcements', compact('announcements'));
+        $category = $request->input('category');
+
+        $query = Announcement::with(['author', 'proposal'])->orderByDesc('created_at');
+        if ($category) {
+            $query->where('category', $category);
+        }
+        $announcements = $query->get();
+
+        return view('treasurer.announcements', compact('announcements', 'category'));
     }
 }
