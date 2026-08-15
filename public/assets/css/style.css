@@ -568,6 +568,120 @@ body {
   background: #fff;
 }
 
+/* ========== CATEGORY PICKER (pill-style radio group) ========== */
+.category-picker {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.category-option {
+  position: relative;
+  flex: 1;
+  min-width: 150px;
+  cursor: pointer;
+}
+
+.category-option input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.category-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--slate-500);
+  background: #fff;
+  transition: var(--transition);
+}
+
+.category-option:hover .category-pill {
+  border-color: var(--slate-300);
+  color: var(--slate-700);
+}
+
+.category-option input:checked + .category-pill {
+  border-color: var(--primary);
+  background: rgba(227, 79, 38, 0.06);
+  color: var(--primary-dark);
+}
+
+.category-option input:checked + .category-pill.pill-lost {
+  border-color: var(--warning);
+  background: rgba(245, 158, 11, 0.08);
+  color: #92400e;
+}
+
+.category-option input:focus-visible + .category-pill {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ========== UPLOAD DROPZONE ========== */
+.upload-dropzone {
+  display: block;
+  border: 1.5px dashed var(--slate-300);
+  border-radius: var(--radius-sm);
+  padding: 22px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--slate-50);
+}
+
+.upload-dropzone:hover {
+  border-color: var(--primary);
+  background: rgba(227, 79, 38, 0.04);
+}
+
+.upload-dropzone .upload-placeholder i {
+  font-size: 1.75rem;
+  color: var(--slate-400);
+}
+
+.upload-dropzone .upload-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--slate-700);
+  margin-top: 8px;
+}
+
+.upload-dropzone .upload-hint {
+  font-size: 0.75rem;
+  color: var(--slate-400);
+  margin-top: 2px;
+}
+
+.upload-dropzone .upload-preview {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  object-fit: cover;
+  transition: opacity 0.2s ease;
+}
+
+.upload-remove-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--slate-500);
+  margin-top: 10px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* ========== BUTTONS ========== */
 .btn-primary-custom {
   background: var(--primary);

@@ -70,30 +70,39 @@
                                 <label class="form-label-custom">Announcement Title <span class="text-danger">*</span></label>
                                 <input type="text" name="title" class="form-control-custom" value="{{ $a->title }}" required>
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-4">
                                 <label class="form-label-custom">Category</label>
-                                <select name="category" class="form-control-custom">
-                                    @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
-                                    <option value="{{ $value }}" {{ $a->category === $value ? 'selected' : '' }}>{{ $label }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label-custom">Content Body <span class="text-danger">*</span></label>
-                                <textarea name="content" class="form-control-custom" rows="8" required style="resize:vertical;">{{ $a->content }}</textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label-custom">Photo (optional)</label>
-                                @if($a->image_path)
-                                <div class="d-flex align-items-center gap-3 mb-2">
-                                    <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="max-height:80px; border-radius:8px;">
-                                    <label style="font-size:0.8rem; color:#64748b;">
-                                        <input type="checkbox" name="remove_image" value="1"> Remove current photo
+                                <div class="category-picker">
+                                    <label class="category-option">
+                                        <input type="radio" name="category" value="general" {{ $a->category !== 'lost_item' ? 'checked' : '' }}>
+                                        <span class="category-pill"><i class="bi bi-megaphone"></i> General</span>
+                                    </label>
+                                    <label class="category-option">
+                                        <input type="radio" name="category" value="lost_item" {{ $a->category === 'lost_item' ? 'checked' : '' }}>
+                                        <span class="category-pill pill-lost"><i class="bi bi-search"></i> Lost &amp; Found</span>
                                     </label>
                                 </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label-custom">Content Body <span class="text-danger">*</span></label>
+                                <textarea name="content" class="form-control-custom" rows="7" required style="resize:vertical;">{{ $a->content }}</textarea>
+                            </div>
+                            <div class="mb-2 photo-field">
+                                <label class="form-label-custom">Photo <span class="text-muted fw-normal">(optional)</span></label>
+                                <label class="upload-dropzone">
+                                    <input type="file" name="image" accept="image/*" hidden onchange="sscPreviewImage(this)">
+                                    <div class="upload-placeholder" style="{{ $a->image_path ? 'display:none;' : '' }}">
+                                        <i class="bi bi-cloud-arrow-up"></i>
+                                        <div class="upload-text">Click to upload a photo</div>
+                                        <div class="upload-hint">JPG, PNG or WEBP — up to 5MB</div>
+                                    </div>
+                                    <img class="upload-preview" src="{{ $a->image_path ? \App\Helpers\SscHelper::getUploadUrl($a->image_path) : '' }}" style="{{ $a->image_path ? 'display:inline-block;' : 'display:none;' }}">
+                                </label>
+                                @if($a->image_path)
+                                <label class="upload-remove-label">
+                                    <input type="checkbox" name="remove_image" value="1" onchange="sscToggleRemove(this)"> Remove current photo
+                                </label>
                                 @endif
-                                <input type="file" name="image" class="form-control-custom" accept="image/*">
-                                <div class="form-text" style="font-size:0.75rem;color:#94a3b8;">Upload a new photo to replace the current one. JPG, PNG or WEBP, up to 5MB.</div>
                             </div>
                         </div>
                         <div class="modal-footer border-0 pt-0">
@@ -135,22 +144,34 @@
                         <label class="form-label-custom">Announcement Title <span class="text-danger">*</span></label>
                         <input type="text" name="title" class="form-control-custom" placeholder="e.g. Notice on Semester Enrollment Fee Extensions" required>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="form-label-custom">Category</label>
-                        <select name="category" class="form-control-custom">
-                            @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
-                            <option value="{{ $value }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <div class="category-picker">
+                            <label class="category-option">
+                                <input type="radio" name="category" value="general" checked>
+                                <span class="category-pill"><i class="bi bi-megaphone"></i> General</span>
+                            </label>
+                            <label class="category-option">
+                                <input type="radio" name="category" value="lost_item">
+                                <span class="category-pill pill-lost"><i class="bi bi-search"></i> Lost &amp; Found</span>
+                            </label>
+                        </div>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="form-label-custom">Content Body <span class="text-danger">*</span></label>
-                        <textarea name="content" class="form-control-custom" rows="8" placeholder="Enter complete announcement details here..." required style="resize:vertical;"></textarea>
+                        <textarea name="content" class="form-control-custom" rows="7" placeholder="Enter complete announcement details here..." required style="resize:vertical;"></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label-custom">Photo (optional)</label>
-                        <input type="file" name="image" class="form-control-custom" accept="image/*">
-                        <div class="form-text" style="font-size:0.75rem;color:#94a3b8;">JPG, PNG or WEBP, up to 5MB.</div>
+                    <div class="mb-2">
+                        <label class="form-label-custom">Photo <span class="text-muted fw-normal">(optional)</span></label>
+                        <label class="upload-dropzone">
+                            <input type="file" name="image" accept="image/*" hidden onchange="sscPreviewImage(this)">
+                            <div class="upload-placeholder">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                                <div class="upload-text">Click to upload a photo</div>
+                                <div class="upload-hint">JPG, PNG or WEBP — up to 5MB</div>
+                            </div>
+                            <img class="upload-preview" src="" style="display:none;">
+                        </label>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
@@ -161,4 +182,39 @@
         </div>
     </div>
 </div>
+
+<script>
+    function sscPreviewImage(input) {
+        const wrapper = input.closest('.upload-dropzone');
+        const placeholder = wrapper.querySelector('.upload-placeholder');
+        const preview = wrapper.querySelector('.upload-preview');
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            preview.style.display = 'inline-block';
+            preview.style.opacity = '1';
+            if (placeholder) placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function sscToggleRemove(checkbox) {
+        const wrapper = checkbox.closest('.photo-field');
+        const preview = wrapper ? wrapper.querySelector('.upload-preview') : null;
+        if (preview) preview.style.opacity = checkbox.checked ? '0.35' : '1';
+    }
+
+    // Reset the "Post Announcement" modal to a blank state each time it opens,
+    // so a previous selection doesn't linger into the next post.
+    document.getElementById('annModal')?.addEventListener('hidden.bs.modal', function () {
+        const form = this.querySelector('form');
+        form.reset();
+        const preview = this.querySelector('.upload-preview');
+        const placeholder = this.querySelector('.upload-placeholder');
+        if (preview) { preview.style.display = 'none'; preview.src = ''; }
+        if (placeholder) placeholder.style.display = '';
+    });
+</script>
 @endsection

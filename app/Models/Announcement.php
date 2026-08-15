@@ -29,6 +29,7 @@ class Announcement extends Model
     public function author() { return $this->belongsTo(User::class, 'created_by'); }
     public function officer() { return $this->belongsTo(User::class, 'created_by'); }
     public function proposal() { return $this->belongsTo(Proposal::class, 'project_id'); }
+    public function comments() { return $this->hasMany(AnnouncementComment::class)->orderByDesc('created_at'); }
 
     public function getCategoryLabelAttribute(): string
     {

@@ -242,6 +242,7 @@ Route::group([], function () use ($baseDomain) {
         Route::post('/proposals/{proposal}/comment', [Student\ProposalController::class, 'comment'])->name('proposal.comment');
 
         Route::get('/announcements', [Student\AnnouncementController::class, 'index'])->name('announcements');
+        Route::post('/announcements/{announcement}/comment', [Student\AnnouncementController::class, 'comment'])->name('announcements.comment');
 
         Route::get('/api/announcements', function () {
             $announcements = \App\Models\Announcement::with(['author', 'proposal'])
@@ -369,7 +370,7 @@ Route::group([], function () use ($baseDomain) {
         Route::get('/announcements', function (\Illuminate\Http\Request $request) {
             $category = $request->input('category');
 
-            $query = \App\Models\Announcement::with(['author', 'proposal'])->orderByDesc('created_at');
+            $query = \App\Models\Announcement::with(['author', 'proposal', 'comments.user'])->orderByDesc('created_at');
             if ($category) {
                 $query->where('category', $category);
             }
@@ -377,6 +378,21 @@ Route::group([], function () use ($baseDomain) {
 
             return view('mobile.student.announcements', compact('announcements', 'category'));
         })->name('announcements');
+
+        Route::post('/announcements/{announcement}/comment', function (\Illuminate\Http\Request $request, \App\Models\Announcement $announcement) {
+            if ($announcement->category !== \App\Models\Announcement::CATEGORY_LOST_ITEM) {
+                abort(404);
+            }
+
+            $request->validate(['comment' => 'required|string|min:1|max:2000']);
+
+            $announcement->comments()->create([
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'comment' => $request->comment,
+            ]);
+
+            return redirect()->route('mobile.student.announcements')->with('success', 'Comment added!');
+        })->name('announcements.comment');
 
         Route::get('/feedback', function () {
             $feedbacks = \App\Models\Feedback::with('replier')

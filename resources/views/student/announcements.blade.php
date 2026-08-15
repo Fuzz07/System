@@ -28,6 +28,9 @@
         <div style="font-size:.75rem;color:#a0aec0;display:flex;align-items:center;gap:12px;">
             <span><i class="bi bi-person-circle"></i> {{ $a->author->fullname ?? 'SSC Admin' }}</span>
             <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
+            @if($a->category === 'lost_item')
+            <span><i class="bi bi-chat-dots"></i> {{ $a->comments->count() }}</span>
+            @endif
         </div>
         <button class="btn btn-sm btn-outline-primary px-4" data-bs-toggle="modal" data-bs-target="#annModal{{ $a->id }}" style="border-radius:10px;font-weight:600;">Read Full Story <i class="bi bi-arrow-right-short"></i></button>
     </div>
@@ -52,6 +55,36 @@
             <div class="mt-5 p-4 rounded-4 bg-success bg-opacity-10 border border-success border-opacity-20 d-flex justify-content-between align-items-center">
                 <div><h6 class="fw-bold text-success mb-1"><i class="bi bi-shield-check"></i> Verified Audit Proof</h6><div class="text-muted small">Official receipt available.</div></div>
                 <a href="{{ \App\Helpers\SscHelper::getUploadUrl($a->proposal->completion_proof) }}" target="_blank" class="btn btn-success px-4" style="border-radius:10px;font-weight:600;"><i class="bi bi-receipt"></i> View Receipt</a>
+            </div>
+            @endif
+
+            @if($a->category === 'lost_item')
+            <hr class="opacity-10 my-4">
+            <h6 class="fw-bold mb-3"><i class="bi bi-chat-dots"></i> Comments ({{ $a->comments->count() }})</h6>
+
+            <form method="POST" action="{{ route('student.announcements.comment', $a) }}" class="mb-4">
+                @csrf
+                <div class="mb-2"><textarea name="comment" class="form-control-custom" rows="2" placeholder="Found this item, or know whose it is? Leave a comment..." required style="border-radius:12px;"></textarea></div>
+                <button type="submit" class="btn-primary-custom px-4" style="padding:8px 18px;font-size:0.85rem;">Post Comment <i class="bi bi-send ms-1"></i></button>
+            </form>
+
+            <div class="d-flex flex-column gap-3">
+                @forelse($a->comments as $c)
+                <div class="d-flex gap-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0 bg-light text-muted" style="width:38px;height:38px;font-size:1.1rem;">
+                        <i class="bi bi-person-circle"></i>
+                    </div>
+                    <div class="flex-fill">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark small"><i class="bi bi-person-fill-lock"></i> Anonymous Student</span>
+                            <span class="text-muted small" style="font-size:0.7rem;">{{ $c->created_at?->diffForHumans() }}</span>
+                        </div>
+                        <div class="p-3 bg-light rounded-4 small text-dark" style="line-height:1.6;">{!! nl2br(e($c->comment)) !!}</div>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center py-3 text-muted small">No comments yet. Be the first to help!</div>
+                @endforelse
             </div>
             @endif
         </div>
