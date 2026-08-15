@@ -250,6 +250,7 @@ Route::group([], function () use ($baseDomain) {
                         'id' => $a->id,
                         'title' => $a->title,
                         'content' => $a->content,
+                        'image_url' => $a->image_path ? \App\Helpers\SscHelper::getUploadUrl($a->image_path) : null,
                         'author' => $a->author->fullname ?? 'SSC Admin',
                         'date' => $a->created_at?->format('M d, Y'),
                         'time_ago' => $a->created_at?->diffForHumans(),

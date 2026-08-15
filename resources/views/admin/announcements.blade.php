@@ -18,6 +18,9 @@
                     </span>
                     <span style="font-weight:700; font-size:1.05rem; color:#0f172a;">{{ $a->title }}</span>
                 </div>
+                @if($a->image_path)
+                <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="max-width:100%; max-height:280px; border-radius:10px; margin-bottom:12px; object-fit:cover;">
+                @endif
                 <div style="font-size:0.9rem; color:#475569; margin-bottom:12px; line-height:1.7; white-space:pre-line;">{!! nl2br(e($a->content)) !!}</div>
                 <div style="font-size:0.75rem; color:#94a3b8;" class="d-flex align-items-center gap-3">
                     <span><i class="bi bi-person"></i> {{ $a->author->fullname ?? 'System' }}</span>
@@ -59,7 +62,7 @@
                 <h5 class="modal-title" style="font-weight:700;"><i class="bi bi-megaphone"></i> Post New Announcement</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);"></button>
             </div>
-            <form method="POST" action="{{ route('admin.announcements.store') }}">
+            <form method="POST" action="{{ route('admin.announcements.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body p-4">
                     <div class="mb-4">
@@ -69,6 +72,11 @@
                     <div class="mb-3">
                         <label class="form-label-custom">Content Body <span class="text-danger">*</span></label>
                         <textarea name="content" class="form-control-custom" rows="8" placeholder="Enter complete announcement details here..." required style="resize:vertical;"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Photo (optional)</label>
+                        <input type="file" name="image" class="form-control-custom" accept="image/*">
+                        <div class="form-text" style="font-size:0.75rem;color:#94a3b8;">JPG, PNG or WEBP, up to 5MB.</div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">

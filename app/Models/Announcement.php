@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Announcement extends Model
 {
     public $timestamps = false;
-    protected $fillable = ['title', 'content', 'created_by', 'project_id'];
+    protected $fillable = ['title', 'content', 'image_path', 'created_by', 'project_id'];
     protected $casts = ['created_at' => 'datetime'];
 
     protected static function booted()

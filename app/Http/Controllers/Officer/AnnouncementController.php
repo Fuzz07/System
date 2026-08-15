@@ -21,11 +21,23 @@ class AnnouncementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
+            'image' => 'nullable|image|max:5120',
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            try {
+                $imagePath = SscHelper::uploadToCloudinary($request->file('image'), 'announcements');
+            } catch (\Exception $e) {
+                \Log::warning('Cloudinary upload failed for announcement image, falling back to local public disk: ' . $e->getMessage());
+                $imagePath = $request->file('image')->store('announcements', 'public');
+            }
+        }
 
         Announcement::create([
             'title' => $request->title,
             'content' => $request->content,
+            'image_path' => $imagePath,
             'created_by' => Auth::id(),
         ]);
 

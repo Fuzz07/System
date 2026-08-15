@@ -10,6 +10,9 @@
         <h2 style="font-size:1.1rem;font-weight:700;color:var(--navy-900);margin-bottom:0;flex:1;">{{ $a->title }}</h2>
         <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10 px-3 py-2" style="font-size:0.7rem;"><i class="bi bi-calendar3"></i> {{ $a->created_at?->format('M d, Y') }}</span>
     </div>
+    @if($a->image_path)
+    <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="width:100%; max-height:260px; border-radius:14px; margin-bottom:16px; object-fit:cover;">
+    @endif
     <div style="font-size:.9rem;color:#4a5568;line-height:1.7;margin-bottom:20px;">{!! nl2br(e(Str::limit($a->content, 250))) !!}</div>
     <div class="d-flex justify-content-between align-items-center">
         <div style="font-size:.75rem;color:#a0aec0;display:flex;align-items:center;gap:12px;">
@@ -30,6 +33,9 @@
                 <div class="text-muted small mt-2"><i class="bi bi-person"></i> {{ $a->author->fullname ?? 'SSC Admin' }} &bull; <i class="bi bi-calendar3"></i> {{ $a->created_at?->format('F d, Y') }}</div>
             </div>
             <hr class="opacity-10 my-4">
+            @if($a->image_path)
+            <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="width:100%; max-height:360px; border-radius:16px; margin-bottom:24px; object-fit:cover;">
+            @endif
             <div style="font-size:1.05rem;line-height:1.9;color:var(--slate-700);">{!! nl2br(e($a->content)) !!}</div>
             @if($a->project_id && $a->proposal?->completion_proof)
             <div class="mt-5 p-4 rounded-4 bg-success bg-opacity-10 border border-success border-opacity-20 d-flex justify-content-between align-items-center">

@@ -16,6 +16,9 @@
     @forelse($announcements as $a)
         {{-- Announcement Card --}}
         <div class="ann-card ripple" onclick="openAnn({{ $a->id }})" style="margin: 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.02); overflow: hidden; background: #fff;">
+            @if($a->image_path)
+            <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="width: 100%; height: 160px; object-fit: cover; display: block;">
+            @endif
             <div style="padding: 20px;">
                 <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">
                     <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(79,70,229,0.1); display: flex; align-items: center; justify-content: center; color: var(--indigo-600); font-size: 1.25rem; flex-shrink: 0;">
@@ -61,6 +64,10 @@
                         {{ $a->created_at?->format('F d, Y') }}
                     </div>
                 </div>
+
+                @if($a->image_path)
+                <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="width: 100%; max-height: 260px; border-radius: 14px; margin-bottom: 20px; object-fit: cover;">
+                @endif
 
                 <div style="font-size:0.95rem;line-height:1.8;color:#334155; margin-bottom: 24px;">
                     {!! nl2br(e($a->content)) !!}
