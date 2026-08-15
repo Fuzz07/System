@@ -68,8 +68,6 @@
 </div>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
   :root {
     --chatbot-primary: #2563eb;
     --chatbot-primary-dark: #1d4ed8;
@@ -89,7 +87,14 @@
     bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 15px);
     right: 16px;
     z-index: 10000;
-    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    /* Force this fixed-position widget onto its own compositor layer — Android
+       WebView is known to repaint/flicker plain position:fixed elements during
+       page transitions and scrolling without this hint. */
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
   }
 
   /* Chatbot Label */
@@ -558,7 +563,10 @@
       bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px) + 12px);
       right: 16px;
       left: auto;
-      transform: none;
+      /* Keep translateZ(0) (not "none") so the widget stays on its own
+         compositor layer on phone-width screens — this is where the
+         WebView position:fixed flicker was actually visible. */
+      transform: translateZ(0);
       width: auto;
     }
 
