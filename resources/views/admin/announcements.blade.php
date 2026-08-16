@@ -4,14 +4,22 @@
 @section('content')
 <div class="page-header">
     <div><h1>Announcements Management</h1><p>Post, view, and moderate all system announcements</p></div>
-    <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#annModal"><i class="bi bi-megaphone"></i> Post Announcement</button>
+    <button type="button" class="btn btn-brand d-inline-flex align-items-center gap-2 px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#annModal">
+        <i class="bi bi-megaphone-fill"></i> Post Announcement
+    </button>
 </div>
 
-<div class="category-filter-bar">
-    <a href="{{ route('admin.announcements') }}" class="{{ !$category ? 'active' : '' }}"><i class="bi bi-grid"></i> All</a>
-    <a href="{{ route('admin.announcements', ['category' => 'general']) }}" class="{{ $category === 'general' ? 'active' : '' }}"><i class="bi bi-megaphone"></i> General</a>
-    <a href="{{ route('admin.announcements', ['category' => 'lost_item']) }}" class="{{ $category === 'lost_item' ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
-</div>
+<ul class="nav nav-pills nav-brand d-inline-flex gap-1 bg-white border rounded-3 p-1 mb-4 shadow-sm">
+    <li class="nav-item">
+        <a href="{{ route('admin.announcements') }}" class="nav-link d-flex align-items-center gap-2 {{ !$category ? 'active' : '' }}"><i class="bi bi-grid"></i> All</a>
+    </li>
+    <li class="nav-item">
+        <a href="{{ route('admin.announcements', ['category' => 'general']) }}" class="nav-link d-flex align-items-center gap-2 {{ $category === 'general' ? 'active' : '' }}"><i class="bi bi-megaphone"></i> General</a>
+    </li>
+    <li class="nav-item">
+        <a href="{{ route('admin.announcements', ['category' => 'lost_item']) }}" class="nav-link d-flex align-items-center gap-2 {{ $category === 'lost_item' ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
+    </li>
+</ul>
 
 <div class="row g-4">
         @forelse($announcements as $a)
@@ -35,14 +43,14 @@
                     <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
                 </div>
             </div>
-            <div class="announcement-actions">
-                <button type="button" class="btn-icon-sm" data-bs-toggle="modal" data-bs-target="#editAnnModal{{ $a->id }}" title="Edit Announcement">
+            <div class="d-flex flex-column gap-2 flex-shrink-0">
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-icon" data-bs-toggle="modal" data-bs-target="#editAnnModal{{ $a->id }}" title="Edit announcement" aria-label="Edit announcement">
                     <i class="bi bi-pencil"></i>
                 </button>
                 <form method="POST" action="{{ route('admin.announcements.destroy', $a) }}" onsubmit="return confirm('Delete this announcement permanently?')">
                     @csrf
                     @method('DELETE')
-                    <button class="btn-icon-sm danger" title="Delete Announcement">
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Delete announcement" aria-label="Delete announcement">
                         <i class="bi bi-trash"></i>
                     </button>
                 </form>
@@ -100,9 +108,9 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="modal-footer border-0 pt-0">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius:var(--radius-sm);">Cancel</button>
-                            <button type="submit" class="btn-primary-custom" style="padding:10px 18px;"><i class="bi bi-check2"></i> Save Changes</button>
+                        <div class="modal-footer border-0 pt-0 px-4 pb-4 gap-2">
+                            <button type="button" class="btn btn-light border px-3" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-brand d-inline-flex align-items-center gap-2 px-4"><i class="bi bi-check2"></i> Save Changes</button>
                         </div>
                     </form>
                 </div>
@@ -171,9 +179,9 @@
                         </label>
                     </div>
                 </div>
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius:var(--radius-sm);">Cancel</button>
-                    <button type="submit" class="btn-primary-custom" style="padding:10px 18px;"><i class="bi bi-send"></i> Post Announcement</button>
+                <div class="modal-footer border-0 pt-0 px-4 pb-4 gap-2">
+                    <button type="button" class="btn btn-light border px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-brand d-inline-flex align-items-center gap-2 px-4"><i class="bi bi-send"></i> Post Announcement</button>
                 </div>
             </form>
         </div>
