@@ -49,7 +49,11 @@ class DashboardController extends Controller
                     ->from('budget_releases')
                     ->whereColumn('proposal_id', 'proposals.id');
             }, 'total_released')
-            ->havingRaw('total_released < approved_budget')
+            // Filter with a correlated subquery in WHERE rather than HAVING. A HAVING
+            // without a GROUP BY makes this an implicitly grouped query, which MariaDB
+            // rejects under ONLY_FULL_GROUP_BY (error 1140) because proposals.* is not
+            // aggregated. WHERE carries the same meaning and runs on MySQL and MariaDB.
+            ->whereRaw('COALESCE((SELECT SUM(amount_released) FROM budget_releases WHERE proposal_id = proposals.id), 0) < proposals.approved_budget')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();

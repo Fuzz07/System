@@ -1,0 +1,8 @@
+Placeholder for your compiled Android Application package (APK). 
+
+To make this download your actual Android App:
+1. Open the folder `employee-kotlin-app` in Android Studio.
+2. Build your APK: Go to "Build" -> "Build Bundle(s) / APK(s)" -> "Build APK(s)".
+3. Android Studio will generate a file named "app-debug.apk" or "app-release.apk".
+4. Copy that generated file, rename it to "mcc-employee-app.apk", and replace this placeholder file inside "public/downloads/".
+5. Push to GitHub!
