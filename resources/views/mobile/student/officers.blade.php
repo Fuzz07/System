@@ -158,7 +158,7 @@
   }
   .officer-modal-banner {
     height: 90px;
-    background: linear-gradient(135deg, #4f46e5, #312e81);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   }
   .btn-officer-modal-close {
     position: absolute;
@@ -200,7 +200,7 @@
     height: 90px;
     border-radius: 50%;
     border: 4px solid #ffffff;
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
     color: #ffffff;
     display: flex;
     align-items: center;
@@ -223,8 +223,8 @@
     font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: #4f46e5;
-    background: rgba(79, 70, 229, 0.06);
+    color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.06);
     padding: 4px 12px;
     border-radius: 20px;
     display: inline-block;
@@ -257,7 +257,7 @@
     font-size: 1.05rem;
   }
   .officer-modal-info-icon.party { background: rgba(239, 68, 68, 0.08); color: #ef4444; }
-  .officer-modal-info-icon.dept { background: rgba(79, 70, 229, 0.08); color: #4f46e5; }
+  .officer-modal-info-icon.dept { background: rgba(var(--primary-rgb), 0.08); color: var(--primary); }
   .officer-modal-info-icon.year { background: rgba(16, 185, 129, 0.08); color: #10b981; }
   .officer-modal-info-icon.status { background: rgba(245, 158, 11, 0.08); color: #f59e0b; }
   .officer-modal-info-icon.email { background: rgba(6, 182, 212, 0.08); color: #06b6d4; }
@@ -279,7 +279,7 @@
     margin-top: 1px;
   }
   .btn-officer-modal-action {
-    background: linear-gradient(135deg, #4f46e5, #4338ca);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: #ffffff;
     border: none;
     border-radius: 14px;
@@ -292,12 +292,12 @@
     justify-content: center;
     gap: 8px;
     text-decoration: none;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+    box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
     transition: transform 0.2s, box-shadow 0.2s;
   }
   .btn-officer-modal-action:active {
     transform: scale(0.98);
-    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.15);
+    box-shadow: 0 2px 6px rgba(var(--primary-rgb), 0.15);
   }
 </style>
 

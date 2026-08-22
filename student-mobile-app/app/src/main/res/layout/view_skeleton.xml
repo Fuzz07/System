@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Skeleton ("bone") loading screen.
+  Mirrors the real app shell — app bar, hero, feed cards, bottom nav — so the
+  transition into loaded content has no layout jump. Shown while the WebView
+  is fetching a page; the whole tree is alpha-pulsed from MainActivity.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/skeletonRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/slate_50"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- App bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/white"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="14dp"
+        android:paddingBottom="14dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="130dp"
+                android:layout_height="14dp"
+                android:background="@drawable/skeleton_block" />
+
+            <View
+                android:layout_width="90dp"
+                android:layout_height="10dp"
+                android:layout_marginTop="7dp"
+                android:background="@drawable/skeleton_block" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/skeleton_circle" />
+    </LinearLayout>
+
+    <!-- Hero banner -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="104dp"
+        android:background="@color/skeleton_hero" />
+
+    <!-- Feed cards -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp">
+
+        <include layout="@layout/view_skeleton_card" />
+
+        <include layout="@layout/view_skeleton_card" />
+
+        <include layout="@layout/view_skeleton_card" />
+    </LinearLayout>
+
+    <!-- Bottom navigation -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:orientation="horizontal"
+        android:background="@color/white">
+
+        <include layout="@layout/view_skeleton_tab" />
+
+        <include layout="@layout/view_skeleton_tab" />
+
+        <include layout="@layout/view_skeleton_tab" />
+
+        <include layout="@layout/view_skeleton_tab" />
+    </LinearLayout>
+</LinearLayout>

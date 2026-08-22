@@ -18,7 +18,7 @@
 @endphp
 
 @if($activeSy && ($activeSy->candidacy_open || $candidacy))
-    <div class="m-card elevated" style="margin-bottom: 20px; background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%); color: #fff; border: none; padding: 16px; border-radius: 16px;">
+    <div class="m-card elevated" style="margin-bottom: 20px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: #fff; border: none; padding: 16px; border-radius: 16px;">
         <div style="display: flex; align-items: center; gap: 12px;">
             <div style="font-size: 1.8rem;">🗳️</div>
             <div style="flex: 1;">
@@ -50,18 +50,19 @@
     <div class="m-card elevated" style="margin-bottom: 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; border: none; padding: 16px; border-radius: 16px;">
         <div style="display: flex; align-items: center; gap: 12px;">
             <div style="font-size: 1.8rem;">🗳️</div>
-            <div style="flex: 1;">
+            <div style="flex: 1; min-width: 0;">
                 <div style="font-size: 0.88rem; font-weight: 700;">SSC Elections are Live!</div>
                 <div style="font-size: 0.72rem; opacity: 0.9;">Cast your vote for the new student council leaders.</div>
             </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <a href="{{ route('mobile.student.voting') }}" style="text-decoration: none; font-size: 0.78rem; padding: 6px 12px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; color: #fff; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
-                    Vote Now <i class="bi bi-arrow-right"></i>
-                </a>
-                <a href="{{ route('mobile.student.election.results') }}" style="text-decoration: none; font-size: 0.78rem; padding: 6px 12px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; color: #fff; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
-                    View Results <i class="bi bi-bar-chart"></i>
-                </a>
-            </div>
+        </div>
+        {{-- Actions get their own full-width row so the copy above is never squeezed --}}
+        <div style="display: flex; gap: 10px; margin-top: 14px;">
+            <a href="{{ route('mobile.student.voting') }}" style="flex: 1; justify-content: center; text-decoration: none; font-size: 0.78rem; padding: 9px 12px; background: #fff; border: none; border-radius: 10px; color: #047857; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+                Vote Now <i class="bi bi-arrow-right"></i>
+            </a>
+            <a href="{{ route('mobile.student.election.results') }}" style="flex: 1; justify-content: center; text-decoration: none; font-size: 0.78rem; padding: 9px 12px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.35); border-radius: 10px; color: #fff; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+                Results <i class="bi bi-bar-chart"></i>
+            </a>
         </div>
     </div>
 @endif

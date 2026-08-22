@@ -6,7 +6,7 @@
 
 @section('content')
 
-    <div class="hero-banner" style="background: linear-gradient(135deg, var(--indigo-600) 0%, var(--indigo-800) 100%);">
+    <div class="hero-banner" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);">
         <div class="hero-banner-title" style="display:flex; align-items:center; gap:8px;">
             <i class="bi bi-megaphone-fill" style="font-size: 1.5rem; color: #fff;"></i> News &amp; Updates
         </div>
@@ -14,9 +14,9 @@
     </div>
 
     <div style="display: flex; gap: 8px; padding: 0 16px 4px; overflow-x: auto;">
-        <a href="{{ route('mobile.student.announcements') }}" style="flex-shrink:0; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 16px; border-radius:20px; {{ !$category ? 'background:var(--indigo-600); color:#fff;' : 'background:#f1f5f9; color:#475569;' }}">All</a>
+        <a href="{{ route('mobile.student.announcements') }}" style="flex-shrink:0; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 16px; border-radius:20px; {{ !$category ? 'background:var(--primary); color:#fff;' : 'background:#f1f5f9; color:#475569;' }}">All</a>
         @foreach(\App\Models\Announcement::CATEGORIES as $value => $label)
-        <a href="{{ route('mobile.student.announcements', ['category' => $value]) }}" style="flex-shrink:0; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 16px; border-radius:20px; {{ $category === $value ? 'background:var(--indigo-600); color:#fff;' : 'background:#f1f5f9; color:#475569;' }}">{{ $label }}</a>
+        <a href="{{ route('mobile.student.announcements', ['category' => $value]) }}" style="flex-shrink:0; text-decoration:none; font-size:0.8rem; font-weight:600; padding:7px 16px; border-radius:20px; {{ $category === $value ? 'background:var(--primary); color:#fff;' : 'background:#f1f5f9; color:#475569;' }}">{{ $label }}</a>
         @endforeach
     </div>
 
@@ -28,7 +28,7 @@
             @endif
             <div style="padding: 20px;">
                 <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">
-                    <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(79,70,229,0.1); display: flex; align-items: center; justify-content: center; color: var(--indigo-600); font-size: 1.25rem; flex-shrink: 0;">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(var(--primary-rgb), 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem; flex-shrink: 0;">
                         <i class="bi bi-info-circle-fill"></i>
                     </div>
                     <div>
@@ -51,7 +51,7 @@
                         <span><i class="bi bi-chat-dots"></i> {{ $a->comments->count() }}</span>
                         @endif
                     </div>
-                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--indigo-600);">
+                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">
                         Read More <i class="bi bi-arrow-right"></i>
                     </div>
                 </div>
@@ -64,7 +64,7 @@
                 <div style="width: 40px; height: 5px; background: #cbd5e1; border-radius: 4px; margin: 0 auto 24px;"></div>
                 
                 <div style="text-align:center;margin-bottom:24px;">
-                    <div style="width:64px;height:64px;border-radius:20px;background:rgba(79,70,229,0.1);color:var(--primary);font-size:1.75rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <div style="width:64px;height:64px;border-radius:20px;background:rgba(var(--primary-rgb), 0.1);color:var(--primary);font-size:1.75rem;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
                         <i class="bi bi-megaphone-fill"></i>
                     </div>
                     <span style="display:inline-block; font-size: 0.65rem; text-transform:uppercase; font-weight:700; padding:3px 10px; border-radius:8px; margin-bottom:8px; {{ $a->category === 'lost_item' ? 'background:#fef3c7; color:#92400e;' : 'background:#e0f2fe; color:#075985;' }}">{{ $a->category_label }}</span>
@@ -108,7 +108,7 @@
                     <form method="POST" action="{{ route('mobile.student.announcements.comment', $a) }}" style="margin-bottom:18px;">
                         @csrf
                         <textarea name="comment" rows="2" placeholder="Found this item, or know whose it is?" required style="width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:10px 14px; font-size:0.85rem; resize:vertical; margin-bottom:8px;"></textarea>
-                        <button type="submit" style="background:var(--indigo-600); color:#fff; border:none; padding:9px 18px; border-radius:10px; font-weight:600; font-size:0.85rem;">Post Comment <i class="bi bi-send"></i></button>
+                        <button type="submit" style="background:var(--primary); color:#fff; border:none; padding:9px 18px; border-radius:10px; font-weight:600; font-size:0.85rem;">Post Comment <i class="bi bi-send"></i></button>
                     </form>
 
                     <div style="display:flex; flex-direction:column; gap:12px;">

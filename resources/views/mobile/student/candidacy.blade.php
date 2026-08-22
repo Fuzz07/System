@@ -42,7 +42,7 @@
                     <div style="font-size: 0.8rem; color: var(--slate-600); line-height: 1.5; background: var(--slate-50); padding: 12px; border-radius: 10px; white-space: pre-wrap;">{{ $candidacy->platform }}</div>
                 </div>
 
-                <div style="background: rgba(79, 70, 229, 0.06); border-radius: 10px; padding: 12px; font-size: 0.76rem; color: var(--primary-dark); line-height: 1.4;">
+                <div style="background: rgba(var(--primary-rgb), 0.06); border-radius: 10px; padding: 12px; font-size: 0.76rem; color: var(--primary-dark); line-height: 1.4;">
                     @if($candidacy->status === 'pending')
                         <i class="bi bi-hourglass-split"></i> Awaiting review by the Dean of <strong>{{ $candidacy->department }}</strong>. You will be notified here once updated.
                     @elseif($candidacy->status === 'approved')

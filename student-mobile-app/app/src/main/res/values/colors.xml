@@ -2,12 +2,28 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="indigo_600">#4F46E5</color>
-    <color name="indigo_700">#4338CA</color>
-    <color name="navy_900">#1E1B4B</color>
+
+    <!-- SSC brand palette — matches the primary color in the web app's stylesheets
+         so the native shell and the WebView content read as one product. -->
+    <color name="brand_500">#F06529</color>
+    <color name="brand_600">#E34F26</color>
+    <color name="brand_700">#D13F19</color>
+    <color name="brand_ink">#0F172A</color>
+
+    <!-- Retained so any straggling reference still resolves. -->
+    <color name="indigo_600">#E34F26</color>
+    <color name="indigo_700">#D13F19</color>
+    <color name="navy_900">#0F172A</color>
+
     <color name="slate_50">#F8FAFC</color>
+    <color name="slate_100">#F1F5F9</color>
+    <color name="slate_200">#E2E8F0</color>
     <color name="slate_400">#94A3B8</color>
     <color name="slate_500">#64748B</color>
     <color name="slate_700">#334155</color>
     <color name="slate_800">#1E293B</color>
+
+    <!-- Skeleton placeholder fill -->
+    <color name="skeleton_base">#E2E8F0</color>
+    <color name="skeleton_hero">#F3D9CF</color>
 </resources>

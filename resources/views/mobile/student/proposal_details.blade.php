@@ -83,7 +83,7 @@
 </div>
 
 {{-- Transparency Pledge --}}
-<div class="desc-section" style="background:rgba(79,70,229,0.04);border:1px solid rgba(79,70,229,0.1);text-align:center;">
+<div class="desc-section" style="background:rgba(var(--primary-rgb), 0.04);border:1px solid rgba(var(--primary-rgb), 0.1);text-align:center;">
     <i class="bi bi-shield-check" style="font-size:1.4rem;color:var(--primary);display:block;margin-bottom:6px;"></i>
     <div class="desc-section-title" style="color:var(--primary);">Transparency Pledge</div>
     <div class="desc-text" style="font-size:0.8rem;">
@@ -118,7 +118,7 @@
                         <i class="bi bi-person-fill-lock" style="font-size:0.7rem;"></i> Anonymous
                     @else
                         {{ $c->user->fullname }}
-                        <span style="font-size:0.62rem;background:rgba(79,70,229,0.1);color:var(--primary);padding:1px 6px;border-radius:6px;margin-left:4px;">{{ ucfirst($c->user->role) }}</span>
+                        <span style="font-size:0.62rem;background:rgba(var(--primary-rgb), 0.1);color:var(--primary);padding:1px 6px;border-radius:6px;margin-left:4px;">{{ ucfirst($c->user->role) }}</span>
                     @endif
                 </span>
                 <span class="comment-time">{{ $c->created_at?->diffForHumans() }}</span>

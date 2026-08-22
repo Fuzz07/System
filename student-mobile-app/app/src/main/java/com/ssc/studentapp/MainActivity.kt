@@ -1,5 +1,6 @@
 package com.ssc.studentapp
 
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -10,6 +11,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.os.Handler
 import android.os.Looper
 import android.app.NotificationChannel
@@ -63,6 +65,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var progressBar: ProgressBar
+    private lateinit var skeletonLayout: View
+    private var skeletonPulse: ObjectAnimator? = null
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private lateinit var fileChooserLauncher: ActivityResultLauncher<Intent>
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
@@ -86,6 +90,10 @@ class MainActivity : AppCompatActivity() {
         webView.clearCache(true)
         swipeRefresh = findViewById(R.id.swipeRefresh)
         progressBar = findViewById(R.id.progressBar)
+        skeletonLayout = findViewById(R.id.skeletonLayout)
+
+        // The very first paint should be the skeleton, not a blank white screen.
+        showSkeleton()
 
         // Setup Swipe to Refresh
         swipeRefresh.setOnRefreshListener {
@@ -96,7 +104,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, OfflineActivity::class.java))
             }
         }
-        swipeRefresh.setColorSchemeResources(R.color.indigo_600)
+        swipeRefresh.setColorSchemeResources(R.color.brand_600)
 
         // Setup WebView Settings
         val settings = webView.settings
@@ -129,11 +137,15 @@ class MainActivity : AppCompatActivity() {
                 super.onPageStarted(view, url, favicon)
                 progressBar.visibility = View.VISIBLE
                 progressBar.progress = 10
+                // Pull-to-refresh draws its own spinner over live content, so the
+                // skeleton would only hide what the user is already looking at.
+                if (!swipeRefresh.isRefreshing) showSkeleton()
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 progressBar.visibility = View.GONE
+                hideSkeleton()
                 swipeRefresh.isRefreshing = false
                 CookieManager.getInstance().flush()
 
@@ -204,6 +216,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                 super.onReceivedError(view, request, error)
+                if (request?.isForMainFrame == true) hideSkeleton()
                 // Only show offline page if the MAIN frame fails (not subresources like images/css)
                 // and the error is a genuine connection failure (not a HTTP error like 404)
                 if (request?.isForMainFrame == true) {
@@ -249,6 +262,9 @@ class MainActivity : AppCompatActivity() {
                 progressBar.progress = newProgress
                 if (newProgress >= 100) {
                     progressBar.visibility = View.GONE
+                    // Safety net: onPageFinished can be skipped on some redirects,
+                    // so never leave the skeleton stranded over loaded content.
+                    hideSkeleton()
                 }
             }
 
@@ -529,6 +545,47 @@ class MainActivity : AppCompatActivity() {
         return super.onKeyDown(keyCode, event)
     }
 
+
+    /**
+     * Shows the skeleton ("bone") placeholder over the WebView and starts a soft
+     * alpha pulse on it. Implemented with a plain ObjectAnimator rather than a
+     * shimmer library so the app takes on no new dependency.
+     */
+    private fun showSkeleton() {
+        if (skeletonLayout.visibility == View.VISIBLE) return
+        skeletonLayout.alpha = 1f
+        skeletonLayout.visibility = View.VISIBLE
+
+        skeletonPulse?.cancel()
+        skeletonPulse = ObjectAnimator.ofFloat(skeletonLayout, View.ALPHA, 1f, 0.45f).apply {
+            duration = 750
+            repeatCount = ObjectAnimator.INFINITE
+            repeatMode = ObjectAnimator.REVERSE
+            interpolator = AccelerateDecelerateInterpolator()
+            start()
+        }
+    }
+
+    /** Fades the skeleton out and stops the pulse. Safe to call repeatedly. */
+    private fun hideSkeleton() {
+        if (skeletonLayout.visibility != View.VISIBLE) return
+        skeletonPulse?.cancel()
+        skeletonPulse = null
+        skeletonLayout.animate()
+            .alpha(0f)
+            .setDuration(220)
+            .withEndAction {
+                skeletonLayout.visibility = View.GONE
+                skeletonLayout.alpha = 1f
+            }
+            .start()
+    }
+
+    override fun onDestroy() {
+        skeletonPulse?.cancel()
+        skeletonPulse = null
+        super.onDestroy()
+    }
 
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

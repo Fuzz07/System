@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One placeholder bottom-nav tab: icon dot over a label bar. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    android:layout_weight="1"
+    android:orientation="vertical"
+    android:gravity="center">
+
+    <View
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@drawable/skeleton_circle" />
+
+    <View
+        android:layout_width="34dp"
+        android:layout_height="8dp"
+        android:layout_marginTop="7dp"
+        android:background="@drawable/skeleton_block" />
+</LinearLayout>

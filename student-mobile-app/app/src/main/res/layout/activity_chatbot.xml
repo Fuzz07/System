@@ -19,7 +19,7 @@
             android:layout_height="?attr/actionBarSize"
             android:background="@color/white"
             app:title="SSC Help Assistant"
-            app:titleTextColor="@color/navy_900"
+            app:titleTextColor="@color/brand_ink"
             app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light" />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -70,7 +70,7 @@
             app:iconGravity="textStart"
             app:iconPadding="0dp"
             app:iconTint="@color/white"
-            app:backgroundTint="@color/indigo_600"
+            app:backgroundTint="@color/brand_600"
             app:cornerRadius="12dp" />
 
     </LinearLayout>

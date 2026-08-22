@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/navy_900">
+    android:background="@color/brand_ink">
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -38,14 +38,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:text="Transparency &amp; Budget System"
-            android:textColor="#A5B4FC"
+            android:textColor="#FBC7B4"
             android:textSize="14sp" />
 
         <ProgressBar
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginTop="40dp"
-            android:indeterminateTint="@color/indigo_600" />
+            android:indeterminateTint="@color/brand_600" />
 
     </LinearLayout>
 
@@ -53,7 +53,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
-        android:text="v1.0.0"
+        android:id="@+id/splash_version"
+        android:text="v1.3"
         android:textColor="@color/slate_500"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"

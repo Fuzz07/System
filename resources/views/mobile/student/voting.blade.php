@@ -9,8 +9,8 @@
 {{-- ===== ELECTION NOT ACTIVE STATE ===== --}}
 @if(!$votingOpen)
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 32px 24px; text-align: center;">
-    <div style="width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(79,70,229,0.12);">
-        <i class="bi bi-calendar-x" style="font-size: 2.4rem; color: #6366f1;"></i>
+    <div style="width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.14) 0%, rgba(var(--primary-rgb), 0.24) 100%); display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(var(--primary-rgb), 0.12);">
+        <i class="bi bi-calendar-x" style="font-size: 2.4rem; color: var(--primary-light);"></i>
     </div>
     <h2 style="font-size: 1.25rem; font-weight: 800; color: #1e1b4b; margin-bottom: 10px; letter-spacing: -0.5px;">No Active Election</h2>
     <p style="font-size: 0.84rem; color: #64748b; line-height: 1.6; max-width: 280px; margin-bottom: 28px;">
@@ -42,7 +42,7 @@
     @endif
 
     <a href="{{ route('mobile.student.election.results') }}"
-        style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 0.82rem; font-weight: 700; color: #6366f1; border: 1.5px solid #c7d2fe; border-radius: 12px; padding: 10px 20px; background: #f0f0ff;">
+        style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 0.82rem; font-weight: 700; color: var(--primary-light); border: 1.5px solid rgba(var(--primary-rgb), 0.3); border-radius: 12px; padding: 10px 20px; background: rgba(var(--primary-rgb), 0.06);">
         <i class="bi bi-bar-chart-fill"></i> View Past Election Results
     </a>
 </div>
@@ -56,7 +56,7 @@
         </div>
     @else
         {{-- Election Header --}}
-        <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: 16px; padding: 16px; margin-bottom: 18px; color: #fff;">
+        <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 16px; padding: 16px; margin-bottom: 18px; color: #fff;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                 <span style="font-size: 1.5rem;">🗳️</span>
                 <div>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rounded placeholder bar used to build skeleton ("bone") screens. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/skeleton_base" />
+    <corners android:radius="6dp" />
+</shape>

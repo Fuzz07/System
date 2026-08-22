@@ -7,6 +7,7 @@
 
 :root {
   --primary: #e34f26;
+  --primary-rgb: 227, 79, 38;
   --primary-light: #f06529;
   --primary-dark: #d13f19;
   --secondary: #f06529;
@@ -253,10 +254,14 @@ body {
 }
 
 .nav-tab-label {
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.nav-tab.active .nav-tab-label {
+  font-weight: 700;
 }
 
 .nav-tab::after {
@@ -286,7 +291,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(79, 70, 229, 0.08);
+  background: rgba(var(--primary-rgb), 0.08);
   border-radius: inherit;
   opacity: 0;
   transition: opacity 0.15s;
@@ -298,7 +303,7 @@ body {
 
 /* ── Hero Banner ── */
 .hero-banner {
-  background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-dark) 100%);
   margin: -16px -16px 20px;
   padding: 28px 20px 32px;
   color: #fff;
@@ -410,7 +415,7 @@ body {
 }
 
 .m-badge.replied {
-  background: rgba(79, 70, 229, 0.12);
+  background: rgba(var(--primary-rgb), 0.12);
   color: var(--primary);
 }
 
@@ -543,7 +548,7 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: rgba(79, 70, 229, 0.1);
+  background: rgba(var(--primary-rgb), 0.1);
   color: var(--primary);
   font-size: 1.1rem;
   display: flex;
@@ -609,8 +614,18 @@ body {
   text-align: center;
   text-decoration: none;
   color: inherit;
-  display: block;
+  /* Column flex so cards in a row share a height and the CTA can be pinned
+     to the bottom regardless of how much detail each officer has. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
   transition: var(--transition);
+}
+
+.officer-card > .officer-contact {
+  margin-top: auto;
+  padding-top: 10px;
 }
 
 .officer-card:active {
@@ -621,7 +636,7 @@ body {
   width: 72px;
   height: 72px;
   border-radius: 20px;
-  background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-dark) 100%);
   color: #fff;
   font-size: 1.75rem;
   font-weight: 800;
@@ -630,7 +645,7 @@ body {
   justify-content: center;
   margin: 0 auto 12px;
   object-fit: cover;
-  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+  box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.25);
 }
 
 .officer-avatar img {
@@ -659,7 +674,7 @@ body {
 }
 
 .officer-role-badge.president {
-  background: rgba(79, 70, 229, 0.1);
+  background: rgba(var(--primary-rgb), 0.1);
   color: var(--primary);
 }
 
@@ -684,7 +699,7 @@ body {
   color: var(--primary);
   text-decoration: none;
   padding: 6px 14px;
-  background: rgba(79, 70, 229, 0.08);
+  background: rgba(var(--primary-rgb), 0.08);
   border-radius: 20px;
   transition: var(--transition);
 }
@@ -716,7 +731,7 @@ body {
 .feedback-compose textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1);
   background: #fff;
 }
 
@@ -750,7 +765,7 @@ body {
 }
 
 .bubble-avatar.admin {
-  background: rgba(79, 70, 229, 0.12);
+  background: rgba(var(--primary-rgb), 0.12);
   color: var(--primary);
 }
 
@@ -788,7 +803,7 @@ body {
 }
 
 .bubble-text.reply {
-  background: rgba(79, 70, 229, 0.08);
+  background: rgba(var(--primary-rgb), 0.08);
   color: var(--slate-700);
   border-left: 3px solid var(--primary);
   border-radius: 0 12px 12px 0;
@@ -796,7 +811,7 @@ body {
 
 /* ── Proposal Detail ── */
 .detail-hero {
-  background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-dark) 100%);
   padding: 24px 20px 28px;
   color: #fff;
   margin: -16px -16px 0;
@@ -921,7 +936,7 @@ body {
 .comment-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
   background: #fff;
 }
 
@@ -938,7 +953,7 @@ body {
   border: none;
   cursor: pointer;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
   transition: var(--transition);
 }
 
@@ -978,7 +993,7 @@ body {
 }
 
 .comment-avatar.officer-av {
-  background: rgba(79, 70, 229, 0.12);
+  background: rgba(var(--primary-rgb), 0.12);
   color: var(--primary);
 }
 
@@ -1086,7 +1101,7 @@ body {
 .m-btn-primary {
   background: var(--primary);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
 .m-btn-primary:hover {
@@ -1172,6 +1187,7 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.5);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   z-index: 500;
   opacity: 0;
@@ -1232,7 +1248,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+  box-shadow: 0 8px 24px rgba(var(--primary-rgb), 0.4);
   cursor: pointer;
   z-index: 250;
   border: none;
@@ -1242,7 +1258,7 @@ body {
 
 .chatbot-fab:hover {
   transform: scale(1.08);
-  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.5);
+  box-shadow: 0 12px 28px rgba(var(--primary-rgb), 0.5);
 }
 
 /* ── Scroll Progress ── */
@@ -1282,7 +1298,7 @@ body {
   justify-content: space-between;
   gap: 12px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-dark) 100%);
   color: #fff;
   position: relative;
   z-index: 400;
@@ -1391,6 +1407,7 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.5);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   z-index: 700;
   align-items: flex-end;
@@ -1442,7 +1459,7 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #4f46e5;
+  background: var(--primary);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 700;
@@ -1483,7 +1500,7 @@ body {
 .ios-close-btn {
   width: 100%;
   padding: 14px;
-  background: #4f46e5;
+  background: var(--primary);
   color: #fff;
   border: none;
   border-radius: 14px;
@@ -1585,10 +1602,10 @@ body {
   }
 
   body {
-    background: #1e1b4b;
+    background: var(--slate-900);
     background-image:
-      radial-gradient(circle at 20% 50%, rgba(79, 70, 229, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.2) 0%, transparent 50%);
+      radial-gradient(circle at 20% 50%, rgba(var(--primary-rgb), 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(var(--primary-rgb), 0.14) 0%, transparent 50%);
   }
 
   .bottom-nav {
@@ -1596,4 +1613,221 @@ body {
     border-radius: 0 0 40px 40px;
     overflow: hidden;
   }
+}
+/* ══════════════════════════════════════════════
+   Account Sheet
+   Opened from the app-bar avatar. Holds the
+   secondary/destructive actions that used to sit
+   in the tab bar, keeping the nav at 5 tabs max.
+   ══════════════════════════════════════════════ */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.sheet-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.account-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 480px;
+  z-index: 1001;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 8px 16px calc(16px + var(--safe-bottom));
+  box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.18);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.account-sheet.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--slate-200);
+  margin: 6px auto 14px;
+}
+
+.sheet-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 4px 16px;
+  border-bottom: 1px solid var(--slate-100);
+  margin-bottom: 8px;
+}
+
+.sheet-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sheet-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--slate-900);
+  line-height: 1.3;
+}
+
+.sheet-email {
+  font-size: 0.78rem;
+  color: var(--slate-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 4px;
+  border: none;
+  background: none;
+  text-align: left;
+  text-decoration: none;
+  color: var(--slate-700);
+  font-size: 0.92rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s ease;
+}
+
+.sheet-item:active {
+  background: var(--slate-50);
+}
+
+.sheet-item i:first-child {
+  font-size: 1.15rem;
+  color: var(--slate-400);
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sheet-item .sheet-chevron {
+  margin-left: auto;
+  font-size: 0.9rem;
+  color: var(--slate-300);
+}
+
+.sheet-item.danger {
+  color: var(--danger);
+}
+
+.sheet-item.danger i:first-child {
+  color: var(--danger);
+}
+
+/* ══════════════════════════════════════════════
+   Card header / body / field primitives
+   Used by the enrollment screen. These class
+   names were in the markup but had no styles,
+   so the screen rendered as unstyled body text.
+   ══════════════════════════════════════════════ */
+.m-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.m-card-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--slate-900);
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+
+.m-card-sub {
+  font-size: 0.8rem;
+  color: var(--slate-500);
+  line-height: 1.5;
+  margin-top: 3px;
+}
+
+.m-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.m-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.m-field > label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--slate-500);
+}
+
+/* The amount readout — the one number the student is looking for. */
+.m-field-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* Native file inputs look unfinished; present the control as a styled button. */
+.m-field input[type="file"] {
+  font-size: 0.85rem;
+  color: var(--slate-600);
+  padding: 12px;
+  border: 1.5px dashed var(--slate-300);
+  border-radius: var(--radius-sm);
+  background: var(--slate-50);
+  width: 100%;
+}
+
+.m-field input[type="file"]::file-selector-button {
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--primary);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-right: 12px;
+  cursor: pointer;
 }

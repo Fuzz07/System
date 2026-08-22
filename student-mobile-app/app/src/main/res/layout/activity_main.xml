@@ -9,11 +9,11 @@
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="4dp"
+        android:layout_height="3dp"
         android:indeterminate="false"
         android:max="100"
         android:progressDrawable="@android:drawable/progress_horizontal"
-        android:progressTint="@color/indigo_600"
+        android:progressTint="@color/brand_600"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -30,5 +30,18 @@
             android:layout_height="match_parent" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Skeleton overlay. Declared last so it draws above the WebView, and it
+         swallows touches while visible so a half-painted page can't be tapped. -->
+    <include
+        android:id="@+id/skeletonLayout"
+        layout="@layout/view_skeleton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
