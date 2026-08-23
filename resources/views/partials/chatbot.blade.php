@@ -426,6 +426,83 @@
     border-bottom-color: var(--chatbot-primary-dark);
   }
 
+  /* Messenger hand-off card. Offered once, after the assistant has had a few
+     tries at a question. It is an offer to leave the conversation, so it reads
+     as a card in Facebook's blue rather than as one more thing the bot said. */
+  .chat-handoff {
+    align-self: stretch;
+    margin-left: 36px;
+    background: #f2f8ff;
+    border: 1px solid #c7e0ff;
+    border-radius: 18px;
+    padding: 14px;
+    animation: messageSlide 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+
+  .chat-handoff-head {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .chat-handoff-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0084ff 0%, #0064d2 100%);
+    color: #fff;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chat-handoff-title {
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+  }
+
+  .chat-handoff-sub {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 1px;
+  }
+
+  .chat-handoff-body {
+    margin-top: 10px;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    color: #334155;
+  }
+
+  .chat-handoff-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+    height: 44px;
+    border-radius: 14px;
+    background: #0084ff;
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.12s ease;
+  }
+
+  .chat-handoff-btn:hover {
+    background: #0064d2;
+    color: #fff;
+  }
+
+  .chat-handoff-btn:active {
+    transform: scale(0.98);
+  }
+
   .bot-msg b {
     color: var(--chatbot-primary-dark);
     font-weight: 700;
@@ -867,14 +944,20 @@
     function maybeOfferMessenger() {
       if (messengerOffered || userMessageCount < MESSENGER_AFTER_MESSAGES) return;
       messengerOffered = true;
-      addMessage(
-        "Still not finding what you need? 💬<br><br>"
-        + "Our officers reply to messages on the official SSC Facebook page, so you'll be "
-        + "talking to a real person instead of me.<br>"
-        + "<a href='" + SSC_MESSENGER_URL + "' target='_blank' rel='noopener' class='chat-link'>"
-        + "<i class='bi bi-messenger'></i> Chat with the SSC on Messenger</a>",
-        'bot'
-      );
+      const card = document.createElement('div');
+      card.className = 'chat-handoff';
+      card.innerHTML =
+        '<div class="chat-handoff-head">'
+        + '<div class="chat-handoff-icon"><i class="bi bi-chat-dots-fill"></i></div>'
+        + '<div><div class="chat-handoff-title">Still need a hand?</div>'
+        + '<div class="chat-handoff-sub">Chat with a real SSC officer</div></div>'
+        + '</div>'
+        + '<div class="chat-handoff-body">Our officers reply to messages on the official '
+        + 'SSC Facebook page, so you get a real person instead of me.</div>'
+        + '<a class="chat-handoff-btn" href="' + SSC_MESSENGER_URL + '" '
+        + 'target="_blank" rel="noopener"><i class="bi bi-messenger"></i> Chat on Messenger</a>';
+      messagesContainer.appendChild(card);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
     function handleSend(overrideText = null) {

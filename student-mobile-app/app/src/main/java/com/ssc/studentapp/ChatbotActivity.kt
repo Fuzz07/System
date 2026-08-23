@@ -12,7 +12,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -97,16 +96,14 @@ class ChatbotActivity : AppCompatActivity() {
         if (messengerOffered || userMessageCount < MESSENGER_AFTER_MESSAGES) return
         messengerOffered = true
         addMessage(
-            "Still not finding what you need? 💬\n\n" +
-                "Our officers reply to messages on the official SSC Facebook page, so " +
-                "you'll be talking to a real person instead of me.\n\n" +
-                "Tap this message to open Messenger.",
+            "Our officers reply to messages on the official SSC Facebook page, so " +
+                "you'll be talking to a real person instead of me.",
             "bot",
             SSC_MESSENGER_URL
         )
     }
 
-    /** Opens a link outside the app; used by the Messenger hand-off bubble. */
+    /** Opens a link outside the app; used by the Messenger hand-off card. */
     private fun openLink(url: String) {
         try {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
@@ -258,46 +255,62 @@ class ChatbotActivity : AppCompatActivity() {
     }
 
     inner class ChatAdapter(private val messages: List<ChatMessage>) :
-        RecyclerView.Adapter<ChatAdapter.ViewHolder>() {
+        RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_chat_message, parent, false)
-            return ViewHolder(view)
+        // A message that carries a link is the Messenger hand-off, and it gets a
+        // card of its own rather than another chat bubble: it is an offer to
+        // leave the conversation, not one more thing the assistant said.
+        override fun getItemViewType(position: Int): Int =
+            if (messages[position].actionUrl != null) TYPE_HANDOFF else TYPE_BUBBLE
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+            val inflater = LayoutInflater.from(parent.context)
+            return if (viewType == TYPE_HANDOFF) {
+                HandoffViewHolder(inflater.inflate(R.layout.item_chat_handoff, parent, false))
+            } else {
+                BubbleViewHolder(inflater.inflate(R.layout.item_chat_message, parent, false))
+            }
         }
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             val message = messages[position]
-            if (message.sender == "bot") {
-                holder.layoutBot.visibility = View.VISIBLE
-                holder.layoutUser.visibility = View.GONE
-                holder.textBotMessage.text = message.text
-                // Holders are recycled, so both states have to be set explicitly
-                // or a plain answer inherits the previous bubble's tap target.
-                val url = message.actionUrl
-                val ctx = holder.itemView.context
-                if (url != null) {
-                    holder.textBotMessage.setTextColor(ContextCompat.getColor(ctx, R.color.brand_600))
-                    holder.textBotMessage.setOnClickListener { openLink(url) }
-                } else {
-                    holder.textBotMessage.setTextColor(ContextCompat.getColor(ctx, R.color.slate_800))
-                    holder.textBotMessage.setOnClickListener(null)
-                    holder.textBotMessage.isClickable = false
+            when (holder) {
+                is HandoffViewHolder -> {
+                    holder.body.text = message.text
+                    val url = message.actionUrl
+                    holder.button.setOnClickListener { if (url != null) openLink(url) }
                 }
-            } else {
-                holder.layoutBot.visibility = View.GONE
-                holder.layoutUser.visibility = View.VISIBLE
-                holder.textUserMessage.text = message.text
+                is BubbleViewHolder -> {
+                    if (message.sender == "bot") {
+                        holder.layoutBot.visibility = View.VISIBLE
+                        holder.layoutUser.visibility = View.GONE
+                        holder.textBotMessage.text = message.text
+                    } else {
+                        holder.layoutBot.visibility = View.GONE
+                        holder.layoutUser.visibility = View.VISIBLE
+                        holder.textUserMessage.text = message.text
+                    }
+                }
             }
         }
 
         override fun getItemCount() = messages.size
 
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        inner class BubbleViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val layoutBot: View = view.findViewById(R.id.layoutBot)
             val layoutUser: View = view.findViewById(R.id.layoutUser)
             val textBotMessage: TextView = view.findViewById(R.id.textBotMessage)
             val textUserMessage: TextView = view.findViewById(R.id.textUserMessage)
         }
+
+        inner class HandoffViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val body: TextView = view.findViewById(R.id.textHandoffBody)
+            val button: MaterialButton = view.findViewById(R.id.buttonMessenger)
+        }
+    }
+
+    private companion object {
+        const val TYPE_BUBBLE = 0
+        const val TYPE_HANDOFF = 1
     }
 }

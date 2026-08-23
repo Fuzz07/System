@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Messenger-blue disc behind the hand-off card's icon. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <gradient
+        android:angle="315"
+        android:endColor="@color/messenger_blue_dark"
+        android:startColor="@color/messenger_blue" />
+</shape>

@@ -23,6 +23,13 @@
     <color name="slate_700">#334155</color>
     <color name="slate_800">#1E293B</color>
 
+    <!-- Messenger hand-off card. Facebook's own blue, so the button reads as
+         "this leaves the app and opens Messenger" rather than an SSC action. -->
+    <color name="messenger_blue">#0084FF</color>
+    <color name="messenger_blue_dark">#0064D2</color>
+    <color name="messenger_wash">#F2F8FF</color>
+    <color name="messenger_border">#C7E0FF</color>
+
     <!-- Skeleton placeholder fill -->
     <color name="skeleton_base">#E2E8F0</color>
     <color name="skeleton_hero">#F3D9CF</color>
