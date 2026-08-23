@@ -41,7 +41,11 @@
     Header always set Permissions-Policy "accelerometer=(), camera=(), geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), fullscreen=(self), interest-cohort=()"
     Header always set Cross-Origin-Opener-Policy "same-origin"
     Header always set Cross-Origin-Resource-Policy "same-origin"
-    Header always set Cross-Origin-Embedder-Policy "require-corp"
+    # NOTE: no Cross-Origin-Embedder-Policy here. "require-corp" blocks every
+    # cross-origin subresource that does not send Cross-Origin-Resource-Policy,
+    # which silently hid the Cloudinary-hosted announcement images (Cloudinary
+    # sends Access-Control-Allow-Origin but no CORP header). Nothing in this app
+    # needs cross-origin isolation, so the policy only cost us working images.
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Content-Security-Policy "default-src 'self'; style-src 'self' 'unsafe-inline' https: https://cdn.jsdelivr.net https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: https://cdn.jsdelivr.net https://www.google.com https://www.gstatic.com https://www.recaptcha.net; img-src 'self' data: blob: https:; font-src 'self' data: https: https://fonts.gstatic.com https://cdn.jsdelivr.net; frame-src 'self' https://www.google.com https://www.gstatic.com https://www.recaptcha.net https://recaptcha.google.com; object-src 'none'; base-uri 'self'; form-action 'self';"
     

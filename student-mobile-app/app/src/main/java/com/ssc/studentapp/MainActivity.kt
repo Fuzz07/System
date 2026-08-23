@@ -106,6 +106,16 @@ class MainActivity : AppCompatActivity() {
         }
         swipeRefresh.setColorSchemeResources(R.color.brand_600)
 
+        // Pull-to-refresh may only claim a drag while the page is at the very top.
+        // SwipeRefreshLayout decides that from the WebView's own scroll position, so
+        // any page that scrolls in an inner element instead of the document looks
+        // permanently pinned at the top to it — and every downward drag gets
+        // swallowed as a refresh, which students read as "the app won't scroll".
+        // Gating on scrollY keeps the gesture honest even if such a page shows up.
+        webView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            swipeRefresh.isEnabled = scrollY == 0
+        }
+
         // Setup WebView Settings
         val settings = webView.settings
         settings.javaScriptEnabled = true
@@ -151,6 +161,8 @@ class MainActivity : AppCompatActivity() {
                 super.onPageStarted(view, url, favicon)
                 progressBar.visibility = View.VISIBLE
                 progressBar.progress = 10
+                // A fresh page renders at the top, so the gesture is valid again.
+                swipeRefresh.isEnabled = true
                 // Pull-to-refresh draws its own spinner over live content, so the
                 // skeleton would only hide what the user is already looking at.
                 if (!swipeRefresh.isRefreshing) showSkeleton()

@@ -30,10 +30,18 @@ class SecurityHeadersMiddleware
             'camera=(), microphone=(), geolocation=(self), payment=(), usb=(), interest-cohort=()'
         );
 
-        // Isolate this application from cross-origin browsing contexts and resources.
+        // Isolate this application from cross-origin browsing contexts and protect
+        // our own resources from being embedded elsewhere.
+        //
+        // Cross-Origin-Embedder-Policy is deliberately NOT set. 'require-corp'
+        // blocks every cross-origin subresource that doesn't send back a
+        // Cross-Origin-Resource-Policy header, and Cloudinary — where the
+        // announcement images live — sends Access-Control-Allow-Origin but no
+        // CORP header. That silently blanked every image on the News screen
+        // (and the Google Maps embed in the chatbot). Nothing here uses
+        // SharedArrayBuffer, so cross-origin isolation buys us nothing.
         $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
         $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
-        $response->headers->set('Cross-Origin-Embedder-Policy', 'require-corp');
 
         // Content Security Policy — only allow assets from our own origin
         // Allows inline styles/scripts (needed for Blade), but restricts all other origins

@@ -193,10 +193,16 @@ body {
 }
 
 /* ── Page Content ── */
+/* The app shell grows with its content and the DOCUMENT does the scrolling.
+   This used to be an `overflow-y: auto` box as well, which gave the page a
+   second, inner scroller. The Android WebView host wraps the WebView in a
+   SwipeRefreshLayout, and that reads the *document's* scroll position to decide
+   whether a downward drag is a scroll or a pull-to-refresh — an inner scroller
+   is invisible to it, so the document always looked pinned at the top and every
+   downward drag was swallowed as a refresh. The framed desktop mock-up below
+   re-introduces the inner scroller, which is the one place it belongs. */
 .page-content {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  flex: 1 0 auto;
   padding: 16px 16px calc(var(--nav-height) + var(--safe-bottom) + 16px);
 }
 
@@ -1593,7 +1599,12 @@ body {
 }
 
 /* ── Desktop Override — keep desktop view if not mobile ── */
-@media (min-width: 481px) {
+/* Gated on a real pointer, not on width alone. Plenty of touch devices report a
+   CSS viewport wider than 480px — tablets, unfolded foldables, and any phone
+   whose owner picked a smaller Display size — and on those this rule used to
+   clip the shell to the viewport (`overflow: hidden`) and move scrolling into
+   an inner box, which left the app unscrollable inside the WebView. */
+@media (min-width: 481px) and (hover: hover) and (pointer: fine) {
   .mobile-app {
     margin: 20px auto;
     border-radius: 40px;
@@ -1602,9 +1613,14 @@ body {
     overflow: hidden;
   }
 
+  /* Inside the frame the shell has a fixed height, so the content pane is the
+     scroller. `min-height: 0` lets it shrink below its content, which a flex
+     item won't do on its own. */
   .mobile-app .page-content {
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
-    height: 100%;
+    -webkit-overflow-scrolling: touch;
   }
 
   body {
