@@ -17,7 +17,12 @@
         $__hasApprovedCandidates = $__activeSyLayout
             ? \App\Models\Candidacy::where('school_year', $__activeSyLayout->label)->where('status', 'approved')->exists()
             : false;
-        $__showVoteTab = $__votingOpen && $__hasApprovedCandidates;
+        // Show the election tab whenever an election exists for the active year.
+        // While voting is open it gets the live "Vote!" treatment; once closed it
+        // stays as a calm "Election" entry so students can still reach the status
+        // and results screens, which otherwise had no route into them at all.
+        $__showVoteTab = $__hasApprovedCandidates;
+        $__voteLive = $__votingOpen && $__hasApprovedCandidates;
     @endphp
     <title>{{ $pageTitle ?? 'SSC' }} — Student App</title>
     <meta name="description" content="SSC Transparency and Budget Allocation — Student Portal">
@@ -111,18 +116,22 @@
                 <div class="nav-tab-label">News</div>
             </a>
 
-            {{-- Voting Tab — only visible when elections are live --}}
+            {{-- Election tab — live "Vote!" while voting is open, otherwise a
+                 neutral entry point to the election status / results screens --}}
             @if($__showVoteTab)
             <a href="{{ route('mobile.student.voting') }}"
-                class="nav-tab {{ request()->routeIs('mobile.student.voting') ? 'active' : '' }}"
-                id="tab-vote"
-                style="position: relative;">
+                class="nav-tab {{ request()->routeIs('mobile.student.voting', 'mobile.student.election.results') ? 'active' : '' }}"
+                id="tab-vote">
                 <div class="nav-tab-icon" style="position: relative;">
                     <i class="bi bi-check-square{{ request()->routeIs('mobile.student.voting') ? '-fill' : '' }}"></i>
-                    {{-- Live pulse badge --}}
-                    <span style="position: absolute; top: -2px; right: -4px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 1.5px solid #fff; animation: navLivePulse 1.5s infinite;"></span>
+                    @if($__voteLive)
+                        {{-- Live pulse badge --}}
+                        <span class="nav-live-dot"></span>
+                    @endif
                 </div>
-                <div class="nav-tab-label" style="color: #ef4444; font-weight: 800;">Vote!</div>
+                <div class="nav-tab-label" @if($__voteLive) style="color:#ef4444; font-weight:800;" @endif>
+                    {{ $__voteLive ? 'Vote!' : 'Election' }}
+                </div>
             </a>
             @endif
 
@@ -164,13 +173,6 @@
                 </button>
             </form>
         </div>
-
-        <style>
-            @keyframes navLivePulse {
-                0%, 100% { transform: scale(1); opacity: 1; }
-                50% { transform: scale(1.4); opacity: 0.6; }
-            }
-        </style>
 
     </div>{{-- /.mobile-app --}}
 

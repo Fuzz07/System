@@ -2101,13 +2101,14 @@ body {
   transform: translateX(-50%) translateZ(0);
 }
 
-/* Reserve space for feed images so text doesn't reflow as they decode —
-   the main cause of content jumping while scrolling a list. */
+/* A placeholder tint so a decoding image doesn't flash white.
+   Deliberately NOT using content-visibility here: without an intrinsic-size
+   hint it collapses off-screen elements, which makes the scroll height jump
+   around while the list is being scrolled. */
 .announcement-image,
 .ann-card img,
 .ann-sheet-hero {
   background: var(--slate-100);
-  content-visibility: auto;
 }
 
 /* Give the tab bar a snappier press response than the shared token. */
@@ -2130,4 +2131,26 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .page-content { animation: none; }
   html { scroll-behavior: auto; }
+}
+
+/* Live badge on the election tab while voting is open */
+.nav-live-dot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  border: 1.5px solid #fff;
+  animation: navLivePulse 1.5s infinite;
+}
+
+@keyframes navLivePulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%      { transform: scale(1.4); opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-live-dot { animation: none; }
 }

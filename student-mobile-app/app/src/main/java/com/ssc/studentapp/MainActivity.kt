@@ -130,9 +130,9 @@ class MainActivity : AppCompatActivity() {
         webView.isScrollbarFadingEnabled = true
         webView.scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
         webView.isVerticalScrollBarEnabled = false
-        // Keep the WebView on a hardware layer so scrolling a blurred, translucent
-        // app bar over content doesn't force software re-rasterisation each frame.
-        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        // NOTE: do not call setLayerType(LAYER_TYPE_HARDWARE) on the WebView.
+        // WebView composites its own layers; forcing the whole view into a single
+        // hardware layer flattens that and breaks scrolling inside the page.
         // Render images progressively rather than blocking layout on them.
         settings.blockNetworkImage = false
         settings.loadsImagesAutomatically = true
