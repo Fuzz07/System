@@ -150,11 +150,23 @@ class CandidacyController extends Controller
 
             $newRole = (strcasecmp($position, 'SSC Treasurer') === 0) ? 'treasurer' : 'officer';
 
-            $winnerUser->update([
+            $promotion = [
                 'role' => $newRole,
                 'position' => $position,
                 'status' => 'active',
-            ]);
+            ];
+
+            // Carry the campaign photo they filed with onto the officer roster,
+            // otherwise a freshly elected officer shows up as a bare initial.
+            // The winning filing always wins: it is the most recent photo the
+            // student chose for this role, and re-electing someone should not
+            // leave last year's shot in place. Nothing else in the app writes
+            // profile_pic, so there is no curated portrait to protect.
+            if ($winner->photo_path) {
+                $promotion['profile_pic'] = $winner->photo_path;
+            }
+
+            $winnerUser->update($promotion);
 
             $winnersText[] = "- **{$position}**: {$winnerUser->fullname} (Winner, {$winner->votes_count} votes)";
         }

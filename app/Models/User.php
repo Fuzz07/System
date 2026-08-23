@@ -43,6 +43,48 @@ class User extends Authenticatable
         return strtoupper(substr($this->fullname, 0, 1));
     }
 
+    /**
+     * Resolved URL of the officer's photo, or null when they have none.
+     *
+     * Two shapes live in profile_pic. Officers added by hand carry a bare
+     * filename dropped into public/assets/img; officers promoted from an
+     * election carry the campaign photo they filed with, which is a Cloudinary
+     * URL or a path on the public disk. Both resolve here so the views do not
+     * have to know which kind they were handed.
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (blank($this->profile_pic)) {
+            return null;
+        }
+
+        $isStoredUpload = str_contains($this->profile_pic, '/');
+
+        return $isStoredUpload
+            ? \App\Helpers\SscHelper::getUploadUrl($this->profile_pic)
+            : asset('assets/img/' . $this->profile_pic);
+    }
+
+    /**
+     * The public SSC roster, in council order rather than alphabetically, so the
+     * President heads the list and department representatives sit below the
+     * executive posts. Shared by the mobile and desktop officers pages.
+     */
+    public function scopeActiveOfficers($query)
+    {
+        return $query->whereIn('role', ['officer', 'treasurer'])
+            ->where('status', 'active')
+            ->orderByRaw("CASE
+                WHEN position = 'SSC President' THEN 1
+                WHEN position = 'SSC Vice President' THEN 2
+                WHEN position = 'SSC Secretary' THEN 3
+                WHEN position = 'SSC Treasurer' THEN 4
+                WHEN position LIKE '%Representative%' THEN 5
+                ELSE 6
+            END")
+            ->orderBy('fullname');
+    }
+
     public function isAdmin(): bool { return $this->role === 'admin'; }
     public function isTreasurer(): bool { return $this->role === 'treasurer'; }
     public function isOfficer(): bool { return $this->role === 'officer'; }

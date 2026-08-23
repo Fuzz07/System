@@ -429,10 +429,7 @@ Route::group([], function () use ($baseDomain) {
         })->name('feedback.store');
 
         Route::get('/officers', function () {
-            $officers = \App\Models\User::whereIn('role', ['officer', 'treasurer'])
-                ->where('status', 'active')
-                ->orderBy('role')
-                ->get();
+            $officers = \App\Models\User::activeOfficers()->get();
             return view('mobile.student.officers', compact('officers'));
         })->name('officers');
 

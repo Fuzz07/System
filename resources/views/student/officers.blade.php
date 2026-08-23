@@ -10,8 +10,8 @@
         <div class="card h-100 transition hover-shadow border-0 shadow-sm text-center p-4" style="border-radius:20px;">
             <div class="mb-4 d-flex justify-content-center">
                 <div style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#officerModal{{ $officer->id }}" title="Click to view full profile">
-                    @if(!empty($officer->profile_pic))
-                    <img src="{{ asset('assets/img/' . $officer->profile_pic) }}" alt="{{ $officer->fullname }}" class="rounded-circle object-fit-cover shadow-sm hover-scale" style="width:100px;height:100px;border:4px solid var(--primary-100);transition:transform 0.2s;">
+                    @if($officer->photo_url)
+                    <img src="{{ $officer->photo_url }}" alt="{{ $officer->fullname }}" class="rounded-circle object-fit-cover shadow-sm hover-scale" style="width:100px;height:100px;border:4px solid var(--primary-100);transition:transform 0.2s;">
                     @else
                     <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm hover-scale" style="width:100px;height:100px;font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:white;border:4px solid var(--primary-100);transition:transform 0.2s;">{{ strtoupper(substr($officer->fullname, 0, 1)) }}</div>
                     @endif
@@ -45,8 +45,8 @@
                 </div>
                 <!-- Profile Avatar Overlap -->
                 <div class="text-center" style="margin-top:-60px; position:relative; z-index:5;">
-                    @if(!empty($officer->profile_pic))
-                    <img src="{{ asset('assets/img/' . $officer->profile_pic) }}" alt="{{ $officer->fullname }}" class="rounded-circle shadow" style="width:120px; height:120px; border:5px solid white; object-fit:cover;">
+                    @if($officer->photo_url)
+                    <img src="{{ $officer->photo_url }}" alt="{{ $officer->fullname }}" class="rounded-circle shadow" style="width:120px; height:120px; border:5px solid white; object-fit:cover;">
                     @else
                     <div class="rounded-circle d-flex align-items-center justify-content-center shadow mx-auto" style="width:120px; height:120px; font-size:3rem; font-weight:700; background:linear-gradient(135deg, #6366f1, #4f46e5); color:white; border:5px solid white;">{{ strtoupper(substr($officer->fullname, 0, 1)) }}</div>
                     @endif

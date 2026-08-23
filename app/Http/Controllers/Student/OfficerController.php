@@ -9,11 +9,7 @@ class OfficerController extends Controller
 {
     public function index()
     {
-        $officers = User::whereIn('role', ['treasurer', 'officer'])
-            ->where('status', 'active')
-            ->orderByRaw("FIELD(role, 'officer', 'treasurer')")
-            ->orderBy('fullname')
-            ->get();
+        $officers = User::activeOfficers()->get();
         return view('student.officers', compact('officers'));
     }
 }
