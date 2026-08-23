@@ -328,6 +328,44 @@ class PushNotificationService
     }
 
     /**
+     * Tell a student the council has answered their feedback.
+     *
+     * Goes to that one student only: feedback is a private thread, and the
+     * message body carries the reply itself so it can be read from the lock
+     * screen without opening the app.
+     */
+    public static function sendFeedbackReplyNotification($feedback)
+    {
+        try {
+            if (!$feedback->student_id || blank($feedback->reply)) {
+                return false;
+            }
+
+            $repliedBy = $feedback->replier->fullname ?? 'The SSC';
+
+            $title = 'The SSC replied to your feedback';
+            $body = \Illuminate\Support\Str::limit($feedback->reply, 160);
+
+            $data = [
+                'type' => 'feedback_reply',
+                'id' => $feedback->id,
+                'reply' => $feedback->reply,
+                'replied_by' => $repliedBy,
+                // Where the reply lives, for when the app learns to deep-link.
+                'url' => url('/m/student/feedback'),
+            ];
+
+            return self::sendToUsers([$feedback->student_id], $title, $body, $data);
+        } catch (\Exception $e) {
+            Log::error('Error sending feedback reply notification', [
+                'error' => $e->getMessage(),
+                'feedback_id' => $feedback->id ?? null,
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Send notification for enrollment payment status.
      */
     public static function sendEnrollmentNotification($userId, $title, $body, $data = [])
