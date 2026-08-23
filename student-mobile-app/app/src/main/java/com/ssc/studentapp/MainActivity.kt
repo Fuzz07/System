@@ -166,13 +166,11 @@ class MainActivity : AppCompatActivity() {
                     return true
                 }
 
-                if (url.contains("/m/student/announcements") || url.contains("/student/announcements")) {
-                    val intent = Intent(this@MainActivity, AnnouncementsActivity::class.java).apply {
-                        putExtra("portal_url", webView.url ?: portalUrl)
-                    }
-                    startActivity(intent)
-                    return true
-                }
+                // News/announcements deliberately stays inside the WebView. It used to
+                // open a native activity that had no bottom navigation, which stranded
+                // the student on a dead-end screen with only the back button. Keeping it
+                // in the WebView preserves the tab bar — including the Vote tab that
+                // appears while an election is running.
 
                 // Allow navigation within the app's own hosts (local dev + production Vercel)
                 val appHost = BuildConfig.APP_HOST

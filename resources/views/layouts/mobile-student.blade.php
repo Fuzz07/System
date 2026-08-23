@@ -176,6 +176,8 @@
             --chatbot-primary: #e34f26;
             --chatbot-primary-dark: #d13f19;
             --chatbot-gradient: linear-gradient(135deg, #f06529 0%, #d13f19 100%);
+            --chatbot-ring: rgba(227, 79, 38, 0.45);
+            --chatbot-glow: rgba(227, 79, 38, 0.32);
         }
     </style>
 

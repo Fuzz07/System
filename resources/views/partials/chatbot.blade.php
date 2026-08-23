@@ -72,6 +72,10 @@
     --chatbot-primary: #2563eb;
     --chatbot-primary-dark: #1d4ed8;
     --chatbot-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    /* Idle-animation tokens. Named distinctly from --chatbot-shadow below,
+       which already holds a full box-shadow value. */
+    --chatbot-ring: rgba(37, 99, 235, 0.45);
+    --chatbot-glow: rgba(37, 99, 235, 0.3);
     --chatbot-bg: #f8fafc;
     --chatbot-card-bg: #ffffff;
     --chatbot-text-main: #0f172a;
@@ -156,6 +160,70 @@
   .chatbot-toggle:hover {
     transform: scale(1.08) rotate(5deg);
     box-shadow: 0 12px 40px rgba(37, 99, 235, 0.45);
+  }
+
+  /* ── Idle attention animation ──
+     A slow float plus an expanding halo, so the assistant reads as available
+     without nagging. The icon gives a periodic wiggle on a long delay.
+     Everything is transform/opacity only, so it stays on the compositor. */
+  @keyframes chatbotFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+
+  /* Expanding ring drawn with box-shadow rather than a pseudo-element: the
+     float animation makes the button its own stacking context, which would
+     bury a z-index:-1 pseudo-element behind its own background. */
+  @keyframes chatbotHalo {
+    0%   { box-shadow: 0 8px 32px var(--chatbot-glow), 0 0 0 0 var(--chatbot-ring); }
+    70%  { box-shadow: 0 8px 32px var(--chatbot-glow), 0 0 0 16px transparent; }
+    100% { box-shadow: 0 8px 32px var(--chatbot-glow), 0 0 0 0 transparent; }
+  }
+
+  @keyframes chatbotWiggle {
+    0%, 88%, 100%   { transform: rotate(0deg); }
+    91%             { transform: rotate(-14deg); }
+    94%             { transform: rotate(12deg); }
+    97%             { transform: rotate(-6deg); }
+  }
+
+  /* The float lives on the WRAPPER, not the button: an animation on the
+     button's own transform would outrank the :hover scale below and the
+     button would stop responding to hover. */
+  .chatbot-toggle-wrapper {
+    animation: chatbotFloat 3.2s ease-in-out infinite;
+  }
+
+  .chatbot-toggle {
+    animation: chatbotHalo 2.6s ease-out infinite;
+  }
+
+  .chatbot-toggle > i {
+    display: block;
+    animation: chatbotWiggle 6s ease-in-out infinite;
+  }
+
+  /* Drop the idle motion on interaction and while the panel is open, so it
+     never competes with what the user is actually doing. `animation: none`
+     rather than a pause, so the :hover box-shadow can take effect. */
+  .chatbot-toggle-wrapper:hover,
+  .chatbot-container.chatbot-open .chatbot-toggle-wrapper {
+    animation: none;
+  }
+
+  .chatbot-toggle:hover,
+  .chatbot-toggle:hover > i,
+  .chatbot-container.chatbot-open .chatbot-toggle,
+  .chatbot-container.chatbot-open .chatbot-toggle > i {
+    animation: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chatbot-toggle-wrapper,
+    .chatbot-toggle,
+    .chatbot-toggle > i {
+      animation: none;
+    }
   }
 
   /* Chat Window */
