@@ -7,7 +7,16 @@
             <h1>Eligible Students</h1>
             <p>Manage the MS account whitelist — only listed emails may register</p>
         </div>
-
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-brand d-inline-flex align-items-center gap-2 px-3 py-2"
+                data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="bi bi-upload"></i> Import CSV
+            </button>
+            <button type="button" class="btn btn-brand d-inline-flex align-items-center gap-2 px-4 py-2 shadow-sm"
+                data-bs-toggle="modal" data-bs-target="#addModal">
+                <i class="bi bi-plus-circle"></i> Add Email
+            </button>
+        </div>
     </div>
 
     {{-- Stats --}}
@@ -51,7 +60,8 @@
                     </div>
                     <div>
                         <div style="font-size:1.7rem;font-weight:800;color:#1e293b;line-height:1;">
-                            {{ $total - $registered }}</div>
+                            {{ $total - $registered }}
+                        </div>
                         <div style="font-size:.8rem;color:#64748b;font-weight:500;">Not Yet Registered</div>
                     </div>
                 </div>
@@ -68,7 +78,8 @@
                 <strong style="color:#1e3a5f;font-size:.88rem;">Whitelist is ACTIVE</strong>
                 <div style="font-size:.82rem;color:#475569;margin-top:2px;">Only MS accounts in this list can complete student
                     registration. To disable this, set <code>ENFORCE_ELIGIBILITY_WHITELIST=false</code> in your
-                    <code>.env</code>.</div>
+                    <code>.env</code>.
+                </div>
             </div>
         </div>
     @else
@@ -103,16 +114,6 @@
                             class="bi bi-search"></i></button>
                     @if($search || $department)<a href="{{ route('admin.eligible_students.index') }}"
                     class="btn btn-outline-secondary">Reset</a>@endif
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary d-flex align-items-center gap-2" data-bs-toggle="modal"
-                        data-bs-target="#importModal"
-                        style="border-radius:var(--radius-sm);font-weight:600;font-size:.85rem;">
-                        <i class="bi bi-upload"></i> Import CSV
-                    </button>
-                    <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addModal">
-                        <i class="bi bi-plus-circle"></i> Add Email
-                    </button>
                 </div>
             </form>
         </div>
@@ -271,8 +272,8 @@
                             <div style="font-size:.82rem;font-weight:700;color:#1e293b;margin-bottom:8px;"><i
                                     class="bi bi-info-circle text-primary me-1"></i>Expected CSV Format</div>
                             <code style="font-size:.78rem;color:#475569;display:block;white-space:pre-line;">email,student_name,department,year_level
-    juan.dela.cruz@mcclawis.edu.ph,Juan Dela Cruz,BSIT,3rd Year
-    maria.santos@mcclawis.edu.ph,Maria Santos,BSED,2nd Year</code>
+        juan.dela.cruz@mcclawis.edu.ph,Juan Dela Cruz,BSIT,3rd Year
+        maria.santos@mcclawis.edu.ph,Maria Santos,BSED,2nd Year</code>
                             <div class="mt-2" style="font-size:.75rem;color:#64748b;">
                                 • Header row is automatically detected and skipped<br>
                                 • Only <strong>@mcclawis.edu.ph</strong> emails are accepted<br>
