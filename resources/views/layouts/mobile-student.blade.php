@@ -24,6 +24,14 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/images/ssc_logo.png') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     <link rel="apple-touch-icon" href="{{ asset('assets/img/icon-192.png') }}">
+    {{-- Fonts were pulled in with @import at the top of mobile-student.css, which
+         blocks rendering and can't start until the stylesheet itself has downloaded.
+         Preconnecting and linking them here lets both requests run in parallel. --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="{{ asset('assets/css/mobile-student.css') }}?v={{ @filemtime(public_path('assets/css/mobile-student.css')) ?: 1 }}" rel="stylesheet">
     @stack('head')

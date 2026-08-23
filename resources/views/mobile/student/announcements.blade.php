@@ -24,7 +24,7 @@
         {{-- Announcement Card --}}
         <div class="ann-card ripple" onclick="openAnn({{ $a->id }})" style="margin: 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.02); overflow: hidden; background: #fff;">
             @if($a->image_path)
-            <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" style="width: 100%; height: 160px; object-fit: cover; display: block;">
+            <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" loading="lazy" decoding="async" style="width: 100%; height: 160px; object-fit: cover; display: block;">
             @endif
             <div style="padding: 20px;">
                 <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">
@@ -84,7 +84,7 @@
 
                 <div class="ann-sheet-body">
                     @if($a->image_path)
-                        <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt=""
+                        <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" loading="lazy" decoding="async"
                             class="ann-sheet-hero" style="margin-top:18px;">
                     @endif
 

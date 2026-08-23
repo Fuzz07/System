@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ─────────────────────────────────────────
    SSC Student Mobile App — Stylesheet
@@ -31,7 +30,10 @@
   --header-height: 60px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Scoped to the properties actually animated — "all" makes the engine
+     watch every property on every state change, which shows up as jank
+     on low-end phones during scroll and tab changes. */
+  --transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
   --radius: 16px;
   --radius-sm: 10px;
   --radius-lg: 24px;
@@ -2071,4 +2073,61 @@ body {
   padding: 14px;
   color: var(--slate-400);
   font-size: 0.82rem;
+}
+
+/* ══════════════════════════════════════════════
+   Scrolling & paint smoothness
+   ══════════════════════════════════════════════ */
+
+/* Keep scroll chaining inside the page instead of bubbling to the WebView,
+   which is what causes the whole app to rubber-band mid-scroll. */
+.page-content,
+.ann-sheet-body,
+.recent-list {
+  overscroll-behavior: contain;
+}
+
+/* The app bar and tab bar are translucent + blurred and sit above scrolling
+   content. Promoting them keeps the blur from being re-rasterised each frame. */
+.app-bar {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* The tab bar is centred with translateX(-50%); the promotion hint has to be
+   appended to that transform, not replace it, or the bar jumps off-centre. */
+.bottom-nav {
+  will-change: transform;
+  transform: translateX(-50%) translateZ(0);
+}
+
+/* Reserve space for feed images so text doesn't reflow as they decode —
+   the main cause of content jumping while scrolling a list. */
+.announcement-image,
+.ann-card img,
+.ann-sheet-hero {
+  background: var(--slate-100);
+  content-visibility: auto;
+}
+
+/* Give the tab bar a snappier press response than the shared token. */
+.nav-tab:active .nav-tab-icon {
+  transform: scale(0.9);
+  transition: transform 0.08s ease;
+}
+
+/* Content settles in on load instead of snapping — each tab is a full page
+   load in the WebView, so this smooths the seam between navigations. */
+@keyframes pageFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.page-content {
+  animation: pageFade 0.22s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-content { animation: none; }
+  html { scroll-behavior: auto; }
 }

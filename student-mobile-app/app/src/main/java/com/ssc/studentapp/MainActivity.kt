@@ -123,6 +123,20 @@ class MainActivity : AppCompatActivity() {
         // Set Cache Mode
         settings.cacheMode = WebSettings.LOAD_DEFAULT
 
+        // ── Scroll/paint smoothness ──
+        // The page draws its own overscroll cues, so suppress the WebView's glow
+        // and let SwipeRefresh own the pull gesture instead of fighting it.
+        webView.overScrollMode = View.OVER_SCROLL_NEVER
+        webView.isScrollbarFadingEnabled = true
+        webView.scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
+        webView.isVerticalScrollBarEnabled = false
+        // Keep the WebView on a hardware layer so scrolling a blurred, translucent
+        // app bar over content doesn't force software re-rasterisation each frame.
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        // Render images progressively rather than blocking layout on them.
+        settings.blockNetworkImage = false
+        settings.loadsImagesAutomatically = true
+
         // Set Cookie Policy
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)

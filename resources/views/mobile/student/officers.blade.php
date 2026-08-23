@@ -20,7 +20,7 @@
 <div class="officer-card ripple" onclick="openOfficerModal({{ $officer->id }})" style="cursor:pointer;">
     <div class="officer-avatar">
         @if(!empty($officer->profile_pic))
-            <img src="{{ asset('assets/img/' . $officer->profile_pic) }}" alt="{{ $officer->fullname }}">
+            <img src="{{ asset('assets/img/' . $officer->profile_pic) }}" alt="{{ $officer->fullname }}" loading="lazy" decoding="async">
         @else
             {{ strtoupper(substr($officer->fullname, 0, 1)) }}
         @endif
@@ -49,7 +49,7 @@
     </button>
     <div class="officer-modal-avatar-wrapper">
         @if(!empty($officer->profile_pic))
-            <img src="{{ asset('assets/img/' . $officer->profile_pic) }}" alt="{{ $officer->fullname }}">
+            <img src="{{ asset('assets/img/' . $officer->profile_pic) }}" alt="{{ $officer->fullname }}" loading="lazy" decoding="async">
         @else
             <div class="officer-modal-initial">{{ strtoupper(substr($officer->fullname, 0, 1)) }}</div>
         @endif
