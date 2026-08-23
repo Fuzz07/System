@@ -16,30 +16,58 @@
         <h1>Election Results Dashboard</h1>
         <p>Official tally of student votes cast for Supreme Student Council candidacies</p>
     </div>
-    @if($activeSy && $activeSy->results_announced)
-        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-4 py-2" style="font-size:0.9rem; border-radius:12px;">
-            <i class="bi bi-shield-check-fill me-1"></i> Final Results Announced
-        </span>
-    @else
-        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-4 py-2" style="font-size:0.9rem; border-radius:12px;">
-            <i class="bi bi-clock me-1"></i> Live Tally Active
-        </span>
-    @endif
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        {{-- School-year archive. Only years that actually ran an election are
+             listed, so every option leads somewhere. --}}
+        @if($archivedYears->count() > 1)
+            <form method="GET" action="{{ url()->current() }}" class="m-0">
+                <select name="sy" class="form-select form-select-sm fw-bold" onchange="this.form.submit()"
+                    style="border-radius:12px; min-width:190px; padding:0.55rem 2rem 0.55rem 0.9rem;"
+                    aria-label="View results for a school year">
+                    @foreach($archivedYears as $year)
+                        <option value="{{ $year->label }}" @selected($selectedSy && $selectedSy->label === $year->label)>
+                            SY {{ $year->label }}@if($activeSy && $year->label === $activeSy->label) (Current)@endif
+                        </option>
+                    @endforeach
+                </select>
+                <noscript><button type="submit" class="btn btn-sm btn-primary mt-1">View</button></noscript>
+            </form>
+        @endif
+
+        @if($isArchive)
+            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-4 py-2" style="font-size:0.9rem; border-radius:12px;">
+                <i class="bi bi-archive-fill me-1"></i> Archived Results
+            </span>
+        @elseif($selectedSy && $selectedSy->results_announced)
+            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-4 py-2" style="font-size:0.9rem; border-radius:12px;">
+                <i class="bi bi-shield-check-fill me-1"></i> Final Results Announced
+            </span>
+        @elseif($selectedSy)
+            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-4 py-2" style="font-size:0.9rem; border-radius:12px;">
+                <i class="bi bi-clock me-1"></i> Live Tally Active
+            </span>
+        @endif
+    </div>
 </div>
 
 <div class="row justify-content-center">
     <div class="col-md-10">
-        @if(!$activeSy)
+        @if(!$selectedSy)
             <div class="alert alert-warning border-0 shadow-sm rounded-4">
-                <i class="bi bi-exclamation-triangle-fill"></i> No active school year set. Election data is unavailable.
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                No election results on record yet. They appear here once a dean approves candidacies and voting begins.
             </div>
         @else
             <div class="mb-4 p-4 bg-white border-0 shadow-sm rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
                     <div style="font-size: 2rem;">📊</div>
                     <div>
-                        <h5 class="mb-1 fw-bold text-dark">Vote Distribution (SY {{ $activeSy->label }})</h5>
-                        <p class="text-muted mb-0 small">Real-time vote counts and visualization for all approved positions.</p>
+                        <h5 class="mb-1 fw-bold text-dark">Vote Distribution (SY {{ $selectedSy->label }})</h5>
+                        <p class="text-muted mb-0 small">
+                            {{ $isArchive
+                                ? 'Final tally kept on record for this school year.'
+                                : 'Real-time vote counts and visualization for all approved positions.' }}
+                        </p>
                     </div>
                 </div>
                 

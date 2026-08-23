@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
+use App\Services\ElectionResultsService;
 use App\Models\Candidacy;
 use App\Models\SchoolYear;
 use App\Models\User;
@@ -194,34 +195,8 @@ class CandidacyController extends Controller
         return redirect()->route('admin.candidacies')->with('success', "Candidacy application for {$name} deleted successfully.");
     }
 
-    public function results()
+    public function results(Request $request)
     {
-        $activeSy = SchoolYear::where('is_active', 1)->first();
-
-        if (!$activeSy) {
-            return view('shared.election-results', [
-                'activeSy' => null,
-                'candidatesByPosition' => [],
-            ]);
-        }
-
-        $candidates = Candidacy::with('user')
-            ->withCount('votes')
-            ->where('school_year', $activeSy->label)
-            ->where('status', 'approved')
-            ->get();
-
-        $candidatesByPosition = [];
-        foreach ($candidates as $c) {
-            $candidatesByPosition[$c->position][] = $c;
-        }
-
-        foreach ($candidatesByPosition as $pos => &$cands) {
-            usort($cands, function ($a, $b) {
-                return $b->votes_count <=> $a->votes_count;
-            });
-        }
-
-        return view('shared.election-results', compact('activeSy', 'candidatesByPosition'));
+        return view('shared.election-results', ElectionResultsService::forYear($request->query('sy')));
     }
 }

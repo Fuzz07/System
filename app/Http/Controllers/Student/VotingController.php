@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
+use App\Services\ElectionResultsService;
 use App\Models\Candidacy;
 use App\Models\SchoolYear;
 use App\Models\StudentBallot;
@@ -251,35 +252,9 @@ class VotingController extends Controller
         return redirect()->route('student.voting');
     }
 
-    public function results()
+    public function results(Request $request)
     {
-        $activeSy = SchoolYear::where('is_active', 1)->first();
-
-        if (!$activeSy) {
-            return view('shared.election-results', [
-                'activeSy' => null,
-                'candidatesByPosition' => [],
-            ]);
-        }
-
-        $candidates = Candidacy::with('user')
-            ->withCount('votes')
-            ->where('school_year', $activeSy->label)
-            ->where('status', 'approved')
-            ->get();
-
-        $candidatesByPosition = [];
-        foreach ($candidates as $c) {
-            $candidatesByPosition[$c->position][] = $c;
-        }
-
-        foreach ($candidatesByPosition as $pos => &$cands) {
-            usort($cands, function ($a, $b) {
-                return $b->votes_count <=> $a->votes_count;
-            });
-        }
-
-        return view('shared.election-results', compact('activeSy', 'candidatesByPosition'));
+        return view('shared.election-results', ElectionResultsService::forYear($request->query('sy')));
     }
 
     public function indexMobile()
@@ -401,34 +376,8 @@ class VotingController extends Controller
         return redirect()->route('mobile.student.voting')->with('success', "Your vote for {$candidacy->position} has been securely cast!");
     }
 
-    public function resultsMobile()
+    public function resultsMobile(Request $request)
     {
-        $activeSy = SchoolYear::where('is_active', 1)->first();
-
-        if (!$activeSy) {
-            return view('mobile.student.election-results', [
-                'activeSy' => null,
-                'candidatesByPosition' => [],
-            ]);
-        }
-
-        $candidates = Candidacy::with('user')
-            ->withCount('votes')
-            ->where('school_year', $activeSy->label)
-            ->where('status', 'approved')
-            ->get();
-
-        $candidatesByPosition = [];
-        foreach ($candidates as $c) {
-            $candidatesByPosition[$c->position][] = $c;
-        }
-
-        foreach ($candidatesByPosition as $pos => &$cands) {
-            usort($cands, function ($a, $b) {
-                return $b->votes_count <=> $a->votes_count;
-            });
-        }
-
-        return view('mobile.student.election-results', compact('activeSy', 'candidatesByPosition'));
+        return view('mobile.student.election-results', ElectionResultsService::forYear($request->query('sy')));
     }
 }

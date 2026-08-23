@@ -14,16 +14,16 @@
     @php
         $__activeSyLayout = \App\Models\SchoolYear::where('is_active', 1)->first();
         $__votingOpen = $__activeSyLayout && $__activeSyLayout->voting_open;
-        $__hasApprovedCandidates = $__activeSyLayout
-            ? \App\Models\Candidacy::where('school_year', $__activeSyLayout->label)->where('status', 'approved')->exists()
-            : false;
-        // The SSC Vote tab is the only route into the election screens, so it shows
-        // whenever there is an election to reach: voting is open right now, or an
-        // election has been held for the active year and students can still look at
-        // the status and results. Gating it on approved candidates alone hid the tab
-        // during the window where an admin had opened voting but no candidacy was
-        // approved under this year's label yet — students had no way to the ballot.
-        $__showVoteTab = $__votingOpen || $__hasApprovedCandidates;
+        // Has any election ever been held? That keeps the tab available after the
+        // school year rolls over, so the results archive stays reachable — it is
+        // the only route into the election screens on mobile.
+        $__hasAnyElection = \App\Models\Candidacy::where('status', 'approved')->exists();
+        // The tab shows whenever there is an election to reach: voting is open right
+        // now, or results exist for some year. Gating it on the active year's
+        // approved candidates alone hid it during the window where an admin had
+        // opened voting but nothing was approved under this year's label yet, and
+        // again for good once the year turned over.
+        $__showVoteTab = $__votingOpen || $__hasAnyElection;
         $__voteLive = $__votingOpen;
     @endphp
     <title>{{ $pageTitle ?? 'SSC' }} — Student App</title>

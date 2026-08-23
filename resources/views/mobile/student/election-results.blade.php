@@ -2,14 +2,41 @@
 
 @section('content')
 <div style="padding: 12px 16px;">
-    @if(!$activeSy)
-        <div class="m-alert m-alert-danger">
-            <i class="bi bi-exclamation-triangle-fill"></i> No active school year set. Election results are unavailable.
+    {{-- School-year archive. Only years that actually ran an election are listed,
+         so every option leads somewhere. Hidden when there is just the one. --}}
+    @if($archivedYears->count() > 1)
+        <form method="GET" action="{{ url()->current() }}" style="margin-bottom: 14px;">
+            <label for="syPicker" style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:var(--slate-500); margin-bottom:6px;">
+                <i class="bi bi-archive"></i> School Year
+            </label>
+            <select name="sy" id="syPicker" onchange="this.form.submit()"
+                style="width:100%; border:1px solid var(--slate-200); border-radius:12px; padding:11px 12px; font-size:0.85rem; font-weight:700; font-family:inherit; background:#fff; color:var(--slate-800);">
+                @foreach($archivedYears as $year)
+                    <option value="{{ $year->label }}" @selected($selectedSy && $selectedSy->label === $year->label)>
+                        SY {{ $year->label }}@if($activeSy && $year->label === $activeSy->label) (Current)@endif
+                    </option>
+                @endforeach
+            </select>
+            <noscript>
+                <button type="submit" style="width:100%; margin-top:8px; padding:10px; background:var(--primary); color:#fff; border:none; border-radius:10px; font-weight:700;">View</button>
+            </noscript>
+        </form>
+    @endif
+
+    @if(!$selectedSy)
+        <div class="m-alert m-alert-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            No election results on record yet. They appear here once a dean approves candidacies and voting begins.
         </div>
     @else
-        <div style="background: rgba(59, 130, 246, 0.08); border-radius: 14px; padding: 14px; margin-bottom: 18px; font-size: 0.8rem; color: var(--primary-dark); line-height: 1.45;">
-            <strong>Election Results — SY {{ $activeSy->label }}</strong><br>
-            Approved candidates are ranked by votes cast. Your vote is included in the totals.
+        <div style="background: {{ $isArchive ? 'rgba(100, 116, 139, 0.1)' : 'rgba(59, 130, 246, 0.08)' }}; border-radius: 14px; padding: 14px; margin-bottom: 18px; font-size: 0.8rem; color: {{ $isArchive ? 'var(--slate-700)' : 'var(--primary-dark)' }}; line-height: 1.45;">
+            <strong>
+                @if($isArchive)<i class="bi bi-archive-fill"></i> Archived @endif
+                Election Results — SY {{ $selectedSy->label }}
+            </strong><br>
+            {{ $isArchive
+                ? 'Final tally kept on record for this school year.'
+                : 'Approved candidates are ranked by votes cast. Your vote is included in the totals.' }}
         </div>
 
         @if(empty($candidatesByPosition))
