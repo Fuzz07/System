@@ -17,7 +17,7 @@ class User extends Authenticatable
         'first_name', 'middle_name', 'last_name', 'age', 'year_level',
         'fullname', 'email', 'password', 'role', 'department',
         'student_id', 'profile_pic', 'status', 'position', 'party',
-        'admin_device_token', 'remember_token',
+        'admin_device_token', 'remember_token', 'notifications_seen_at',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -27,6 +27,7 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'created_at' => 'datetime',
+            'notifications_seen_at' => 'datetime',
         ];
     }
 

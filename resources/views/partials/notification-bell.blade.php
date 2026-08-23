@@ -1,9 +1,14 @@
 {{-- ══════════════════════════════════════
 Notification Bell — Shared Partial
 Sits beside the profile avatar in the mobile app bar and the desktop topbar.
-Reads the student's database notifications (enrolment, elections, feedback
-replies); the FCM push is the separate, real-time channel.
-Usage: @include('partials.notification-bell')
+
+Shows two things merged into one feed: the student's own notifications
+(enrolment, elections, feedback replies) and every council announcement. The
+FCM push is the separate, real-time channel; this is the inbox.
+
+Pass a surface so announcement links point at the right shell:
+  @include('partials.notification-bell')                        {{-- desktop --}}
+  @include('partials.notification-bell', ['surface' => 'mobile'])
 ═══════════════════════════════════════ --}}
 
 @if(Auth::check() && Auth::user()->isStudent())
@@ -57,6 +62,76 @@ Usage: @include('partials.notification-bell')
 
     .ssc-bell-badge[hidden] {
         display: none;
+    }
+
+    /* Unread state: the bell fills in and gets a slow halo, so there is a
+       visible signal even at a glance where the count is too small to read. */
+    .ssc-bell-btn.has-unread {
+        color: #e34f26;
+        background: rgba(227, 79, 38, 0.1);
+    }
+
+    .ssc-bell-btn.has-unread::after {
+        content: '';
+        position: absolute;
+        inset: -3px;
+        border-radius: 14px;
+        border: 2px solid rgba(227, 79, 38, 0.5);
+        animation: sscBellHalo 2s ease-out infinite;
+        pointer-events: none;
+    }
+
+    @keyframes sscBellHalo {
+        0%   { transform: scale(0.9); opacity: 0.9; }
+        70%  { transform: scale(1.18); opacity: 0; }
+        100% { transform: scale(1.18); opacity: 0; }
+    }
+
+    .ssc-bell-btn.has-unread i {
+        animation: sscBellSwing 2.6s ease-in-out infinite;
+        transform-origin: top center;
+    }
+
+    @keyframes sscBellSwing {
+        0%, 70%, 100% { transform: rotate(0deg); }
+        75%           { transform: rotate(11deg); }
+        80%           { transform: rotate(-9deg); }
+        85%           { transform: rotate(6deg); }
+        90%           { transform: rotate(-4deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ssc-bell-btn.has-unread::after,
+        .ssc-bell-btn.has-unread i { animation: none; }
+    }
+
+    /* Announcements carry a headline; personal notes are a single line. */
+    .ssc-bell-title {
+        font-size: 0.83rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.35;
+        margin-bottom: 3px;
+    }
+
+    .ssc-bell-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.6rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 2px 7px;
+        border-radius: 999px;
+        margin-bottom: 6px;
+        background: rgba(227, 79, 38, 0.1);
+        color: #c2410c;
+    }
+
+    .ssc-bell-tag.is-personal {
+        background: rgba(59, 130, 246, 0.12);
+        color: #1d4ed8;
     }
 
     .ssc-bell-panel {
@@ -143,7 +218,7 @@ Usage: @include('partials.notification-bell')
 </style>
 @endonce
 
-<div class="ssc-bell-wrap" id="sscBellWrap">
+<div class="ssc-bell-wrap" id="sscBellWrap" data-surface="{{ ($surface ?? 'desktop') }}">
     <button type="button" class="ssc-bell-btn" id="sscBellBtn"
         aria-label="Notifications" aria-haspopup="true" aria-expanded="false" aria-controls="sscBellPanel">
         <i class="bi bi-bell"></i>
@@ -172,18 +247,24 @@ Usage: @include('partials.notification-bell')
         var list = document.getElementById('sscBellList');
         if (!wrap || !btn || !panel) return;
 
-        var URL_LIST = @json(route('student.notifications.index'));
+        var SURFACE = wrap.dataset.surface || 'desktop';
+        var URL_LIST = @json(route('student.notifications.index')) + '?surface=' + encodeURIComponent(SURFACE);
         var URL_COUNT = @json(route('student.notifications.unread'));
         var URL_READ = @json(route('student.notifications.read'));
         var csrfMeta = document.querySelector('meta[name="csrf-token"]');
         var CSRF = csrfMeta ? csrfMeta.getAttribute('content') : '';
 
         function setBadge(n) {
+            var icon = btn.querySelector('i');
             if (n > 0) {
                 badge.textContent = n > 99 ? '99+' : n;
                 badge.hidden = false;
+                btn.classList.add('has-unread');
+                if (icon) icon.className = 'bi bi-bell-fill';
             } else {
                 badge.hidden = true;
+                btn.classList.remove('has-unread');
+                if (icon) icon.className = 'bi bi-bell';
             }
         }
 
@@ -208,8 +289,18 @@ Usage: @include('partials.notification-bell')
             }
             list.innerHTML = items.map(function (n) {
                 var cls = 'ssc-bell-item' + (n.unread ? ' is-unread' : '');
-                var inner = '<div class="ssc-bell-msg">' + escapeHtml(n.message) + '</div>'
+                var isAnn = n.kind === 'announcement';
+
+                var inner = '<span class="ssc-bell-tag' + (isAnn ? '' : ' is-personal') + '">'
+                    + '<i class="bi ' + (isAnn ? 'bi-megaphone-fill' : 'bi-person-check-fill') + '"></i>'
+                    + (isAnn ? 'Announcement' : 'For you') + '</span>';
+
+                if (n.title) {
+                    inner += '<div class="ssc-bell-title">' + escapeHtml(n.title) + '</div>';
+                }
+                inner += '<div class="ssc-bell-msg">' + escapeHtml(n.message) + '</div>'
                     + '<div class="ssc-bell-ago">' + escapeHtml(n.ago) + '</div>';
+
                 return n.url
                     ? '<a class="' + cls + '" href="' + escapeHtml(n.url) + '">' + inner + '</a>'
                     : '<div class="' + cls + '">' + inner + '</div>';
