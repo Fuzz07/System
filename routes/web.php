@@ -336,6 +336,7 @@ Route::group([], function () use ($baseDomain) {
         
         Route::get('/notifications', [Student\NotificationController::class, 'index'])->name('notifications.index');
         Route::get('/notifications/unread-count', [Student\NotificationController::class, 'unreadCount'])->name('notifications.unread');
+        Route::post('/notifications/read', [Student\NotificationController::class, 'markAllRead'])->name('notifications.read');
         
         Route::post('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'store'])->name('api.device_token');
         Route::delete('/api/device-token', [App\Http\Controllers\DeviceTokenController::class, 'destroy'])->name('api.device_token.destroy');

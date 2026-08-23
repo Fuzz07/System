@@ -65,6 +65,7 @@
                 @endif
             </div>
             @yield('app-bar-right')
+            @include('partials.notification-bell')
             <button type="button" class="app-bar-avatar" id="accountTrigger"
                 aria-label="Account menu" aria-haspopup="dialog" aria-expanded="false" aria-controls="accountSheet"
                 style="border:none; cursor:pointer;">

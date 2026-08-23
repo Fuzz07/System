@@ -60,7 +60,8 @@
                     <div class="topbar-sub">{{ $pageSubtitle ?? '' }}</div>
                 </div>
             </div>
-            <div class="topbar-right">
+            <div class="topbar-right d-flex align-items-center gap-3">
+                @include('partials.notification-bell')
                 @yield('topbar-right')
             </div>
         </header>

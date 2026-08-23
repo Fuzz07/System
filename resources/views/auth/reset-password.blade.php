@@ -14,6 +14,8 @@
 </head>
 <body>
 <div class="login-page">
+    @include('partials.auth-backdrop')
+
     <div class="login-card" style="max-width: 520px;">
         <div class="login-logo" style="background: none; box-shadow: none; width: 100px; height: 100px;">
             <img src="{{ asset('assets/images/ssc_logo.png') }}" alt="SSC Logo" style="width: 100%; height: 100%; object-fit: contain;">

@@ -22,7 +22,16 @@ class Feedback extends Model
             // an existing reply is a new message to that student and should ping
             // them again, while saving the row for any other reason must not.
             if ($feedback->wasChanged('reply') && filled($feedback->reply)) {
+                // Two channels, two jobs: the push reaches the phone's lock
+                // screen, the database record is the copy the notification bell
+                // reads, so a reply is still there to find later.
                 \App\Services\PushNotificationService::sendFeedbackReplyNotification($feedback);
+
+                try {
+                    $feedback->student?->notify(new \App\Notifications\FeedbackRepliedNotification($feedback));
+                } catch (\Throwable $e) {
+                    // Fail silently; the reply itself is already saved.
+                }
             }
         });
     }
