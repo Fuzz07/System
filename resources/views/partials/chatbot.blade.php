@@ -853,19 +853,19 @@
 
     // --- Restore Open/Close State Across Refresh & Navigation ---
     const storedState = sessionStorage.getItem('chatbotWindowState');
-    if (storedState === 'open' && !navigator.userAgent.includes('SSCStudentApp')) {
+    if (storedState === 'open') {
       openChatbot(false);
     }
 
     // --- Toggle chatbot window ---
+    // The Android app used to divert this tap to a native chat screen. That was a
+    // second implementation of the same assistant and had already drifted from
+    // this one: no shortcut chips, no links inside answers, plain-text replies.
+    // The app now opens this widget in its WebView like every other client, so
+    // there is a single chatbot to build, style and fix.
     toggleBtn.addEventListener('click', (e) => {
       if (hasMoved) {
         hasMoved = false; // Reset for next click
-        return;
-      }
-      if (navigator.userAgent.includes('SSCStudentApp')) {
-        e.preventDefault();
-        window.location.href = '/student/chatbot-native';
         return;
       }
       const isActive = chatWindow.classList.contains('active');
@@ -902,10 +902,9 @@
 
     // --- Message Handling Logic ---
 
-    // Where to send a student who wants a human. Swap this for the page's
-    // https://m.me/<page-username> link if you have it: that opens a Messenger
-    // thread straight away instead of the page itself.
-    const SSC_MESSENGER_URL = 'https://web.facebook.com/photo/?fbid=1287391326723459&set=a.467203248742275&__tn__=%3C';
+    // Opens a Messenger thread with the SSC page directly, rather than the page
+    // itself: m.me hands straight off to the Messenger app when it is installed.
+    const SSC_MESSENGER_URL = 'https://m.me/madridejoscollege';
     // After this many questions the assistant stops guessing and points the
     // student at a real officer. Offered once per chat session, not every turn.
     const MESSENGER_AFTER_MESSAGES = 3;

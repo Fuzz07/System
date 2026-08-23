@@ -38,11 +38,9 @@ class ChatbotActivity : AppCompatActivity() {
     private val messagesList = mutableListOf<ChatMessage>()
     private var portalUrl = BuildConfig.PORTAL_URL
 
-    // Where to send a student who wants a human. Swap this for the page's
-    // https://m.me/<page-username> link if you have it: that opens a Messenger
-    // thread straight away instead of the page itself.
-    private val SSC_MESSENGER_URL =
-        "https://web.facebook.com/photo/?fbid=1287391326723459&set=a.467203248742275&__tn__=%3C"
+    // Opens a Messenger thread with the SSC page directly, rather than the page
+    // itself: m.me hands straight off to the Messenger app when it is installed.
+    private val SSC_MESSENGER_URL = "https://m.me/madridejoscollege"
     // After this many questions the assistant stops guessing and points the
     // student at a real officer. Offered once per chat session, not every turn.
     private val MESSENGER_AFTER_MESSAGES = 3
