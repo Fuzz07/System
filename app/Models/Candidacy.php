@@ -16,9 +16,21 @@ class Candidacy extends Model
         'department',
         'position',
         'platform',
+        'photo_path',
         'status',
         'school_year',
     ];
+
+    /**
+     * Resolved URL of the candidate's campaign photo, or null when they did not
+     * upload one. Call sites fall back to the user's initials in that case.
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        return $this->photo_path
+            ? \App\Helpers\SscHelper::getUploadUrl($this->photo_path)
+            : null;
+    }
 
     public function user()
     {

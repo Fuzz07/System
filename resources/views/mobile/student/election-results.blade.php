@@ -42,7 +42,11 @@
                                 <div style="border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
                                     <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:10px;">
                                         <div style="display:flex; align-items:center; gap:10px;">
-                                            <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center" style="width:38px; height:38px; border-radius:50%; font-size:0.95rem;">{{ $cand->user->avatar }}</div>
+                                            <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center" style="width:38px; height:38px; border-radius:50%; font-size:0.95rem;">@if($cand->photo_url)
+                                                <img src="{{ $cand->photo_url }}" alt="{{ $cand->user->fullname }}" style="width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;">
+                                            @else
+                                                {{ $cand->user->avatar }}
+                                            @endif</div>
                                             <div>
                                                 <div style="font-size:0.84rem; font-weight:700; color:#111827;">{{ $cand->user->fullname }}</div>
                                                 <div style="font-size:0.7rem; color:#6b7280;">{{ $cand->department }}</div>

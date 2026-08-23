@@ -17,7 +17,12 @@
             {{-- Status Screen --}}
             <div class="m-card elevated" style="padding: 20px 16px;">
                 <div style="text-align: center; margin-bottom: 20px;">
-                    <div style="font-size: 2.5rem; margin-bottom: 8px;">🗳️</div>
+                    @if($candidacy->photo_url)
+                        <img src="{{ $candidacy->photo_url }}" alt="{{ Auth::user()->fullname }}"
+                            style="width: 76px; height: 76px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px; display: block; border: 3px solid #fff; box-shadow: var(--shadow-md);">
+                    @else
+                        <div style="font-size: 2.5rem; margin-bottom: 8px;">🗳️</div>
+                    @endif
                     <h2 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">Filing Submitted</h2>
                     <p style="font-size: 0.76rem; color: var(--slate-500); margin-top: 3px;">SY {{ $candidacy->school_year }}</p>
                 </div>
@@ -69,7 +74,7 @@
                     Fill out the application to submit your candidacy. Your submission will be reviewed by the department Dean.
                 </p>
 
-                <form method="POST" action="{{ route('mobile.student.candidacy.store') }}">
+                <form method="POST" action="{{ route('mobile.student.candidacy.store') }}" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="department" value="{{ Auth::user()->department }}">
 
@@ -89,6 +94,24 @@
                         </select>
                     </div>
 
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--slate-700); margin-bottom: 6px;">
+                            Campaign Photo <span style="font-weight: 600; color: var(--slate-400);">(optional)</span>
+                        </label>
+                        <label for="candidacyPhoto" style="display: flex; align-items: center; gap: 12px; border: 1px dashed var(--slate-300); border-radius: 12px; padding: 12px; cursor: pointer; background: var(--slate-50);">
+                            <img id="candidacyPhotoPreview" src="" alt="" style="display: none; width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">
+                            <div id="candidacyPhotoPlaceholder" style="width: 56px; height: 56px; border-radius: 50%; background: rgba(var(--primary-rgb), 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;">
+                                <i class="bi bi-camera-fill"></i>
+                            </div>
+                            <div style="min-width: 0;">
+                                <div id="candidacyPhotoName" style="font-size: 0.8rem; font-weight: 700; color: var(--slate-700);">Add a photo</div>
+                                <div style="font-size: 0.7rem; color: var(--slate-400); margin-top: 2px; line-height: 1.35;">Voters see this on the ballot. JPG or PNG, up to 5 MB.</div>
+                            </div>
+                        </label>
+                        <input type="file" name="photo" id="candidacyPhoto" accept="image/*" style="display: none;">
+                    </div>
+
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--slate-700); margin-bottom: 6px;">Platform Manifesto</label>
                         <textarea name="platform" placeholder="Briefly state your vision, program of actions, or platform..." style="width: 100%; border: 1px solid var(--slate-200); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; font-family: inherit; background: var(--slate-50); resize: none; min-height: 120px;" required minlength="20"></textarea>
@@ -104,3 +127,26 @@
 
 </div>
 @endsection
+
+@push('scripts')
+    <script>
+        // Live preview of the chosen campaign photo, so a student can see what
+        // voters will see before committing the filing.
+        (function () {
+            var input = document.getElementById('candidacyPhoto');
+            if (!input) return;
+            var preview = document.getElementById('candidacyPhotoPreview');
+            var placeholder = document.getElementById('candidacyPhotoPlaceholder');
+            var label = document.getElementById('candidacyPhotoName');
+
+            input.addEventListener('change', function () {
+                var file = this.files && this.files[0];
+                if (!file) return;
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+                label.textContent = file.name;
+            });
+        })();
+    </script>
+@endpush

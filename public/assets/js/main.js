@@ -267,6 +267,42 @@ function createPieChart(canvasId, labels, data) {
   });
 }
 
+
+// Months are ordered data, so the bar chart colours them with an ORDINAL ramp
+// (one hue, light to dark, oldest to newest) rather than unrelated categorical
+// hues: every month gets its own colour, and the colour reinforces the sequence
+// instead of fighting it. These six steps are the validated ramp -- six is the
+// most that keeps every adjacent lightness gap visible on a light surface, so
+// beyond six bars the steps are interpolated and the x-axis labels carry
+// identity while the fills still read as an overall light-to-dark drift.
+const ORDINAL_RAMP = ['#7fb4ec', '#5195e0', '#2f77c9', '#245da3', '#1a457e', '#123059'];
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+
+function rgbToHex(rgb) {
+  return '#' + rgb.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+}
+
+/** Colour at position t (0..1) along a ramp, interpolating between its steps. */
+function sampleRamp(ramp, t) {
+  const pos = t * (ramp.length - 1);
+  const i = Math.min(Math.floor(pos), ramp.length - 2);
+  const f = pos - i;
+  const a = hexToRgb(ramp[i]);
+  const b = hexToRgb(ramp[i + 1]);
+  return rgbToHex(a.map((v, k) => v + (b[k] - v) * f));
+}
+
+/** One colour per bar, spanning the ramp end to end whatever the bar count. */
+function ordinalRampColors(count) {
+  if (count <= 0) return [];
+  if (count === 1) return [ORDINAL_RAMP[ORDINAL_RAMP.length - 1]];
+  return Array.from({ length: count }, (_, i) => sampleRamp(ORDINAL_RAMP, i / (count - 1)));
+}
+
 function createBarChart(canvasId, labels, data, label = 'Amount (₱)') {
   const ctx = document.getElementById(canvasId);
   if (!ctx) return;
@@ -277,8 +313,8 @@ function createBarChart(canvasId, labels, data, label = 'Amount (₱)') {
       datasets: [{
         label,
         data,
-        backgroundColor: 'rgba(13,43,92,0.8)',
-        borderRadius: 6,
+        backgroundColor: ordinalRampColors(data.length),
+        borderRadius: 4,
         hoverBackgroundColor: SSC_COLORS.gold,
       }]
     },

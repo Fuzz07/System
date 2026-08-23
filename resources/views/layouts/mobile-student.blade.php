@@ -279,7 +279,7 @@
             }
         })();
     </script>
-    <script src="{{ asset('assets/js/main.js') }}?v=1.0.3"></script>
+    <script src="{{ asset('assets/js/main.js') }}?v=1.0.4"></script>
 </body>
 
 </html>

@@ -107,7 +107,11 @@
                     @endphp
                     <div style="display: flex; align-items: center; gap: 10px; background: var(--slate-50); border: 1px solid var(--slate-100); padding: 10px 12px; border-radius: 12px;">
                         <div class="avatar bg-success text-white fw-bold d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; border-radius: 50%; font-size: 0.95rem;">
-                            {{ $votedCand->user->avatar }}
+                            @if($votedCand->photo_url)
+                                <img src="{{ $votedCand->photo_url }}" alt="{{ $votedCand->user->fullname }}" style="width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;">
+                            @else
+                                {{ $votedCand->user->avatar }}
+                            @endif
                         </div>
                         <div>
                             <div style="font-size: 0.82rem; font-weight: 700; color: var(--slate-800);">{{ $votedCand->user->fullname }}</div>
@@ -126,7 +130,11 @@
                                 <div style="border: 1px solid var(--slate-200); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;">
                                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                                         <div class="avatar bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-radius: 50%; font-size: 0.9rem;">
-                                            {{ $cand->user->avatar }}
+                                            @if($cand->photo_url)
+                                                <img src="{{ $cand->photo_url }}" alt="{{ $cand->user->fullname }}" style="width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;">
+                                            @else
+                                                {{ $cand->user->avatar }}
+                                            @endif
                                         </div>
                                         <div>
                                             <div style="font-size: 0.8rem; font-weight: 700; color: var(--slate-800);">{{ $cand->user->fullname }}</div>
@@ -141,6 +149,7 @@
                                         data-candidate-name="{{ e($cand->user->fullname) }}"
                                         data-position="{{ e($pos) }}"
                                         data-platform="{{ e($cand->platform) }}"
+                                        data-photo="{{ $cand->photo_url ?? '' }}"
                                         onclick="openMobileVotingModal(this)">
                                         View & Vote
                                     </button>
@@ -219,6 +228,22 @@
     const mobileTimerLabel       = document.getElementById('mobileTimerLabel');
     const mobileTimerHint        = document.getElementById('mobileTimerHint');
 
+    // Fills an existing avatar box with the candidate's photo, or falls back to
+    // their initial. The image borrows the box's radius so the shape is unchanged.
+    function paintCandidateAvatar(box, photo, name) {
+        if (!box) return;
+        if (photo) {
+            box.textContent = '';
+            var img = document.createElement('img');
+            img.src = photo;
+            img.alt = name || '';
+            img.style.cssText = 'width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;';
+            box.appendChild(img);
+        } else {
+            box.textContent = (name || '?').charAt(0).toUpperCase();
+        }
+    }
+
     function openMobileVotingModal(button) {
         if (mobileCountdownInterval) {
             clearInterval(mobileCountdownInterval);
@@ -234,7 +259,7 @@
         mobileModalCandPos.textContent      = position;
         mobileModalCandPlatform.textContent = platform;
         mobileModalCandidacyId.value        = candidacyId;
-        mobileModalAvatar.textContent       = candName.charAt(0).toUpperCase();
+        paintCandidateAvatar(mobileModalAvatar, button.dataset.photo, candName);
 
         mobileVotingModal.style.display = 'flex';
 

@@ -85,7 +85,11 @@
                         <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center" style="width:42px; height:42px; border-radius:12px; font-weight:700;">
-                                    {{ $c->user->avatar }}
+                                    @if($c->photo_url)
+                                        <img src="{{ $c->photo_url }}" alt="{{ $c->user->fullname }}" style="width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;">
+                                    @else
+                                        {{ $c->user->avatar }}
+                                    @endif
                                 </div>
                                 <div>
                                     <div class="fw-bold text-dark">{{ $c->user->fullname }}</div>

@@ -93,7 +93,11 @@
                                                         <div class="d-flex align-items-center justify-content-between mb-2">
                                                             <div class="d-flex align-items-center gap-3">
                                                                 <div class="avatar bg-primary text-white fw-bold d-flex align-items-center justify-content-center position-relative" style="width:48px; height:48px; border-radius:50%; font-size:1.15rem;">
-                                                                    {{ $cand->user->avatar }}
+                                                                    @if($cand->photo_url)
+                                                                        <img src="{{ $cand->photo_url }}" alt="{{ $cand->user->fullname }}" style="width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;">
+                                                                    @else
+                                                                        {{ $cand->user->avatar }}
+                                                                    @endif
                                                                     @if($index === 0 && $cand->votes_count > 0)
                                                                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning" style="border: 2px solid white; font-size:0.65rem;" title="Current Winner/Leader">
                                                                             🏆

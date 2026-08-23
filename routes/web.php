@@ -291,6 +291,7 @@ Route::group([], function () use ($baseDomain) {
             $request->validate([
                 'position' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::in($allowedPositions)],
                 'platform' => 'required|string|min:20|max:3000',
+                'photo'    => 'nullable|image|max:5120',
             ]);
 
             $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();
@@ -301,11 +302,25 @@ Route::group([], function () use ($baseDomain) {
             if ($exists) {
                 return back()->with('danger', 'You have already submitted an application for this school year.');
             }
+
+            // Campaign photo is optional. Cloudinary when it is configured, local
+            // public disk otherwise, matching how announcement images are stored.
+            $photoPath = null;
+            if ($request->hasFile('photo')) {
+                try {
+                    $photoPath = \App\Helpers\SscHelper::uploadToCloudinary($request->file('photo'), 'candidacies');
+                } catch (\Exception $e) {
+                    \Log::warning('Cloudinary upload failed for candidacy photo, falling back to local public disk: ' . $e->getMessage());
+                    $photoPath = $request->file('photo')->store('candidacies', 'public');
+                }
+            }
+
             \App\Models\Candidacy::create([
                 'user_id' => $student->id,
                 'department' => $department,
                 'position' => $request->position,
                 'platform' => $request->platform,
+                'photo_path' => $photoPath,
                 'status' => 'pending',
                 'school_year' => $activeSy->label,
             ]);
@@ -514,6 +529,7 @@ Route::group([], function () use ($baseDomain) {
             $request->validate([
                 'position' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::in($allowedPositions)],
                 'platform' => 'required|string|min:20|max:3000',
+                'photo'    => 'nullable|image|max:5120',
             ]);
 
             $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();
@@ -524,11 +540,25 @@ Route::group([], function () use ($baseDomain) {
             if ($exists) {
                 return redirect()->route('mobile.student.candidacy')->with('danger', 'You have already submitted an application.');
             }
+
+            // Campaign photo is optional. Cloudinary when it is configured, local
+            // public disk otherwise, matching how announcement images are stored.
+            $photoPath = null;
+            if ($request->hasFile('photo')) {
+                try {
+                    $photoPath = \App\Helpers\SscHelper::uploadToCloudinary($request->file('photo'), 'candidacies');
+                } catch (\Exception $e) {
+                    \Log::warning('Cloudinary upload failed for candidacy photo, falling back to local public disk: ' . $e->getMessage());
+                    $photoPath = $request->file('photo')->store('candidacies', 'public');
+                }
+            }
+
             \App\Models\Candidacy::create([
                 'user_id' => $student->id,
                 'department' => $department,
                 'position' => $request->position,
                 'platform' => $request->platform,
+                'photo_path' => $photoPath,
                 'status' => 'pending',
                 'school_year' => $activeSy->label,
             ]);

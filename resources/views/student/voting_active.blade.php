@@ -32,7 +32,11 @@
                     <div>
                         <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="avatar bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style="width:50px; height:50px; border-radius:12px; font-size:1.2rem; background: rgba(79,70,229,0.08); color: var(--primary) !important;">
-                                {{ $cand->user->avatar }}
+                                @if($cand->photo_url)
+                                    <img src="{{ $cand->photo_url }}" alt="{{ $cand->user->fullname }}" style="width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;">
+                                @else
+                                    {{ $cand->user->avatar }}
+                                @endif
                             </div>
                             <div>
                                 <h5 class="fw-bold text-dark mb-0">{{ $cand->user->fullname }}</h5>
@@ -47,7 +51,7 @@
                     </div>
 
                     <button type="button" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold vote-btn" 
-                            onclick="confirmVote({{ $cand->id }}, '{{ e($cand->user->fullname) }}')">
+                            onclick="confirmVote({{ $cand->id }}, '{{ e($cand->user->fullname) }}', '{{ $cand->photo_url ?? '' }}')">
                         <i class="bi bi-patch-check-fill me-1"></i> Vote for {{ $cand->user->fullname }}
                     </button>
                 </div>
@@ -202,10 +206,26 @@
         }, 1000);
     });
 
-    function confirmVote(id, name) {
+    // Fills an existing avatar box with the candidate's photo, or falls back to
+    // their initial. The image borrows the box's radius so the shape is unchanged.
+    function paintCandidateAvatar(box, photo, name) {
+        if (!box) return;
+        if (photo) {
+            box.textContent = '';
+            var img = document.createElement('img');
+            img.src = photo;
+            img.alt = name || '';
+            img.style.cssText = 'width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;';
+            box.appendChild(img);
+        } else {
+            box.textContent = (name || '?').charAt(0).toUpperCase();
+        }
+    }
+
+    function confirmVote(id, name, photo) {
         document.getElementById('confirm-candidacy-id').value = id;
         document.getElementById('confirm-name').textContent = name;
-        document.getElementById('confirm-avatar').textContent = name.charAt(0).toUpperCase();
+        paintCandidateAvatar(document.getElementById('confirm-avatar'), photo, name);
         document.getElementById('confirm-modal').style.display = 'flex';
     }
 

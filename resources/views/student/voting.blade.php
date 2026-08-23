@@ -56,7 +56,11 @@
                             @endphp
                             <div class="d-flex align-items-center gap-3 p-3 rounded-4 bg-light border border-success border-opacity-10">
                                 <div class="avatar bg-success text-white fw-bold d-flex align-items-center justify-content-center" style="width:50px; height:50px; border-radius:50%; font-size:1.25rem;">
-                                    {{ $votedCand->user->avatar }}
+                                    @if($votedCand->photo_url)
+                                        <img src="{{ $votedCand->photo_url }}" alt="{{ $votedCand->user->fullname }}" style="width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;">
+                                    @else
+                                        {{ $votedCand->user->avatar }}
+                                    @endif
                                 </div>
                                 <div>
                                     <div class="fw-bold text-dark">{{ $votedCand->user->fullname }}</div>
@@ -79,7 +83,11 @@
                                             <div class="p-3 border rounded-4 h-100 d-flex flex-column justify-content-between transition-all hover-shadow">
                                                 <div class="d-flex align-items-center gap-3 mb-3">
                                                     <div class="avatar bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style="width:46px; height:46px; border-radius:50%; font-size:1.1rem;">
-                                                        {{ $cand->user->avatar }}
+                                                        @if($cand->photo_url)
+                                                            <img src="{{ $cand->photo_url }}" alt="{{ $cand->user->fullname }}" style="width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;">
+                                                        @else
+                                                            {{ $cand->user->avatar }}
+                                                        @endif
                                                     </div>
                                                     <div>
                                                         <div class="fw-bold text-dark">{{ $cand->user->fullname }}</div>

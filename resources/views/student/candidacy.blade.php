@@ -81,7 +81,7 @@
                             <i class="bi bi-info-circle-fill"></i> You are applying to represent <strong>{{ Auth::user()->department }}</strong>. Your application will be sent to the Dean of your department for review, endorsement, and selection.
                         </div>
 
-                        <form method="POST" action="{{ route('student.candidacy.store') }}">
+                        <form method="POST" action="{{ route('student.candidacy.store') }}" enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" name="department" value="{{ Auth::user()->department }}">
 
@@ -94,6 +94,24 @@
                                     <option value="SSC Secretary">SSC Secretary</option>
                                     <option value="SSC Treasurer">SSC Treasurer</option>
                                 </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label-custom">Campaign Photo <span class="text-muted fw-normal">(optional)</span></label>
+                                <label for="candidacyPhoto" class="d-flex align-items-center gap-3 w-100"
+                                    style="border:1px dashed #cbd5e1; border-radius:14px; padding:14px; cursor:pointer; background:#f8fafc;">
+                                    <img id="candidacyPhotoPreview" src="" alt=""
+                                        style="display:none; width:64px; height:64px; border-radius:50%; object-fit:cover; flex-shrink:0;">
+                                    <div id="candidacyPhotoPlaceholder" class="d-flex align-items-center justify-content-center"
+                                        style="width:64px; height:64px; border-radius:50%; background:rgba(79,70,229,0.08); color:var(--primary); font-size:1.4rem; flex-shrink:0;">
+                                        <i class="bi bi-camera-fill"></i>
+                                    </div>
+                                    <div style="min-width:0;">
+                                        <div id="candidacyPhotoName" class="fw-bold" style="font-size:0.9rem; color:#334155;">Add a photo</div>
+                                        <div class="text-muted" style="font-size:0.75rem;">Voters see this on the ballot. JPG or PNG, up to 5 MB.</div>
+                                    </div>
+                                </label>
+                                <input type="file" name="photo" id="candidacyPhoto" accept="image/*" class="d-none">
                             </div>
 
                             <div class="mb-4">
@@ -113,3 +131,26 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    <script>
+        // Live preview of the chosen campaign photo, so a student can see what
+        // voters will see before committing the filing.
+        (function () {
+            var input = document.getElementById('candidacyPhoto');
+            if (!input) return;
+            var preview = document.getElementById('candidacyPhotoPreview');
+            var placeholder = document.getElementById('candidacyPhotoPlaceholder');
+            var label = document.getElementById('candidacyPhotoName');
+
+            input.addEventListener('change', function () {
+                var file = this.files && this.files[0];
+                if (!file) return;
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+                label.textContent = file.name;
+            });
+        })();
+    </script>
+@endpush
