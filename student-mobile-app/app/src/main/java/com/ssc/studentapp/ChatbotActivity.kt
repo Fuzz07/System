@@ -1,5 +1,7 @@
 package com.ssc.studentapp
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,8 +9,10 @@ import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -20,7 +24,10 @@ import kotlin.concurrent.thread
 
 data class ChatMessage(
     val text: String,
-    val sender: String // "user" or "bot"
+    val sender: String, // "user" or "bot"
+    // When set, the bubble becomes tappable and opens this link. Used by the
+    // hand-off that points a student at a real officer on Messenger.
+    val actionUrl: String? = null
 )
 
 class ChatbotActivity : AppCompatActivity() {
@@ -31,6 +38,17 @@ class ChatbotActivity : AppCompatActivity() {
     private lateinit var adapter: ChatAdapter
     private val messagesList = mutableListOf<ChatMessage>()
     private var portalUrl = BuildConfig.PORTAL_URL
+
+    // Where to send a student who wants a human. Swap this for the page's
+    // https://m.me/<page-username> link if you have it: that opens a Messenger
+    // thread straight away instead of the page itself.
+    private val SSC_MESSENGER_URL =
+        "https://web.facebook.com/photo/?fbid=1287391326723459&set=a.467203248742275&__tn__=%3C"
+    // After this many questions the assistant stops guessing and points the
+    // student at a real officer. Offered once per chat session, not every turn.
+    private val MESSENGER_AFTER_MESSAGES = 3
+    private var userMessageCount = 0
+    private var messengerOffered = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,14 +82,42 @@ class ChatbotActivity : AppCompatActivity() {
         }
     }
 
-    private fun addMessage(text: String, sender: String) {
-        messagesList.add(ChatMessage(text, sender))
+    private fun addMessage(text: String, sender: String, actionUrl: String? = null) {
+        messagesList.add(ChatMessage(text, sender, actionUrl))
         adapter.notifyItemInserted(messagesList.size - 1)
         recyclerView.scrollToPosition(messagesList.size - 1)
     }
 
+    /**
+     * Three questions in, the assistant has had a fair go. Rather than keep
+     * guessing, hand the student to an officer who can actually answer. Offered
+     * once per chat session so it reads as help rather than nagging.
+     */
+    private fun maybeOfferMessenger() {
+        if (messengerOffered || userMessageCount < MESSENGER_AFTER_MESSAGES) return
+        messengerOffered = true
+        addMessage(
+            "Still not finding what you need? 💬\n\n" +
+                "Our officers reply to messages on the official SSC Facebook page, so " +
+                "you'll be talking to a real person instead of me.\n\n" +
+                "Tap this message to open Messenger.",
+            "bot",
+            SSC_MESSENGER_URL
+        )
+    }
+
+    /** Opens a link outside the app; used by the Messenger hand-off bubble. */
+    private fun openLink(url: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        } catch (e: Exception) {
+            Toast.makeText(this, "No app can open that link", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun handleUserSendMessage(text: String) {
         addMessage(text, "user")
+        userMessageCount++
         editTextMessage.setText("")
 
         // Add typing indicator
@@ -94,6 +140,7 @@ class ChatbotActivity : AppCompatActivity() {
                 runOnUiThread {
                     removeMessageAt(typingIndex)
                     addMessage(answer, "bot")
+                    maybeOfferMessenger()
                 }
             } else {
                 fallbackResponse(typingIndex, text)
@@ -162,6 +209,7 @@ class ChatbotActivity : AppCompatActivity() {
         runOnUiThread {
             removeMessageAt(typingIndex)
             addMessage(getBotLocalResponse(text.toLowerCase()), "bot")
+            maybeOfferMessenger()
         }
     }
 
@@ -224,6 +272,18 @@ class ChatbotActivity : AppCompatActivity() {
                 holder.layoutBot.visibility = View.VISIBLE
                 holder.layoutUser.visibility = View.GONE
                 holder.textBotMessage.text = message.text
+                // Holders are recycled, so both states have to be set explicitly
+                // or a plain answer inherits the previous bubble's tap target.
+                val url = message.actionUrl
+                val ctx = holder.itemView.context
+                if (url != null) {
+                    holder.textBotMessage.setTextColor(ContextCompat.getColor(ctx, R.color.brand_600))
+                    holder.textBotMessage.setOnClickListener { openLink(url) }
+                } else {
+                    holder.textBotMessage.setTextColor(ContextCompat.getColor(ctx, R.color.slate_800))
+                    holder.textBotMessage.setOnClickListener(null)
+                    holder.textBotMessage.isClickable = false
+                }
             } else {
                 holder.layoutBot.visibility = View.GONE
                 holder.layoutUser.visibility = View.VISIBLE

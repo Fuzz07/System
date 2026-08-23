@@ -17,12 +17,14 @@
         $__hasApprovedCandidates = $__activeSyLayout
             ? \App\Models\Candidacy::where('school_year', $__activeSyLayout->label)->where('status', 'approved')->exists()
             : false;
-        // Show the election tab whenever an election exists for the active year.
-        // While voting is open it gets the live "Vote!" treatment; once closed it
-        // stays as a calm "Election" entry so students can still reach the status
-        // and results screens, which otherwise had no route into them at all.
-        $__showVoteTab = $__hasApprovedCandidates;
-        $__voteLive = $__votingOpen && $__hasApprovedCandidates;
+        // The SSC Vote tab is the only route into the election screens, so it shows
+        // whenever there is an election to reach: voting is open right now, or an
+        // election has been held for the active year and students can still look at
+        // the status and results. Gating it on approved candidates alone hid the tab
+        // during the window where an admin had opened voting but no candidacy was
+        // approved under this year's label yet — students had no way to the ballot.
+        $__showVoteTab = $__votingOpen || $__hasApprovedCandidates;
+        $__voteLive = $__votingOpen;
     @endphp
     <title>{{ $pageTitle ?? 'SSC' }} — Student App</title>
     <meta name="description" content="SSC Transparency and Budget Allocation — Student Portal">
@@ -116,8 +118,8 @@
                 <div class="nav-tab-label">News</div>
             </a>
 
-            {{-- Election tab — live "Vote!" while voting is open, otherwise a
-                 neutral entry point to the election status / results screens --}}
+            {{-- SSC Vote tab — live while voting is open, otherwise a neutral
+                 entry point to the election status / results screens --}}
             @if($__showVoteTab)
             <a href="{{ route('mobile.student.voting') }}"
                 class="nav-tab {{ request()->routeIs('mobile.student.voting', 'mobile.student.election.results') ? 'active' : '' }}"
@@ -130,7 +132,7 @@
                     @endif
                 </div>
                 <div class="nav-tab-label" @if($__voteLive) style="color:#ef4444; font-weight:800;" @endif>
-                    {{ $__voteLive ? 'Vote!' : 'Election' }}
+                    {{ $__voteLive ? 'SSC Vote' : 'Election' }}
                 </div>
             </a>
             @endif

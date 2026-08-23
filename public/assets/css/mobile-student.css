@@ -2134,14 +2134,31 @@ body {
 }
 
 /* Content settles in on load instead of snapping — each tab is a full page
-   load in the WebView, so this smooths the seam between navigations. */
+   load in the WebView, so this smooths the seam between navigations.
+
+   Opacity only, deliberately. This used to animate `transform` too, and with
+   `animation-fill-mode: both` the animation stays in effect forever — so
+   `to { transform: none }` left .page-content computing to the *identity
+   matrix* rather than `none`, permanently. Any transform, identity included,
+   makes an element the containing block for its `position: fixed` descendants,
+   which anchored every bottom sheet and modal inside the page (the "Read More"
+   announcement sheet, the vote confirmation dialog) to the top of the article
+   instead of the viewport. Tapping them appeared to do nothing: the panel was
+   rendered a couple of thousand pixels below the fold, with body scrolling
+   locked so it couldn't even be reached. */
 @keyframes pageFade {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
+/* `backwards`, not `both`. A forwards fill never stops being "in effect", and an
+   animation in effect on opacity keeps the element a stacking context for good.
+   That trapped the bottom sheets (z-index 500) inside .page-content, where they
+   painted *under* the fixed tab bar (z-index 300) instead of over it. The end
+   keyframe matches the base style anyway, so dropping the forwards fill costs
+   nothing visually. */
 .page-content {
-  animation: pageFade 0.22s ease-out both;
+  animation: pageFade 0.22s ease-out backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -824,6 +824,17 @@
     });
 
     // --- Message Handling Logic ---
+
+    // Where to send a student who wants a human. Swap this for the page's
+    // https://m.me/<page-username> link if you have it: that opens a Messenger
+    // thread straight away instead of the page itself.
+    const SSC_MESSENGER_URL = 'https://web.facebook.com/photo/?fbid=1287391326723459&set=a.467203248742275&__tn__=%3C';
+    // After this many questions the assistant stops guessing and points the
+    // student at a real officer. Offered once per chat session, not every turn.
+    const MESSENGER_AFTER_MESSAGES = 3;
+    let userMessageCount = 0;
+    let messengerOffered = false;
+
     shortcuts.forEach(btn => {
       btn.addEventListener('click', () => {
         handleSend(btn.dataset.query);
@@ -844,11 +855,34 @@
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
+    // Every bot answer goes through here, so the Messenger hand-off is offered no
+    // matter which path produced the reply (API, local fallback, or timeout).
+    function botReply(text) {
+      addMessage(text, 'bot');
+      maybeOfferMessenger();
+    }
+
+    // Three questions in, the assistant has had a fair go. Rather than keep
+    // guessing, hand the student to an officer who can actually answer.
+    function maybeOfferMessenger() {
+      if (messengerOffered || userMessageCount < MESSENGER_AFTER_MESSAGES) return;
+      messengerOffered = true;
+      addMessage(
+        "Still not finding what you need? 💬<br><br>"
+        + "Our officers reply to messages on the official SSC Facebook page, so you'll be "
+        + "talking to a real person instead of me.<br>"
+        + "<a href='" + SSC_MESSENGER_URL + "' target='_blank' rel='noopener' class='chat-link'>"
+        + "<i class='bi bi-messenger'></i> Chat with the SSC on Messenger</a>",
+        'bot'
+      );
+    }
+
     function handleSend(overrideText = null) {
       const text = overrideText || chatbotInput.value.trim();
       if (!text) return;
 
       addMessage(text, 'user');
+      userMessageCount++;
       chatbotInput.value = '';
 
       const typingDiv = document.createElement('div');
@@ -874,19 +908,19 @@
         .then(data => {
           typingDiv.remove();
           if (data.success && data.answer) {
-            addMessage(data.answer, 'bot');
+            botReply(data.answer);
           } else {
-            addMessage(getBotResponse(text.toLowerCase()), 'bot');
+            botReply(getBotResponse(text.toLowerCase()));
           }
         })
         .catch(() => {
           typingDiv.remove();
-          addMessage(getBotResponse(text.toLowerCase()), 'bot');
+          botReply(getBotResponse(text.toLowerCase()));
         });
       } else {
         setTimeout(() => {
           typingDiv.remove();
-          addMessage(getBotResponse(text.toLowerCase()), 'bot');
+          botReply(getBotResponse(text.toLowerCase()));
         }, 800);
       }
     }
