@@ -6,9 +6,8 @@ Shows two things merged into one feed: the student's own notifications
 (enrolment, elections, feedback replies) and every council announcement. The
 FCM push is the separate, real-time channel; this is the inbox.
 
-Pass a surface so announcement links point at the right shell:
-  @include('partials.notification-bell')                        {{-- desktop --}}
-  @include('partials.notification-bell', ['surface' => 'mobile'])
+Pass a surface so announcement links point at the right shell. Desktop is the
+default; the mobile layout passes: ['surface' => 'mobile']
 ═══════════════════════════════════════ --}}
 
 @if(Auth::check() && Auth::user()->isStudent())
