@@ -22,6 +22,15 @@ class AuthController extends Controller
 
     private const DECAY_SECONDS = 300;
 
+    /** Wrong-code tries allowed before a registration OTP is burned. */
+    private const OTP_MAX_ATTEMPTS = 5;
+
+    /** Seconds a student must wait between "Resend code" requests. */
+    private const OTP_RESEND_COOLDOWN = 60;
+
+    /** How many replacement codes a single registration attempt may request. */
+    private const OTP_MAX_RESENDS = 3;
+
     public function showLogin(Request $request, string $portal = 'student')
     {
         $portal = $request->route('portal') ?? $portal ?? 'student';
@@ -339,7 +348,15 @@ class AuthController extends Controller
         SscHelper::logActivity($user->id, 'REGISTER', "Student registered and email verified via OTP: {$user->email}");
 
 
-        session()->forget(['register_otp', 'register_email', 'register_email_verified']);
+        session()->forget([
+            'register_otp',
+            'register_email',
+            'register_email_verified',
+            'register_otp_expires_at',
+            'register_otp_last_sent_at',
+            'register_otp_attempts',
+            'register_otp_resend_count',
+        ]);
 
 
         return view('auth.confirm-success', compact('user'));
@@ -412,32 +429,123 @@ class AuthController extends Controller
         }
 
 
-        $otp = (string) rand(100000, 999999);
-        session([
-            'register_otp' => $otp,
-            'register_email' => $request->email,
-            'register_otp_expires_at' => now()->addMinutes(3),
-        ]);
-
-
-        try {
-            Mail::send([], [], function ($message) use ($request, $otp) {
-                $message->to($request->email)
-                    ->subject('Your SSC Account Verification Code')
-                    ->html(view('auth.emails.otp', ['otp' => $otp])->render());
-            });
-            return response()->json([
-                'success' => true,
-                'message' => 'Verification code sent! Please check your Microsoft school email inbox (or spam folder) for the 6-digit code.',
-            ]);
-        } catch (\Exception $e) {
-            Log::error('OTP email failed to send', ['error' => $e->getMessage()]);
-
+        // ── Issue the first verification code for this email ─────────────────
+        if (!$this->sendRegistrationOtp($request->email)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send verification email. Please try again later or contact support.',
             ]);
         }
+
+        session([
+            'register_otp_resend_count' => 0,
+            'register_otp_attempts' => 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Verification code sent! Please check your Microsoft school email inbox (or spam folder) for the 6-digit code.',
+            'expires_at' => session('register_otp_expires_at')->getTimestamp(),
+            'resend_available_in' => self::OTP_RESEND_COOLDOWN,
+        ]);
+    }
+
+    /**
+     * Generate a fresh registration OTP, store it in the session and email it.
+     * Returns false when the mail transport fails.
+     */
+    private function sendRegistrationOtp(string $email): bool
+    {
+        $otp = (string) rand(100000, 999999);
+        $expiresAt = now()->addMinutes(3);
+
+        try {
+            Mail::send([], [], function ($message) use ($email, $otp) {
+                $message->to($email)
+                    ->subject('Your SSC Account Verification Code')
+                    ->html(view('auth.emails.otp', ['otp' => $otp])->render());
+            });
+        } catch (\Exception $e) {
+            Log::error('OTP email failed to send', ['error' => $e->getMessage()]);
+            return false;
+        }
+
+        session([
+            'register_otp' => $otp,
+            'register_email' => $email,
+            'register_otp_expires_at' => $expiresAt,
+            'register_otp_last_sent_at' => now(),
+            'register_otp_attempts' => 0,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Re-issue the registration OTP. Guarded by a per-send cooldown and a hard
+     * cap on how many codes a single registration attempt may request.
+     */
+    public function resendOtp(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email|ends_with:@mcclawis.edu.ph',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()->first('email'),
+            ]);
+        }
+
+        // The resend must belong to the registration currently in progress.
+        if (session('register_email') !== $request->email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your verification session has expired. Please go back and re-enter your details.',
+                'restart' => true,
+            ]);
+        }
+
+        $lastSentAt = session('register_otp_last_sent_at');
+        if ($lastSentAt) {
+            // Carbon 3 returns a signed float here, so normalise to whole seconds.
+            $elapsed = (int) abs($lastSentAt->diffInSeconds(now()));
+            if ($elapsed < self::OTP_RESEND_COOLDOWN) {
+                $wait = self::OTP_RESEND_COOLDOWN - $elapsed;
+                return response()->json([
+                    'success' => false,
+                    'message' => "Please wait {$wait} second(s) before requesting another code.",
+                    'resend_available_in' => $wait,
+                ]);
+            }
+        }
+
+        $resendCount = (int) session('register_otp_resend_count', 0);
+        if ($resendCount >= self::OTP_MAX_RESENDS) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have reached the maximum number of code requests. Please go back and start the verification again.',
+                'restart' => true,
+            ]);
+        }
+
+        if (!$this->sendRegistrationOtp($request->email)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to resend the verification email. Please try again later or contact support.',
+            ]);
+        }
+
+        session(['register_otp_resend_count' => $resendCount + 1]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'A new 6-digit verification code has been sent to your school email.',
+            'expires_at' => session('register_otp_expires_at')->getTimestamp(),
+            'resend_available_in' => self::OTP_RESEND_COOLDOWN,
+            'resends_left' => self::OTP_MAX_RESENDS - ($resendCount + 1),
+        ]);
     }
 
     public function verifyOtp(Request $request)
@@ -450,7 +558,14 @@ class AuthController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'The code must be exactly 6 characters.',
+                'message' => 'Please enter the complete 6-digit verification code.',
+            ]);
+        }
+
+        if (!preg_match('/^\d{6}$/', $request->otp)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The verification code must contain digits only.',
             ]);
         }
 
@@ -458,25 +573,56 @@ class AuthController extends Controller
         $sessionEmail = session('register_email');
         $expiresAt = session('register_otp_expires_at');
 
-        if ($expiresAt && now()->greaterThan($expiresAt)) {
-            session()->forget(['register_otp', 'register_email', 'register_otp_expires_at']);
+        // No pending code at all — the session was lost, or the code was consumed.
+        if (!$sessionOtp || $sessionEmail !== $request->email) {
             return response()->json([
                 'success' => false,
-                'message' => 'Verification code has expired (valid for 3 minutes). Please request a new code.'
+                'message' => 'No active verification code was found. Please request a new code.',
+                'can_resend' => true,
             ]);
         }
 
-        if ($request->otp === $sessionOtp && $request->email === $sessionEmail) {
-            session(['register_email_verified' => true]);
+        if ($expiresAt && now()->greaterThan($expiresAt)) {
+            // Keep the email in session so the student can simply resend.
+            session()->forget(['register_otp', 'register_otp_expires_at']);
             return response()->json([
-                'success' => true,
-                'message' => 'Email verified successfully! Proceeding to password creation.'
+                'success' => false,
+                'message' => 'This verification code has expired (valid for 3 minutes). Please request a new code.',
+                'expired' => true,
+                'can_resend' => true,
             ]);
         }
+
+        $attempts = (int) session('register_otp_attempts', 0);
+
+        if (!hash_equals($sessionOtp, $request->otp)) {
+            $attempts++;
+            session(['register_otp_attempts' => $attempts]);
+            $remaining = self::OTP_MAX_ATTEMPTS - $attempts;
+
+            if ($remaining <= 0) {
+                session()->forget(['register_otp', 'register_otp_expires_at']);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Too many incorrect attempts. For your security this code has been disabled — please request a new one.',
+                    'locked' => true,
+                    'can_resend' => true,
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => "Incorrect verification code. You have {$remaining} attempt(s) remaining before this code is disabled.",
+                'attempts_left' => $remaining,
+            ]);
+        }
+
+        session(['register_email_verified' => true]);
+        session()->forget(['register_otp', 'register_otp_expires_at', 'register_otp_attempts']);
 
         return response()->json([
-            'success' => false,
-            'message' => 'Invalid or expired verification code. Please check your email and try again.'
+            'success' => true,
+            'message' => 'Email verified successfully! Proceeding to password creation.'
         ]);
     }
 

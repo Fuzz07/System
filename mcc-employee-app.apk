@@ -1,8 +1,48 @@
-Placeholder for your compiled Android Application package (APK). 
+<?php
+// db_connect.php
+$host = "127.0.0.1";
+$db   = "u510162695_drSancho";
+$user = "u510162695_DrSancho2026";
+$pass = "@DoctorSancho2026";
+$charset = "utf8mb4";
 
-To make this download your actual Android App:
-1. Open the folder `employee-kotlin-app` in Android Studio.
-2. Build your APK: Go to "Build" -> "Build Bundle(s) / APK(s)" -> "Build APK(s)".
-3. Android Studio will generate a file named "app-debug.apk" or "app-release.apk".
-4. Copy that generated file, rename it to "mcc-employee-app.apk", and replace this placeholder file inside "public/downloads/".
-5. Push to GitHub!
+$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+$options = [
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+];
+
+try {
+    $pdo = new PDO($dsn, $user, $pass, $options);
+} catch (\PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
+
+// create_admin.php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username  = $_POST['username'] ?? null;
+    $email     = $_POST['email'] ?? null;
+    $full_name = $_POST['full_name'] ?? null;
+    $password  = $_POST['password'] ?? null;
+
+    if ($username && $email && $full_name && $password) {
+        // Securely hash the password
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
+        $sql = "INSERT INTO admin (username, email, full_name, password, role, last_login, created_at)
+                VALUES (:admin1, :admin@gmail.com, :full_name, :password123, 'admin', NULL, NOW())";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            ':username'  => $username,
+            ':email'     => $email,
+            ':full_name' => $full_name,
+            ':password'  => $hashedPassword,
+        ]);
+
+        echo "Admin user created successfully!";
+    } else {
+        echo "Please provide username, email, full name, and password.";
+    }
+}
+?>

@@ -218,6 +218,7 @@ Route::group([], function () use ($baseDomain) {
     Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
     Route::post('/register/check-email', [AuthController::class, 'checkEmail'])->name('register.check-email');
     Route::post('/register/verify-otp', [AuthController::class, 'verifyOtp'])->name('register.verify-otp');
+    Route::post('/register/resend-otp', [AuthController::class, 'resendOtp'])->name('register.resend-otp')->middleware('throttle:6,1');
 
     Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'sendResetCode'])->name('password.email');
