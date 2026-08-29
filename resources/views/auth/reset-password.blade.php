@@ -102,6 +102,7 @@
   }
 </style>
 
+<script src="{{ asset('assets/js/main.js') }}"></script>
 <script>
   document.getElementById('resetForm').addEventListener('submit', () => {
     document.getElementById('reset-loading-overlay').style.display = 'flex';
