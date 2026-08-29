@@ -32,69 +32,57 @@ class EnrollmentController extends Controller
         $amount = config('ssc.enrollment_fee_amount', 50);
         $currentSy = SscHelper::getActiveSchoolYear();
 
-        $request->validate([
-            'payment_method' => 'nullable|in:gcash,instapay',
-        ]);
-
-        $method = $request->input('payment_method', 'gcash');
-        $prefix = $method === 'instapay' ? 'INSTAPAY-' : 'GCASH-';
-
         $payment = EnrollmentPayment::where('user_id', $student->id)
             ->where('semester', $currentSy)
             ->orderByDesc('created_at')
             ->first();
 
-        if ($request->hasFile('proof')) {
-            $request->validate([
-                'proof' => 'required|file|extensions:jpg,jpeg,png,pdf,mp4|max:5120',
-            ]);
-
-            if (! $payment || $payment->status === 'paid') {
-                $payment = EnrollmentPayment::create([
-                    'user_id' => $student->id,
-                    'amount' => $amount,
-                    'semester' => $currentSy,
-                    'method' => $method,
-                    'status' => 'pending',
-                    'reference' => $prefix . strtoupper(uniqid()),
-                    'proof_status' => 'pending',
-                ]);
-            }
-
-            try {
-                $proofPath = \App\Helpers\SscHelper::uploadToCloudinary($request->file('proof'), 'enrollment_proofs');
-            } catch (\Exception $e) {
-                \Log::warning('Cloudinary upload failed for student enrollment proof, falling back to local public disk: ' . $e->getMessage());
-                $proofPath = $request->file('proof')->store('enrollment_proofs', 'public');
-            }
-            $payment->update([
-                'proof_path' => $proofPath,
-                'proof_status' => 'pending',
-                'proof_notes' => null,
-            ]);
-
-            return redirect()->route('student.enrollment.index')->with('success', 'Payment proof uploaded successfully. Admin will verify it shortly.');
-        }
-
-        if ($payment && $payment->status === 'pending') {
-            return redirect()->route('student.enrollment.index')->with('info', 'You already have a pending payment. Please upload proof or wait for admin verification.');
-        }
-
         if ($payment && $payment->status === 'paid') {
             return redirect()->route('student.enrollment.index')->with('info', 'Your enrollment fee is already marked as paid.');
         }
 
-        $payment = EnrollmentPayment::create([
-            'user_id' => $student->id,
-            'amount' => $amount,
-            'semester' => $currentSy,
-            'method' => $method,
-            'status' => 'pending',
-            'reference' => $prefix . strtoupper(uniqid()),
-            'proof_status' => 'pending',
+        $request->validate([
+            'payment_method' => 'nullable|in:gcash,instapay',
+            'proof' => 'required|file|extensions:jpg,jpeg,png,pdf,mp4|max:5120',
+        ], [
+            'proof.required' => 'Please attach a proof of payment before submitting.',
+            'proof.file' => 'The proof of payment must be a valid file.',
+            'proof.extensions' => 'The proof of payment must be an image (jpg, jpeg, png), PDF, or MP4 video.',
+            'proof.max' => 'The proof of payment must not exceed 5MB.',
         ]);
 
-        $methodLabel = $method === 'instapay' ? 'InstaPay' : 'GCash';
-        return redirect()->route('student.enrollment.index')->with('success', 'Payment record created. Please follow the ' . $methodLabel . ' instructions to complete payment and upload proof once sent. Reference: ' . $payment->reference);
+        $method = $request->input('payment_method', $payment->method ?? 'gcash');
+        $prefix = $method === 'instapay' ? 'INSTAPAY-' : 'GCASH-';
+
+        if (! $payment) {
+            $payment = EnrollmentPayment::create([
+                'user_id' => $student->id,
+                'amount' => $amount,
+                'semester' => $currentSy,
+                'method' => $method,
+                'status' => 'pending',
+                'reference' => $prefix . strtoupper(uniqid()),
+                'proof_status' => 'pending',
+            ]);
+        } else {
+            if ($request->filled('payment_method')) {
+                $payment->update(['method' => $method]);
+            }
+        }
+
+        try {
+            $proofPath = \App\Helpers\SscHelper::uploadToCloudinary($request->file('proof'), 'enrollment_proofs');
+        } catch (\Exception $e) {
+            \Log::warning('Cloudinary upload failed for student enrollment proof, falling back to local public disk: ' . $e->getMessage());
+            $proofPath = $request->file('proof')->store('enrollment_proofs', 'public');
+        }
+
+        $payment->update([
+            'proof_path' => $proofPath,
+            'proof_status' => 'pending',
+            'proof_notes' => null,
+        ]);
+
+        return redirect()->route('student.enrollment.index')->with('success', 'Payment proof uploaded successfully. Admin will verify it shortly.');
     }
 }

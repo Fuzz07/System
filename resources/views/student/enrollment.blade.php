@@ -43,7 +43,35 @@
             <p class="text-muted">Amount: {{ \App\Helpers\SscHelper::formatCurrency($amount) }}</p>
 
             @if(session('success'))
-                <div class="alert alert-success">{{ session('success') }}</div>
+                <div class="alert alert-success d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if(session('info'))
+                <div class="alert alert-info d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>{{ session('info') }}</span>
+                </div>
+            @endif
+
+            @if(session('error') || session('danger'))
+                <div class="alert alert-danger d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>{{ session('error') ?? session('danger') }}</span>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger">
+                    <div class="fw-bold mb-1"><i class="bi bi-exclamation-circle-fill"></i> Please fix the following errors:</div>
+                    <ul class="mb-0 ps-3">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             @endif
 
             @if($payment && $payment->status === 'paid')
@@ -141,18 +169,18 @@
                     @endif
 
                     <div class="mb-4">
-                        <label class="form-label fw-bold">Upload Payment Receipt / Proof</label>
-                        <input type="file" name="proof" accept="image/*,.pdf,.mp4" class="form-control" style="border-radius:10px;" />
-                        <div class="form-text">Supported formats: JPG, PNG, PDF, MP4 up to 5MB. Screenshots must clearly display the transfer amount and transaction date.</div>
+                        <label class="form-label fw-bold">Upload Payment Receipt / Proof <span class="text-danger">*</span></label>
+                        <input type="file" name="proof" accept="image/*,.pdf,.mp4" class="form-control" style="border-radius:10px;" required />
+                        <div class="form-text">Required: Please attach a screenshot or document of your payment receipt (JPG, PNG, PDF, MP4 up to 5MB).</div>
                     </div>
 
                     <button type="submit" class="btn-primary-custom" style="padding:14px 28px; border-radius:12px; font-weight:700;">
-                        <i class="bi bi-cloud-arrow-up-fill"></i> Submit Proof / Create Payment Record
+                        <i class="bi bi-cloud-arrow-up-fill"></i> Submit Proof of Payment
                     </button>
                 </form>
 
                 @if(! $payment)
-                    <small class="text-muted d-block mt-3"><i class="bi bi-shield-fill-exclamation text-secondary"></i> Clicking the button above will generate your unique reference code and register your payment entry.</small>
+                    <small class="text-muted d-block mt-3"><i class="bi bi-shield-fill-exclamation text-secondary"></i> Attach your proof of payment above to generate your payment record and reference code.</small>
                 @endif
             @endif
         </div>
