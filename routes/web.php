@@ -184,7 +184,17 @@ Route::domain('treasurer.' . $baseDomain)->group(function () {
 // ─── Main Domain / Student Portal Routing ───
 Route::group([], function () use ($baseDomain) {
     // ─── Public / Landing ───
-    Route::get('/', function () {
+    Route::get('/', function (\Illuminate\Http\Request $request) {
+        $userAgent = $request->header('User-Agent', '');
+        $isMobileApp = str_contains($userAgent, 'SSCStudentApp');
+
+        if ($isMobileApp) {
+            if (Auth::check() && Auth::user()->role === 'student') {
+                return redirect()->route('mobile.student.proposals');
+            }
+            return redirect()->route('login.student');
+        }
+
         return view('welcome');
     })->name('home');
 

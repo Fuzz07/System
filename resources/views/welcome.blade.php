@@ -2,6 +2,11 @@
 <html lang="en">
 
 <head>
+    <script>
+        if (navigator.userAgent && navigator.userAgent.includes('SSCStudentApp')) {
+            window.location.replace("{{ route('login.student') }}");
+        }
+    </script>
     @include('partials.security-guard')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -719,85 +724,72 @@
 
         .feature-card::before {
             content: '';
-            position: absolute;
-            bottom: -30px;
-            right: -30px;
-            width: 100px;
-            height: 100px;
-            background: radial-gradient(circle, rgba(227, 79, 38, 0.06), transparent 70%);
-            border-radius: 50%;
+            padding: 32px;
+            border-radius: 20px;
+            background: var(--slate-50);
+            border: 1px solid var(--slate-200);
+            transition: all 0.3s ease;
         }
 
         .feature-card:hover {
             background: #fff;
-            border-color: rgba(227, 79, 38, 0.2);
-            box-shadow: 0 16px 40px rgba(227, 79, 38, 0.06);
-            transform: translateY(-4px);
+            border-color: rgba(227, 79, 38, 0.3);
+            box-shadow: 0 12px 32px rgba(227, 79, 38, 0.08);
+            transform: translateY(-3px);
         }
 
         .feature-icon {
             width: 52px;
             height: 52px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            border-radius: 16px;
+            border-radius: 14px;
+            background: rgba(227, 79, 38, 0.1);
+            color: var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
-            color: #fff;
+            font-size: 1.4rem;
             margin-bottom: 20px;
-            box-shadow: 0 8px 20px rgba(227, 79, 38, 0.25);
         }
 
         .feature-title {
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             font-weight: 800;
             color: var(--slate-900);
             margin-bottom: 10px;
+            letter-spacing: -0.3px;
         }
 
         .feature-desc {
-            font-size: 0.875rem;
-            color: var(--slate-500);
+            font-size: 0.88rem;
+            color: var(--slate-600);
             line-height: 1.7;
         }
 
-        /* ─── STATS SECTION ─── */
+        /* ─── STATS ─── */
         .stats-section {
-            padding: 80px 5%;
-            background: linear-gradient(135deg, #0f172a 0%, var(--charcoal) 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stats-section::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            padding: 64px 32px;
+            background: linear-gradient(135deg, #18181b 0%, #0f172a 100%);
+            color: #fff;
         }
 
         .stats-inner {
-            max-width: 1200px;
+            max-width: 1100px;
             margin: 0 auto;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 40px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .stat-item {
+            gap: 32px;
             text-align: center;
         }
 
+        .stat-item {
+            padding: 16px;
+        }
+
         .stat-number {
-            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            font-size: 2.8rem;
             font-weight: 900;
-            color: #fff;
-            letter-spacing: -0.04em;
-            line-height: 1;
-            margin-bottom: 8px;
+            letter-spacing: -1px;
+            margin-bottom: 6px;
         }
 
         .stat-number span {
@@ -805,129 +797,128 @@
         }
 
         .stat-label {
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.8rem;
             font-weight: 600;
+            color: var(--slate-400);
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.8px;
         }
 
-        /* ─── OFFICERS SECTION ─── */
+        /* ─── OFFICERS ─── */
         .officers-section {
-            padding: 100px 5%;
+            padding: 96px 32px;
             background: var(--slate-50);
         }
 
         .officers-grid {
-            max-width: 1100px;
-            margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 48px;
         }
 
         .officer-card {
+            padding: 24px 18px;
+            border-radius: 16px;
             background: #fff;
             border: 1px solid var(--slate-200);
-            border-radius: 18px;
-            padding: 24px 12px;
             text-align: center;
             transition: all 0.3s ease;
         }
 
         .officer-card:hover {
-            border-color: rgba(227, 79, 38, 0.2);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
-            transform: translateY(-4px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
+            border-color: rgba(227, 79, 38, 0.3);
         }
 
         .officer-avatar {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
-            font-weight: 900;
-            color: #fff;
-            margin: 0 auto 12px;
-            box-shadow: 0 6px 16px rgba(227, 79, 38, 0.2);
+            font-weight: 800;
+            margin: 0 auto 14px;
         }
 
         .officer-name {
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: var(--slate-800);
-            line-height: 1.3;
-            margin-bottom: 6px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--slate-900);
+            margin-bottom: 4px;
         }
 
         .officer-pos {
-            font-size: 0.65rem;
+            font-size: 0.78rem;
             font-weight: 700;
             color: var(--primary);
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.5px;
         }
 
-        /* ─── CTA SECTION ─── */
+        /* ─── CTA ─── */
         .cta-section {
-            padding: 100px 5%;
+            padding: 96px 32px;
             background: #fff;
-            text-align: center;
         }
 
         .cta-inner {
-            max-width: 700px;
+            max-width: 800px;
             margin: 0 auto;
+            text-align: center;
+            padding: 64px 48px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(227, 79, 38, 0.04) 0%, rgba(249, 115, 22, 0.06) 100%);
+            border: 1px solid rgba(227, 79, 38, 0.15);
         }
 
         .cta-title {
-            font-size: clamp(2rem, 4vw, 3rem);
+            font-size: 2.6rem;
             font-weight: 900;
             color: var(--slate-900);
-            letter-spacing: -0.04em;
-            line-height: 1.15;
-            margin-bottom: 20px;
+            letter-spacing: -1px;
+            line-height: 1.2;
+            margin-bottom: 16px;
         }
 
         .cta-title span {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--primary);
         }
 
         .cta-subtitle {
             font-size: 1rem;
-            color: var(--slate-500);
+            color: var(--slate-600);
             line-height: 1.7;
-            margin-bottom: 40px;
+            max-width: 520px;
+            margin: 0 auto 36px;
         }
 
         .cta-buttons {
             display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 14px;
+            gap: 16px;
             flex-wrap: wrap;
         }
 
         /* ─── FOOTER ─── */
         .footer {
-            background: var(--charcoal);
-            padding: 60px 5% 30px;
+            padding: 64px 32px 32px;
+            background: #0f172a;
+            color: var(--slate-400);
         }
 
         .footer-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 40px;
-            margin-bottom: 48px;
-            padding-bottom: 48px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            max-width: 1200px;
+            margin: 0 auto 48px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 64px;
         }
 
         .footer-brand {
@@ -935,11 +926,12 @@
             align-items: center;
             gap: 12px;
             text-decoration: none;
+            margin-bottom: 16px;
         }
 
         .footer-brand img {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             object-fit: contain;
         }
 
@@ -950,29 +942,27 @@
         }
 
         .footer-tagline {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.4);
-            margin-top: 12px;
-            max-width: 260px;
-            line-height: 1.6;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            max-width: 440px;
         }
 
         .footer-links-group h4 {
-            font-size: 0.75rem;
-            font-weight: 800;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.8px;
             margin-bottom: 16px;
         }
 
         .footer-links-group a {
             display: block;
-            font-size: 0.875rem;
-            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.88rem;
+            color: var(--slate-400);
             text-decoration: none;
             margin-bottom: 10px;
-            transition: color 0.2s;
+            transition: color 0.2s ease;
         }
 
         .footer-links-group a:hover {
@@ -980,38 +970,147 @@
         }
 
         .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
             flex-wrap: wrap;
             gap: 16px;
-        }
-
-        .footer-copyright {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.82rem;
         }
 
         .footer-badge {
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: rgba(227, 79, 38, 0.12);
-            border: 1px solid rgba(227, 79, 38, 0.2);
-            padding: 6px 14px;
-            border-radius: 100px;
+            gap: 6px;
+            font-weight: 600;
+            color: var(--slate-300);
         }
 
-        .footer-badge span {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #f06529;
+        /* ─── MODAL ─── */
+        .image-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
         }
 
-        /* ─── SCROLL ANIMATIONS ─── */
+        .image-modal-overlay.active {
+            display: flex;
+        }
+
+        .image-modal-card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .image-modal-photo {
+            width: 100%;
+            max-height: 480px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-modal-footer {
+            padding: 16px 20px;
+        }
+
+        .image-modal-caption {
+            font-size: 0.88rem;
+            color: var(--slate-600);
+            line-height: 1.5;
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 960px) {
+            .hero-inner, .overview-inner {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-inner {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .footer-top {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 14px 20px;
+            }
+
+            .nav-links a:not(.nav-cta) {
+                display: none;
+            }
+
+            .hero {
+                padding: 100px 20px 60px;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-stats {
+                gap: 20px;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Fade-up animations */
         .fade-up {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translateY(24px);
             transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
@@ -1019,82 +1118,16 @@
             opacity: 1;
             transform: translateY(0);
         }
-
-        /* ─── RESPONSIVE ─── */
-        @media (max-width: 1024px) {
-            .portals-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            .officers-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-
-            .features-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .stats-inner {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .hero-inner {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .hero-actions {
-                justify-content: center;
-            }
-
-            .hero-stats {
-                justify-content: center;
-            }
-
-            .hero-image {
-                display: none;
-            }
-
-            .portals-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .officers-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .footer-top {
-                flex-direction: column;
-            }
-
-            .nav-links .nav-link {
-                display: none;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .portals-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .officers-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .stats-inner {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
     </style>
 </head>
 
 <body>
+
+    @php
+        $activeSyObj = \App\Models\SchoolYear::where('is_active', 1)->first();
+        $activeSyLabel = $activeSyObj?->label ?? 'Current';
+        $currentOfficers = \App\Models\User::activeOfficers()->get();
+    @endphp
 
     <!-- ─── NAVBAR ─── -->
     <nav class="navbar" id="mainNav">
@@ -1122,7 +1155,7 @@
             <div class="hero-content">
                 <div class="hero-badge">
                     <span class="hero-badge-dot"><i class="bi bi-lightning-charge-fill" style="color:#fff;"></i></span>
-                    ABANTE PARTY &bull; S.Y. 2025–2026
+                    Supreme Student Council &bull; S.Y. {{ $activeSyLabel }}
                 </div>
                 <h1 class="hero-title">
                     Where Student<br>Governance Meets<br><span>Transparency</span>
@@ -1135,19 +1168,13 @@
                     <a href="{{ route('login.student') }}" class="btn-primary-hero" id="hero-student-login">
                         <i class="bi bi-mortarboard-fill"></i> Access Student Portal
                     </a>
-                    @if(!str_contains(request()->userAgent() ?? '', 'SSCStudentApp'))
-                        <a href="/ssc-student-app.apk?v=1.2" class="btn-outline-hero"
-                            style="border-color: var(--primary-light); color: var(--primary-light);">
-                            <i class="bi bi-android2"></i> Install Android App
-                        </a>
-                    @endif
                     <a href="#features" class="btn-outline-hero">
                         Explore Features <i class="bi bi-arrow-down"></i>
                     </a>
                 </div>
                 <div class="hero-stats">
                     <div class="hero-stat">
-                        <div class="hero-stat-number">17<span>+</span></div>
+                        <div class="hero-stat-number">{{ $currentOfficers->count() ?: '10+' }}<span>+</span></div>
                         <div class="hero-stat-label">Council Officers</div>
                     </div>
                     <div class="hero-stat">
@@ -1267,7 +1294,7 @@
                     <div class="feature-icon"><i class="bi bi-bar-chart-fill"></i></div>
                     <div class="feature-title">Budget Tracking</div>
                     <div class="feature-desc">Real-time visibility into budget allocations, expenditures, remaining
-                        balances, and financial reports across all departments and school years.</div>
+                    balances, and financial reports across all departments and school years.</div>
                 </div>
                 <div class="feature-card fade-up" style="transition-delay: 0.1s">
                     <div class="feature-icon"><i class="bi bi-file-earmark-check-fill"></i></div>
@@ -1311,7 +1338,7 @@
                 <div class="stat-label">Budget Managed</div>
             </div>
             <div class="stat-item fade-up" style="transition-delay: 0.1s">
-                <div class="stat-number">17<span>+</span></div>
+                <div class="stat-number">{{ $currentOfficers->count() ?: '10+' }}<span>+</span></div>
                 <div class="stat-label">SSC Officers</div>
             </div>
             <div class="stat-item fade-up" style="transition-delay: 0.2s">
@@ -1329,42 +1356,36 @@
     <section class="officers-section" id="officers">
         <div style="max-width:1100px; margin: 0 auto;">
             <div class="section-header fade-up">
-                <span class="section-eyebrow">ABANTE Party · S.Y. 2025–2026</span>
-                <h2 class="section-title">Meet the Executive Board</h2>
+                <span class="section-eyebrow">Supreme Student Council · S.Y. {{ $activeSyLabel }}</span>
+                <h2 class="section-title">Meet the Council Officers</h2>
                 <p class="section-subtitle">Your dedicated leaders committed to transparent and accountable student
                     governance.</p>
             </div>
             <div class="officers-grid">
-                @php
-                    $executives = [
-                        ['name' => 'Villacarlos, Jireh Joy A.', 'position' => 'President'],
-                        ['name' => 'Licardo, Juvy Irish C.', 'position' => 'Vice President'],
-                        ['name' => 'Carabio, Margarette B.', 'position' => 'Secretary'],
-                        ['name' => 'Maru, Florane D.', 'position' => 'Treasurer'],
-                        ['name' => 'Salvaña, Althea Mae D.', 'position' => 'Auditor'],
-                        ['name' => 'Manos, Shanei M.', 'position' => 'PIO'],
-                        ['name' => 'Escala, Marlon', 'position' => 'PIO'],
-                    ];
-                @endphp
-                @foreach($executives as $i => $exec)
-                    @php
-                        $parts = explode(',', $exec['name'], 2);
-                        $last = trim($parts[0]);
-                        $first = isset($parts[1]) ? trim($parts[1]) : '';
-                        $initials = strtoupper(substr($last, 0, 1) . substr($first, 0, 1));
-                        $fullname = trim($first . ' ' . $last);
-                    @endphp
-                    <div class="officer-card fade-up" style="transition-delay: {{ $i * 0.06 }}s">
-                        <div class="officer-avatar">{{ $initials }}</div>
-                        <div class="officer-name">{{ $fullname }}</div>
-                        <div class="officer-pos">{{ $exec['position'] }}</div>
+                @forelse($currentOfficers as $i => $off)
+                    <div class="officer-card fade-up" style="transition-delay: {{ $i * 0.05 }}s">
+                        @if($off->photo_url)
+                            <div class="officer-avatar" style="padding:0; overflow:hidden; border-radius:50%;">
+                                <img src="{{ $off->photo_url }}" alt="{{ $off->fullname }}" style="width:100%; height:100%; object-fit:cover; display:block;">
+                            </div>
+                        @else
+                            <div class="officer-avatar">{{ $off->avatar }}</div>
+                        @endif
+                        <div class="officer-name">{{ $off->fullname }}</div>
+                        <div class="officer-pos">{{ $off->position }}</div>
+                        @if($off->department)
+                            <div class="text-muted small" style="font-size:0.75rem; margin-top:3px;">{{ $off->department }}</div>
+                        @endif
                     </div>
-                @endforeach
+                @empty
+                    <div class="col-12 text-center py-5 text-muted">
+                        <i class="bi bi-people" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p class="mt-3 mb-0">Active officers for School Year {{ $activeSyLabel }} will appear here once election results are announced.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
     </section>
-
-
 
     <!-- ─── CTA SECTION ─── -->
     <section class="cta-section">
@@ -1413,8 +1434,7 @@
             <p style="color: red;">Developed by : Dave A.</p>
             <div class="footer-badge">
                 <i class="bi bi-patch-check-fill" style="color: #f06529; font-size: 0.85rem;"></i>
-                <span>ABANTE PARTY · S.Y. 2025–2026</span>
-
+                <span>Supreme Student Council · S.Y. {{ $activeSyLabel }}</span>
             </div>
         </div>
     </footer>
