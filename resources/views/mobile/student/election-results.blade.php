@@ -39,6 +39,18 @@
                 : 'Approved candidates are ranked by votes cast. Your vote is included in the totals.' }}
         </div>
 
+        {{-- Tabs for Detailed Tally vs Visual Analytics --}}
+        <div style="display:flex; background:#e2e8f0; padding:3px; border-radius:12px; margin-bottom:16px;">
+            <button type="button" id="mobile-tally-tab" class="m-tab-btn" onclick="switchMobileTab('tally')" 
+                style="flex:1; padding:9px 12px; border:none; border-radius:10px; font-size:0.8rem; font-weight:700; background:#fff; color:#0f172a; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.06); transition:all 0.2s;">
+                <i class="bi bi-list-ol me-1"></i> Detailed Tally
+            </button>
+            <button type="button" id="mobile-chart-tab" class="m-tab-btn" onclick="switchMobileTab('charts')" 
+                style="flex:1; padding:9px 12px; border:none; border-radius:10px; font-size:0.8rem; font-weight:700; background:transparent; color:#64748b; cursor:pointer; transition:all 0.2s;">
+                <i class="bi bi-pie-chart-fill me-1"></i> Visual Analytics
+            </button>
+        </div>
+
         @if(empty($candidatesByPosition))
             <div style="text-align:center; padding: 18px 12px; color: var(--slate-400); background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);">
                 <div style="font-size: 2rem; margin-bottom: 12px;">📊</div>
@@ -46,7 +58,8 @@
                 <div style="font-size: 0.78rem;">Election results will appear here once the dean approves candidacies and student voting begins.</div>
             </div>
         @else
-            <div style="display:flex; flex-direction:column; gap:16px;">
+            {{-- Tab 1: Detailed Tally View --}}
+            <div id="mobile-tally-view" style="display:flex; flex-direction:column; gap:16px;">
                 @foreach($candidatesByPosition as $position => $candidates)
                     @php
                         $totalVotes = collect($candidates)->sum('votes_count');
@@ -93,7 +106,160 @@
                     </div>
                 @endforeach
             </div>
+
+            {{-- Tab 2: Visual Analytics View --}}
+            <div id="mobile-charts-view" style="display:none; flex-direction:column; gap:16px;">
+                @foreach($candidatesByPosition as $position => $candidates)
+                    @php
+                        $totalVotes = collect($candidates)->sum('votes_count');
+                        $slug = Str::slug($position);
+                    @endphp
+                    <div style="background:#fff; border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(15, 23, 42, 0.04);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <div>
+                                <div style="font-size:0.9rem; font-weight:800; color:#0f172a;">{{ $position }}</div>
+                                <div style="font-size:0.74rem; color:#64748b;">{{ number_format($totalVotes) }} total vote{{ $totalVotes !== 1 ? 's' : '' }}</div>
+                            </div>
+                            <span style="font-size:0.72rem; color:#4f46e5; background:rgba(79,70,229,0.1); padding:6px 10px; border-radius:999px; font-weight:700;">
+                                <i class="bi bi-pie-chart-fill"></i> Distribution
+                            </span>
+                        </div>
+
+                        @if($totalVotes == 0)
+                            <div style="text-align:center; padding: 24px 12px; color:#94a3b8; font-size:0.78rem;">
+                                No votes cast yet for this position.
+                            </div>
+                        @else
+                            <div style="position:relative; width:100%; height:220px; margin:0 auto 12px;">
+                                <canvas id="mobile-chart-{{ $slug }}"></canvas>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
         @endif
     @endif
 </div>
+
+<script>
+    function switchMobileTab(tab) {
+        var tallyBtn = document.getElementById('mobile-tally-tab');
+        var chartBtn = document.getElementById('mobile-chart-tab');
+        var tallyView = document.getElementById('mobile-tally-view');
+        var chartsView = document.getElementById('mobile-charts-view');
+
+        if (!tallyBtn || !chartBtn || !tallyView || !chartsView) return;
+
+        if (tab === 'charts') {
+            tallyBtn.style.background = 'transparent';
+            tallyBtn.style.color = '#64748b';
+            tallyBtn.style.boxShadow = 'none';
+
+            chartBtn.style.background = '#fff';
+            chartBtn.style.color = '#0f172a';
+            chartBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.06)';
+
+            tallyView.style.display = 'none';
+            chartsView.style.display = 'flex';
+            renderMobileCharts();
+        } else {
+            chartBtn.style.background = 'transparent';
+            chartBtn.style.color = '#64748b';
+            chartBtn.style.boxShadow = 'none';
+
+            tallyBtn.style.background = '#fff';
+            tallyBtn.style.color = '#0f172a';
+            tallyBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.06)';
+
+            chartsView.style.display = 'none';
+            tallyView.style.display = 'flex';
+        }
+    }
+
+    var mobileChartData = {
+        @foreach($candidatesByPosition as $pos => $candidates)
+            @php
+                $candNames = collect($candidates)->map(fn($c) => $c->user->fullname)->toArray();
+                $candVotes = collect($candidates)->map(fn($c) => (int)$c->votes_count)->toArray();
+            @endphp
+            "{{ Str::slug($pos) }}": {
+                labels: {!! json_encode($candNames) !!},
+                votes: {!! json_encode($candVotes) !!},
+                total: {{ collect($candidates)->sum('votes_count') }}
+            },
+        @endforeach
+    };
+
+    var mobileActiveCharts = {};
+
+    function ensureMobileChartJs(callback) {
+        if (typeof Chart !== 'undefined') {
+            callback();
+            return;
+        }
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+
+    function renderMobileCharts() {
+        ensureMobileChartJs(function() {
+            Object.keys(mobileChartData).forEach(function(slug) {
+                var data = mobileChartData[slug];
+                if (!data || data.total <= 0) return;
+
+                var canvas = document.getElementById('mobile-chart-' + slug);
+                if (!canvas) return;
+
+                if (mobileActiveCharts[slug]) {
+                    mobileActiveCharts[slug].resize();
+                    return;
+                }
+
+                var ctx = canvas.getContext('2d');
+                mobileActiveCharts[slug] = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.votes,
+                            backgroundColor: [
+                                '#4f46e5', '#10b981', '#f59e0b', '#0ea5e9', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 10,
+                                    padding: 10,
+                                    font: { family: 'Plus Jakarta Sans, sans-serif', size: 11, weight: '600' }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        var label = context.label || '';
+                                        var value = context.parsed || 0;
+                                        var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                        var pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return ' ' + label + ': ' + value + ' votes (' + pct + '%)';
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '62%'
+                    }
+                });
+            });
+        });
+    }
+</script>
 @endsection

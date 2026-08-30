@@ -166,25 +166,31 @@
                             @endforeach
                         </div>
                     </div>
-
-                    {{-- 2. VISUAL CHARTS VIEW (using Chart.js) --}}
+                                     {{-- 2. VISUAL CHARTS VIEW (using Chart.js) --}}
                     <div class="tab-pane fade" id="chart-view" role="tabpanel" aria-labelledby="chart-tab">
                         <div class="row g-4">
                             @foreach($candidatesByPosition as $pos => $candidates)
+                                @php
+                                    $totalVotesForPos = collect($candidates)->sum('votes_count');
+                                    $slug = Str::slug($pos);
+                                @endphp
                                 <div class="col-md-6">
                                     <div class="card border-0 shadow-sm h-100" style="border-radius: 20px;">
-                                        <div class="card-header bg-light py-3 px-4 border-0">
-                                            <h6 class="mb-0 fw-bold text-dark">{{ $pos }} Distribution</h6>
+                                        <div class="card-header bg-light py-3 px-4 border-0 d-flex align-items-center justify-content-between">
+                                            <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-pie-chart text-primary me-1"></i> {{ $pos }}</h6>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2.5 py-1 rounded-pill small">
+                                                {{ number_format($totalVotesForPos) }} vote{{ $totalVotesForPos !== 1 ? 's' : '' }}
+                                            </span>
                                         </div>
-                                        <div class="card-body p-4 d-flex align-items-center justify-content-center" style="min-height: 300px;">
-                                            @php
-                                                $totalVotesForPos = collect($candidates)->sum('votes_count');
-                                            @endphp
+                                        <div class="card-body p-4 d-flex align-items-center justify-content-center" style="min-height: 320px;">
                                             @if($totalVotesForPos == 0)
-                                                <div class="text-center text-muted small">No votes cast yet for this position.</div>
+                                                <div class="text-center text-muted small py-4">
+                                                    <i class="bi bi-clock-history d-block mb-2" style="font-size:1.8rem; opacity:0.35;"></i>
+                                                    No votes cast yet for this position.
+                                                </div>
                                             @else
-                                                <div style="width: 100%; max-width: 280px; margin: 0 auto;">
-                                                    <canvas id="chart-{{ Str::slug($pos) }}"></canvas>
+                                                <div style="position: relative; width: 100%; max-width: 320px; height: 260px; margin: 0 auto;">
+                                                    <canvas id="chart-{{ $slug }}"></canvas>
                                                 </div>
                                             @endif
                                         </div>
@@ -199,78 +205,103 @@
     </div>
 </div>
 
-{{-- Load Chart.js from CDN & Render Beautiful Charts --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let chartsInitialized = false;
-    const chartsMap = {};
+    document.addEventListener("DOMContentLoaded", function() {
+        const chartTab = document.getElementById('chart-tab');
+        if (chartTab) {
+            chartTab.addEventListener('shown.bs.tab', function () {
+                renderElectionCharts();
+            });
+            chartTab.addEventListener('click', function () {
+                setTimeout(renderElectionCharts, 120);
+            });
+        }
+    });
 
-    function initializeCharts() {
-        if (chartsInitialized) return;
-        chartsInitialized = true;
+    const electionChartData = {
+        @foreach($candidatesByPosition as $pos => $candidates)
+            @php
+                $candNames = collect($candidates)->map(fn($c) => $c->user->fullname)->toArray();
+                $candVotes = collect($candidates)->map(fn($c) => (int)$c->votes_count)->toArray();
+            @endphp
+            "{{ Str::slug($pos) }}": {
+                labels: {!! json_encode($candNames) !!},
+                votes: {!! json_encode($candVotes) !!},
+                total: {{ collect($candidates)->sum('votes_count') }}
+            },
+        @endforeach
+    };
 
-        setTimeout(() => {
-            @foreach($candidatesByPosition as $pos => $candidates)
-                @php
-                    $totalVotesForPos = collect($candidates)->sum('votes_count');
-                    $candNames = collect($candidates)->map(fn($c) => $c->user->fullname)->toArray();
-                    $candVotes = collect($candidates)->map(fn($c) => $c->votes_count)->toArray();
-                @endphp
-                
-                @if($totalVotesForPos > 0)
-                    const ctx_{{ Str::slug($pos) }} = document.getElementById("chart-{{ Str::slug($pos) }}")?.getContext('2d');
-                    if (ctx_{{ Str::slug($pos) }}) {
-                        chartsMap["{{ Str::slug($pos) }}"] = new Chart(ctx_{{ Str::slug($pos) }}, {
-                            type: 'doughnut',
-                            data: {
-                                labels: {!! json_encode($candNames) !!},
-                                datasets: [{
-                                    data: {!! json_encode($candVotes) !!},
-                                    backgroundColor: [
-                                        '#4f46e5', // Indigo
-                                        '#10b981', // Emerald
-                                        '#f59e0b', // Amber
-                                        '#0ea5e9', // Sky Blue
-                                        '#ec4899', // Pink
-                                        '#8b5cf6'  // Purple
-                                    ],
-                                    borderWidth: 2,
-                                    borderColor: '#ffffff'
-                                }]
+    let activeCharts = {};
+
+    function ensureChartJs(callback) {
+        if (typeof Chart !== 'undefined') {
+            callback();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+        script.onload = callback;
+        document.head.appendChild(script);
+    }
+
+    function renderElectionCharts() {
+        ensureChartJs(function() {
+            Object.keys(electionChartData).forEach(function(slug) {
+                const data = electionChartData[slug];
+                if (!data || data.total <= 0) return;
+
+                const canvas = document.getElementById('chart-' + slug);
+                if (!canvas) return;
+
+                if (activeCharts[slug]) {
+                    activeCharts[slug].resize();
+                    return;
+                }
+
+                const ctx = canvas.getContext('2d');
+                activeCharts[slug] = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.votes,
+                            backgroundColor: [
+                                '#4f46e5', '#10b981', '#f59e0b', '#0ea5e9', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 14,
+                                    font: { family: 'Plus Jakarta Sans, sans-serif', size: 12, weight: '600' }
+                                }
                             },
-                            options: {
-                                responsive: true,
-                                plugins: {
-                                    legend: {
-                                        position: 'bottom',
-                                        labels: {
-                                            boxWidth: 12,
-                                            padding: 15,
-                                            font: {
-                                                family: 'Inter, sans-serif',
-                                                size: 11
-                                            }
-                                        }
-                                    },
-                                    tooltip: {
-                                        callbacks: {
-                                            label: function(context) {
-                                                const label = context.label || '';
-                                                const value = context.parsed || 0;
-                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                                const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                                return ` ${label}: ${value} votes (${pct}%)`;
-                                            }
-                                        }
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return ` ${label}: ${value} votes (${pct}%)`;
                                     }
-                                },
-                                cutout: '65%'
+                                }
                             }
-                        });
+                        },
+                        cutout: '65%'
                     }
-                @endif
-            @endforeach
-        }, 150);
+                });
+            });
+        });
     }
 </script>
 @endsection
