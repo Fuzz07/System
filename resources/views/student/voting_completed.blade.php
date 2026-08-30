@@ -44,12 +44,9 @@
                 @endforeach
             </div>
 
-            <div class="mt-5 d-flex justify-content-center gap-3 flex-wrap">
+            <div class="mt-5 d-flex justify-content-center">
                 <a href="{{ route('student.election.results') }}" class="btn btn-primary px-4 py-2.5 fw-bold shadow-sm" style="border-radius:10px;">
-                    <i class="bi bi-bar-chart-fill me-1"></i> View Live Results
-                </a>
-                <a href="{{ route('student.overview') }}" class="btn btn-outline-secondary px-4 py-2.5 fw-bold" style="border-radius:10px;">
-                    <i class="bi bi-house-door me-1"></i> Back to Dashboard
+                    <i class="bi bi-bar-chart-fill me-1"></i> Election Results
                 </a>
             </div>
         </div>
