@@ -72,8 +72,8 @@ class DashboardController extends Controller
     protected function authorizeDeanAccess(Candidacy $candidacy)
     {
         $activeSy = SchoolYear::where('is_active', 1)->first();
-        if (!$activeSy || $candidacy->school_year !== $activeSy->label || $candidacy->status !== 'pending') {
-            abort(404);
+        if ($activeSy && $candidacy->school_year !== $activeSy->label) {
+            abort(404, 'Candidacy does not belong to the active school year.');
         }
 
         $dean = Auth::user();
