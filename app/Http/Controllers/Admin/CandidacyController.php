@@ -15,11 +15,18 @@ use Illuminate\Support\Facades\Auth;
 
 class CandidacyController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $candidacies = Candidacy::with('user')
-            ->orderByDesc('id')
-            ->get();
+        $activeSy = SchoolYear::where('is_active', 1)->first();
+        $allSchoolYears = SchoolYear::orderByDesc('label')->get();
+        
+        $selectedSy = $request->query('sy', $activeSy ? $activeSy->label : ($allSchoolYears->first()->label ?? null));
+
+        $candidacyQuery = Candidacy::with('user');
+        if ($selectedSy && $selectedSy !== 'all') {
+            $candidacyQuery->where('school_year', $selectedSy);
+        }
+        $candidacies = $candidacyQuery->orderByDesc('id')->get();
 
         $stats = [
             'total' => $candidacies->count(),
@@ -28,9 +35,56 @@ class CandidacyController extends Controller
             'rejected' => $candidacies->where('status', 'rejected')->count(),
         ];
 
-        $activeSy = SchoolYear::where('is_active', 1)->first();
+        // Previous Election Winners Archive - sorted by school year descending
+        $archivedElections = [];
+        foreach ($allSchoolYears as $sy) {
+            $cands = Candidacy::with('user')
+                ->withCount('votes')
+                ->where('school_year', $sy->label)
+                ->where('status', 'approved')
+                ->get();
 
-        return view('admin.candidacies', compact('candidacies', 'stats', 'activeSy'));
+            $winners = [];
+            $byPos = $cands->groupBy('position');
+            foreach ($byPos as $position => $posCands) {
+                $sorted = $posCands->sortByDesc('votes_count');
+                $topCand = $sorted->first();
+                $totalPosVotes = $posCands->sum('votes_count');
+
+                if ($topCand && ($sy->results_announced || (!$sy->is_active && $topCand->votes_count > 0))) {
+                    $winners[] = [
+                        'position' => $position,
+                        'candidate' => $topCand,
+                        'votes_count' => $topCand->votes_count,
+                        'total_pos_votes' => $totalPosVotes,
+                        'percentage' => $totalPosVotes > 0 ? round(($topCand->votes_count / $totalPosVotes) * 100, 1) : 0,
+                    ];
+                }
+            }
+
+            $totalVotesInYear = \App\Models\Vote::where('school_year', $sy->label)->count();
+            $totalFilingsInYear = Candidacy::where('school_year', $sy->label)->count();
+
+            if ($cands->isNotEmpty() || $sy->results_announced || $totalFilingsInYear > 0 || $totalVotesInYear > 0) {
+                $archivedElections[] = [
+                    'school_year' => $sy,
+                    'is_active' => (bool)$sy->is_active,
+                    'results_announced' => (bool)$sy->results_announced,
+                    'total_filings' => $totalFilingsInYear,
+                    'total_votes' => $totalVotesInYear,
+                    'winners' => $winners,
+                ];
+            }
+        }
+
+        return view('admin.candidacies', compact(
+            'candidacies',
+            'stats',
+            'activeSy',
+            'selectedSy',
+            'allSchoolYears',
+            'archivedElections'
+        ));
     }
 
     public function openVoting(Request $request)

@@ -169,10 +169,28 @@
     </div>
 </div>
 
-{{-- Candidacy Table --}}
-<div class="card border-0 shadow-sm" style="border-radius:20px; overflow:hidden;">
-    <div class="card-header-custom bg-light p-4 border-0">
-        <span class="card-title h5 mb-0 fw-bold" style="color:var(--navy-900);">Active Election Candidacies</span>
+{{-- Candidacy Table with Year Filter --}}
+<div class="card border-0 shadow-sm mb-5" style="border-radius:20px; overflow:hidden;">
+    <div class="card-header-custom bg-light p-4 border-0 d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <span class="card-title h5 mb-1 fw-bold text-dark d-block">
+                <i class="bi bi-clipboard-check text-primary me-1"></i> Candidacy Filings
+            </span>
+            <span class="text-muted small">Viewing applications for {{ $selectedSy === 'all' ? 'All School Years' : 'School Year ' . ($selectedSy ?? 'N/A') }}</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <form method="GET" action="{{ route('admin.candidacies') }}" class="m-0 d-flex align-items-center gap-2">
+                <label for="syFilter" class="small fw-bold text-muted mb-0 d-none d-sm-inline">School Year:</label>
+                <select name="sy" id="syFilter" class="form-select form-select-sm fw-bold" onchange="this.form.submit()" style="border-radius:10px; min-width:160px; padding:0.45rem 1.8rem 0.45rem 0.8rem;">
+                    @foreach($allSchoolYears as $syOption)
+                        <option value="{{ $syOption->label }}" @selected($selectedSy === $syOption->label)>
+                            SY {{ $syOption->label }}@if($activeSy && $activeSy->label === $syOption->label) (Active)@endif
+                        </option>
+                    @endforeach
+                    <option value="all" @selected($selectedSy === 'all')>All School Years</option>
+                </select>
+            </form>
+        </div>
     </div>
     <div class="card-body-custom p-0">
         <div class="table-responsive">
@@ -246,7 +264,7 @@
                     <tr>
                         <td colspan="7" class="text-center text-muted py-5">
                             <i class="bi bi-inbox" style="font-size:3rem; opacity:0.2;"></i>
-                            <p class="mt-3 mb-0">No candidacy applications submitted yet.</p>
+                            <p class="mt-3 mb-0">No candidacy applications found for the selected school year.</p>
                         </td>
                     </tr>
                     @endforelse
@@ -254,5 +272,129 @@
             </table>
         </div>
     </div>
+</div>
+
+{{-- Election Archive & Previous Winners Section --}}
+<div class="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+        <h3 class="h4 fw-bold text-dark mb-1">
+            <i class="bi bi-trophy-fill text-warning me-2"></i> Election Archive & Previous Winners
+        </h3>
+        <p class="text-muted small mb-0">Official record of elected student leaders and election outcomes archived across school years, sorted chronologically.</p>
+    </div>
+    <div>
+        <a href="{{ route('admin.election.results') }}" class="btn btn-outline-primary btn-sm fw-bold px-3 py-2" style="border-radius:10px;">
+            <i class="bi bi-bar-chart-fill me-1"></i> Full Results & Analytics Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="d-flex flex-column gap-4 mb-5">
+    @forelse($archivedElections as $arch)
+        @php
+            $sy = $arch['school_year'];
+            $isCur = $arch['is_active'];
+            $announced = $arch['results_announced'];
+            $winners = $arch['winners'];
+        @endphp
+        <div class="card border-0 shadow-sm" style="border-radius:20px; overflow:hidden;">
+            <div class="card-header bg-white p-4 border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:48px; height:48px; border-radius:12px; background:{{ $announced ? 'rgba(16,185,129,0.1)' : ($isCur ? 'rgba(79,70,229,0.1)' : 'rgba(100,116,139,0.1)') }}; color:{{ $announced ? '#059669' : ($isCur ? '#4f46e5' : '#475569') }}; display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
+                        <i class="bi bi-{{ $announced ? 'trophy' : ($isCur ? 'broadcast' : 'archive') }}"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="fw-bold text-dark mb-0">School Year {{ $sy->label }}</h5>
+                            @if($isCur)
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1 rounded-pill" style="font-size:0.75rem;">Active SY</span>
+                            @endif
+                            @if($announced)
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1 rounded-pill" style="font-size:0.75rem;"><i class="bi bi-check-circle-fill me-1"></i> Results Announced</span>
+                            @elseif($isCur && $sy->voting_open)
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2.5 py-1 rounded-pill" style="font-size:0.75rem;"><i class="bi bi-clock-fill me-1"></i> Voting In Progress</span>
+                            @else
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2.5 py-1 rounded-pill" style="font-size:0.75rem;">Archived Record</span>
+                            @endif
+                        </div>
+                        <div class="text-muted small mt-1">
+                            <i class="bi bi-people me-1"></i> {{ $arch['total_filings'] }} Candidac{{ $arch['total_filings'] === 1 ? 'y' : 'ies' }} Filed
+                            <span class="mx-1.5">·</span>
+                            <i class="bi bi-check2-square me-1"></i> {{ number_format($arch['total_votes']) }} Votes Cast
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <a href="{{ route('admin.election.results', ['sy' => $sy->label]) }}" class="btn btn-outline-primary btn-sm fw-bold px-3 py-2" style="border-radius:10px;">
+                        <i class="bi bi-bar-chart-fill me-1"></i> View SY {{ $sy->label }} Results
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body p-4 bg-light bg-opacity-50">
+                @if(!empty($winners))
+                    <div class="row g-3">
+                        @foreach($winners as $win)
+                            @php
+                                $cand = $win['candidate'];
+                            @endphp
+                            <div class="col-md-6 col-lg-4">
+                                <div class="p-3 bg-white border rounded-4 h-100 shadow-sm position-relative d-flex flex-column justify-content-between" style="border-color:#e2e8f0 !important;">
+                                    <div>
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="badge bg-warning bg-opacity-15 text-warning-800 border border-warning border-opacity-25 px-2.5 py-1 rounded-pill fw-bold" style="font-size:0.7rem; color:#92400e !important;">
+                                                <i class="bi bi-trophy-fill me-1 text-warning"></i> {{ $win['position'] }}
+                                            </span>
+                                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill fw-bold" style="font-size:0.68rem;">
+                                                Winner
+                                            </span>
+                                        </div>
+
+                                        <div class="d-flex align-items-center gap-3 my-2">
+                                            <div class="avatar bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style="width:46px; height:46px; border-radius:12px; font-size:1.1rem; flex-shrink:0;">
+                                                @if($cand->photo_url)
+                                                    <img src="{{ $cand->photo_url }}" alt="{{ $cand->user->fullname }}" style="width:100%; height:100%; border-radius:inherit; object-fit:cover; display:block;">
+                                                @else
+                                                    {{ $cand->user->avatar }}
+                                                @endif
+                                            </div>
+                                            <div class="overflow-hidden">
+                                                <div class="fw-bold text-dark text-truncate" style="font-size:0.92rem;">{{ $cand->user->fullname }}</div>
+                                                <div class="text-muted small text-truncate" style="font-size:0.75rem;">
+                                                    {{ $cand->department }} · ID: {{ $cand->user->student_id }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-2 pt-2 border-top d-flex align-items-center justify-content-between text-muted small" style="font-size:0.75rem;">
+                                        <span><i class="bi bi-patch-check-fill text-success me-1"></i> Votes Received:</span>
+                                        <strong class="text-dark">{{ number_format($win['votes_count']) }} ({{ $win['percentage'] }}%)</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-info-circle" style="font-size:1.8rem; opacity:0.35;"></i>
+                        <p class="mb-0 mt-2 small">
+                            @if($isCur && !$announced)
+                                Election is currently in progress. Final winners will be officially archived here once the election results are announced.
+                            @else
+                                No winning candidates recorded for School Year {{ $sy->label }}.
+                            @endif
+                        </p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @empty
+        <div class="card border-0 shadow-sm text-center p-5" style="border-radius:20px;">
+            <div style="font-size:3rem; opacity:0.3;">🗳️</div>
+            <h5 class="fw-bold text-dark mt-3">No Election Archives on Record</h5>
+            <p class="text-muted small mb-0">Past election results and winners will automatically be sorted and stored here per school year.</p>
+        </div>
+    @endforelse
 </div>
 @endsection
