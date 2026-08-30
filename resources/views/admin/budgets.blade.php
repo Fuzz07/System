@@ -15,60 +15,171 @@
 }
 </style>
 
-<div class="page-header d-flex justify-content-between align-items-center">
-    <div><h1>Budget Management</h1><p>Create and manage budget allocations</p></div>
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-dark mb-1">Budget Management</h1>
+        <p class="text-muted mb-0">Create, monitor, and manage department enrollment fees and budget allocations</p>
+    </div>
     <div class="d-flex gap-2">
-        <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer"></i> Print Report</button>
-        <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#budgetModal"><i class="bi bi-plus-circle"></i> New Budget</button>
+        <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i> Print Report</button>
+        <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#budgetModal"><i class="bi bi-plus-circle me-1"></i> New Budget</button>
     </div>
 </div>
 
-<div class="card mb-4 search-card">
-    <div class="card-body-custom">
-        <form method="GET" class="d-flex gap-2">
-            <input type="text" name="search" class="form-control-custom flex-fill" placeholder="Search budgets..." value="{{ $search }}">
-            <button type="submit" class="btn-primary-custom"><i class="bi bi-search"></i></button>
-            @if($search)<a href="{{ route('admin.budgets') }}" class="btn btn-outline-secondary">Clear</a>@endif
+{{-- KPI Summary Cards --}}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+            <div class="card-body p-3.5 d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.3rem;">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Total Approved Budget</div>
+                    <div class="fs-5 fw-bold text-dark">{!! \App\Helpers\SscHelper::formatCurrency($totalAllocated) !!}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+            <div class="card-body p-3.5 d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.3rem;">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Enrollment Fees Fund</div>
+                    <div class="fs-5 fw-bold text-dark">{!! \App\Helpers\SscHelper::formatCurrency($totalEnrollmentFees) !!}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+            <div class="card-body p-3.5 d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.3rem;">
+                    <i class="bi bi-piggy-bank-fill"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Remaining Balance</div>
+                    <div class="fs-5 fw-bold text-dark">{!! \App\Helpers\SscHelper::formatCurrency($totalRemaining) !!}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 16px;">
+            <div class="card-body p-3.5 d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-warning bg-opacity-10 text-warning d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 1.3rem;">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Departments</div>
+                    <div class="fs-5 fw-bold text-dark">{{ $departmentsCount }} Covered</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4 search-card border-0 shadow-sm" style="border-radius: 16px;">
+    <div class="card-body-custom p-3">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control-custom form-control border-0 bg-light" placeholder="Search title, department, or school year..." value="{{ $search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="filter" class="form-select form-control-custom" onchange="this.form.submit()">
+                    <option value="all" @selected($filter === 'all')>All Budget Types</option>
+                    <option value="enrollment" @selected($filter === 'enrollment')>🎓 Department Enrollment Fees Only</option>
+                    <option value="custom" @selected($filter === 'custom')>📋 Custom / Other Budgets</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="sort" class="form-select form-control-custom" onchange="this.form.submit()">
+                    <option value="dept_enrollment" @selected($sort === 'dept_enrollment')>Sort: Department Enrollment Fees First</option>
+                    <option value="amount_desc" @selected($sort === 'amount_desc')>Sort: Highest Amount</option>
+                    <option value="title_asc" @selected($sort === 'title_asc')>Sort: Title (A - Z)</option>
+                    <option value="latest" @selected($sort === 'latest')>Sort: Newest First</option>
+                </select>
+            </div>
+            <div class="col-md-1 d-flex gap-1">
+                <button type="submit" class="btn btn-primary-custom w-100"><i class="bi bi-filter"></i></button>
+                @if($search || $filter !== 'all' || $sort !== 'dept_enrollment')
+                    <a href="{{ route('admin.budgets') }}" class="btn btn-outline-secondary" title="Reset Filters"><i class="bi bi-x-lg"></i></a>
+                @endif
+            </div>
         </form>
     </div>
 </div>
 
-<div class="card">
+<div class="card border-0 shadow-sm" style="border-radius: 16px;">
     <div class="table-responsive-custom">
-        <table class="table-custom">
-            <thead><tr><th>Title</th><th>Department</th><th>Allocated</th><th>Remaining</th><th>Usage</th><th>Status</th><th>Actions</th></tr></thead>
+        <table class="table-custom align-middle">
+            <thead>
+                <tr>
+                    <th>Budget Title</th>
+                    <th>Department</th>
+                    <th>School Year</th>
+                    <th>Allocated Amount</th>
+                    <th>Remaining Balance</th>
+                    <th>Usage</th>
+                    <th>Status</th>
+                    <th class="text-end pe-3">Actions</th>
+                </tr>
+            </thead>
             <tbody>
             @forelse($budgets as $b)
-            <tr>
-                <td style="font-weight:700;">{{ $b->title }}</td>
-                <td>{{ $b->department }}</td>
-                <td>{!! \App\Helpers\SscHelper::formatCurrency($b->allocated_amount) !!}</td>
-                <td>{!! \App\Helpers\SscHelper::formatCurrency($b->remaining_balance) !!}</td>
-                <td>
-                    <div style="background:var(--slate-100);border-radius:6px;height:8px;width:100px;overflow:hidden;">
-                        <div class="budget-bar-fill" data-width="{{ $b->used_percent }}" style="height:100%;background:{{ $b->used_percent > 80 ? 'var(--danger)' : 'var(--primary)' }};border-radius:6px;transition:width 1s ease;"></div>
-                    </div>
-                    <span style="font-size:.72rem;color:var(--slate-500);">{{ $b->used_percent }}%</span>
-                </td>
-                <td>{!! \App\Helpers\SscHelper::statusBadge($b->status) !!}</td>
-                <td>
-                    <div class="d-flex gap-1 flex-wrap">
-                        @if($b->status === 'Pending')
-                        <form method="POST" action="{{ route('admin.budgets.approve', $b) }}" class="d-inline">@csrf @method('PATCH')
-                            <button class="btn btn-success btn-sm" style="font-size:.72rem;"><i class="bi bi-check2"></i></button>
-                        </form>
-                        <form method="POST" action="{{ route('admin.budgets.reject', $b) }}" class="d-inline">@csrf @method('PATCH')
-                            <button class="btn btn-outline-danger btn-sm" style="font-size:.72rem;"><i class="bi bi-x"></i></button>
-                        </form>
+                @php
+                    $isEnrollmentFee = str_starts_with($b->title, \App\Models\Budget::ENROLLMENT_TITLE_PREFIX);
+                @endphp
+                <tr style="{{ $isEnrollmentFee ? 'background-color: rgba(79, 70, 229, 0.02);' : '' }}">
+                    <td>
+                        <div class="fw-bold text-dark">{{ $b->title }}</div>
+                        @if($isEnrollmentFee)
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mt-1" style="font-size:0.65rem; font-weight:700;">
+                                <i class="bi bi-mortarboard-fill me-1"></i> Department Enrollment Fee
+                            </span>
                         @endif
-                        <form method="POST" action="{{ route('admin.budgets.destroy', $b) }}" class="d-inline" onsubmit="return confirm('Delete this budget?')">@csrf @method('DELETE')
-                            <button class="btn btn-outline-danger btn-sm" style="font-size:.72rem;"><i class="bi bi-trash"></i></button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border px-2.5 py-1.5 fw-semibold" style="font-size:0.75rem;">
+                            <i class="bi bi-building me-1 text-muted"></i> {{ $b->department }}
+                        </span>
+                    </td>
+                    <td><span class="text-muted small fw-semibold">SY {{ $b->school_year ?? 'N/A' }}</span></td>
+                    <td class="fw-bold text-dark">{!! \App\Helpers\SscHelper::formatCurrency($b->allocated_amount) !!}</td>
+                    <td class="fw-bold text-success">{!! \App\Helpers\SscHelper::formatCurrency($b->remaining_balance) !!}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="background:var(--slate-100);border-radius:6px;height:8px;width:90px;overflow:hidden; flex-shrink:0;">
+                                <div class="budget-bar-fill" data-width="{{ $b->used_percent }}" style="height:100%;width:{{ $b->used_percent }}%;background:{{ $b->used_percent > 80 ? 'var(--danger)' : 'var(--primary)' }};border-radius:6px;transition:width 0.6s ease;"></div>
+                            </div>
+                            <span style="font-size:.72rem;color:var(--slate-500);font-weight:700;">{{ $b->used_percent }}%</span>
+                        </div>
+                    </td>
+                    <td>{!! \App\Helpers\SscHelper::statusBadge($b->status) !!}</td>
+                    <td class="text-end pe-3">
+                        <div class="d-flex gap-1 justify-content-end flex-wrap">
+                            @if($b->status === 'Pending')
+                            <form method="POST" action="{{ route('admin.budgets.approve', $b) }}" class="d-inline">@csrf @method('PATCH')
+                                <button class="btn btn-success btn-sm px-2 py-1" style="font-size:.72rem;" title="Approve Budget"><i class="bi bi-check2"></i></button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.budgets.reject', $b) }}" class="d-inline">@csrf @method('PATCH')
+                                <button class="btn btn-outline-danger btn-sm px-2 py-1" style="font-size:.72rem;" title="Reject Budget"><i class="bi bi-x"></i></button>
+                            </form>
+                            @endif
+                            <form method="POST" action="{{ route('admin.budgets.destroy', $b) }}" class="d-inline" onsubmit="return confirm('Delete this budget?')">@csrf @method('DELETE')
+                                <button class="btn btn-outline-danger btn-sm px-2 py-1" style="font-size:.72rem;" title="Delete Budget"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
             @empty
-            <tr><td colspan="7" class="text-center py-4 text-muted">No budgets found.</td></tr>
+                <tr><td colspan="8" class="text-center py-5 text-muted">No budgets found matching the criteria.</td></tr>
             @endforelse
             </tbody>
         </table>

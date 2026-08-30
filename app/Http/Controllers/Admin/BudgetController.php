@@ -13,15 +13,56 @@ class BudgetController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search', '');
+        $filter = $request->input('filter', 'all');
+        $sort = $request->input('sort', 'dept_enrollment');
+
         $query = Budget::with(['creator', 'approver']);
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%$search%")
-                    ->orWhere('department', 'like', "%$search%");
+                    ->orWhere('department', 'like', "%$search%")
+                    ->orWhere('school_year', 'like', "%$search%");
             });
         }
-        $budgets = $query->orderByDesc('created_at')->get();
-        return view('admin.budgets', compact('budgets', 'search'));
+
+        if ($filter === 'enrollment') {
+            $query->where('title', 'like', Budget::ENROLLMENT_TITLE_PREFIX . '%');
+        } elseif ($filter === 'custom') {
+            $query->where('title', 'not like', Budget::ENROLLMENT_TITLE_PREFIX . '%');
+        }
+
+        if ($sort === 'amount_desc') {
+            $query->orderByDesc('allocated_amount');
+        } elseif ($sort === 'title_asc') {
+            $query->orderBy('title', 'asc');
+        } elseif ($sort === 'latest') {
+            $query->orderByDesc('id');
+        } else {
+            // Default: Sorted by department enrollment fees first, then sorted by department name, then amount
+            $query->orderByRaw("CASE WHEN title LIKE 'Enrollment Fees%' THEN 0 ELSE 1 END")
+                ->orderBy('department', 'asc')
+                ->orderByDesc('allocated_amount')
+                ->orderBy('title', 'asc');
+        }
+
+        $budgets = $query->get();
+
+        $totalAllocated = Budget::where('status', 'Approved')->sum('allocated_amount');
+        $totalEnrollmentFees = Budget::enrollmentFees()->where('status', 'Approved')->sum('allocated_amount');
+        $totalRemaining = Budget::where('status', 'Approved')->sum('remaining_balance');
+        $departmentsCount = Budget::distinct('department')->count('department');
+
+        return view('admin.budgets', compact(
+            'budgets',
+            'search',
+            'filter',
+            'sort',
+            'totalAllocated',
+            'totalEnrollmentFees',
+            'totalRemaining',
+            'departmentsCount'
+        ));
     }
 
     public function store(Request $request)
