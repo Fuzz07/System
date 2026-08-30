@@ -881,15 +881,49 @@
             line-height: 1.5;
         }
 
-        /* ─── RESPONSIVE ─── */
+        /* ─── RESPONSIVE & MOBILE POLISH ─── */
         @media (max-width: 960px) {
-            .hero-inner, .overview-inner {
-                grid-template-columns: 1fr;
-                gap: 40px;
+            .hero {
+                min-height: auto;
+                padding: 120px 28px 70px;
             }
 
-            .hero-title {
-                font-size: 2.5rem;
+            .hero-inner {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .hero-badge {
+                margin: 0 auto 20px;
+            }
+
+            .hero-subtitle {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-stats {
+                justify-content: center;
+                gap: 28px;
+            }
+
+            .hero-stat {
+                text-align: center;
+            }
+
+            .hero-image {
+                max-width: 540px;
+                margin: 0 auto;
+            }
+
+            .overview-inner {
+                grid-template-columns: 1fr;
+                gap: 36px;
             }
 
             .gallery-grid {
@@ -897,11 +931,12 @@
             }
 
             .features-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .stats-inner {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 28px;
             }
 
             .footer-top {
@@ -912,27 +947,243 @@
 
         @media (max-width: 640px) {
             .navbar {
-                padding: 14px 20px;
+                padding: 12px 18px;
+                height: 64px;
+            }
+
+            .nav-brand img {
+                width: 34px;
+                height: 34px;
+            }
+
+            .nav-brand-title {
+                font-size: 0.95rem;
+            }
+
+            .nav-brand-sub {
+                font-size: 0.62rem;
             }
 
             .nav-links a:not(.nav-cta) {
                 display: none;
             }
 
+            .nav-cta {
+                padding: 8px 14px;
+                font-size: 0.78rem;
+            }
+
             .hero {
-                padding: 100px 20px 60px;
+                padding: 96px 18px 50px;
+            }
+
+            .hero-badge {
+                font-size: 0.72rem;
+                padding: 5px 12px;
+                margin-bottom: 16px;
+            }
+
+            .hero-badge-dot {
+                width: 18px;
+                height: 18px;
+                font-size: 0.6rem;
             }
 
             .hero-title {
-                font-size: 2rem;
+                font-size: clamp(1.85rem, 8vw, 2.4rem);
+                line-height: 1.15;
+                margin-bottom: 14px;
+            }
+
+            .hero-subtitle {
+                font-size: 0.92rem;
+                line-height: 1.65;
+                margin-bottom: 26px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+                gap: 10px;
+                margin-bottom: 32px;
+            }
+
+            .btn-primary-hero,
+            .btn-outline-hero {
+                width: 100%;
+                justify-content: center;
+                padding: 13px 20px;
+                font-size: 0.9rem;
+                border-radius: 12px;
             }
 
             .hero-stats {
-                gap: 20px;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                padding-top: 24px;
+                margin-top: 28px;
+            }
+
+            .hero-stat-number {
+                font-size: 1.45rem;
+            }
+
+            .hero-stat-label {
+                font-size: 0.68rem;
+                letter-spacing: 0.3px;
+            }
+
+            .hero-image {
+                max-width: 100%;
+                margin-top: 10px;
+            }
+
+            .hero-image-frame {
+                border-radius: 18px;
+            }
+
+            .overview-section,
+            .gallery-section,
+            .features-section,
+            .officers-section,
+            .cta-section {
+                padding: 56px 18px;
+            }
+
+            .section-header {
+                margin-bottom: 36px;
+            }
+
+            .section-title,
+            .overview-title,
+            .gallery-title,
+            .cta-title {
+                font-size: 1.75rem;
+                line-height: 1.2;
+            }
+
+            .overview-card {
+                padding: 24px 18px;
+                border-radius: 20px;
+            }
+
+            .overview-text {
+                font-size: 0.88rem;
+                line-height: 1.7;
             }
 
             .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .gallery-card {
+                border-radius: 14px;
+            }
+
+            .gallery-card img {
+                height: 130px;
+            }
+
+            .gallery-caption {
+                padding: 10px 12px;
+                font-size: 0.72rem;
+                line-height: 1.4;
+            }
+
+            .features-grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .feature-card {
+                padding: 22px 18px;
+                border-radius: 16px;
+            }
+
+            .stats-section {
+                padding: 44px 18px;
+            }
+
+            .stats-inner {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 18px;
+            }
+
+            .stat-number {
+                font-size: 2.1rem;
+            }
+
+            .stat-label {
+                font-size: 0.72rem;
+            }
+
+            .officers-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                margin-top: 28px;
+            }
+
+            .officer-card {
+                padding: 18px 12px;
+                border-radius: 14px;
+            }
+
+            .officer-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 1rem;
+                margin-bottom: 10px;
+            }
+
+            .officer-name {
+                font-size: 0.82rem;
+            }
+
+            .officer-pos {
+                font-size: 0.68rem;
+            }
+
+            .cta-inner {
+                padding: 36px 18px;
+                border-radius: 20px;
+            }
+
+            .cta-subtitle {
+                font-size: 0.88rem;
+                margin-bottom: 24px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                width: 100%;
+                gap: 10px;
+            }
+
+            .cta-buttons a {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .footer {
+                padding: 44px 18px 24px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery-card img {
+                height: 180px;
             }
         }
 
