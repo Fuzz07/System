@@ -93,6 +93,15 @@
                     <p class="mb-0" style="font-size: 0.78rem; opacity: 0.9;">
                         An unrecognized device is attempting to log in to your account from IP: <strong style="font-family: monospace;">{{ $approval['ip'] }}</strong> ({{ $approval['user_agent'] }}). Do you authorize this device?
                     </p>
+                    @if(!empty($approval['latitude']) && !empty($approval['longitude']))
+                        <div class="mt-1 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                            <i class="bi bi-geo-alt-fill text-danger"></i> Location:
+                            <a href="https://www.google.com/maps?q={{ urlencode($approval['latitude'] . ',' . $approval['longitude']) }}" target="_blank" rel="noopener noreferrer" class="badge bg-white text-danger border text-decoration-none shadow-sm d-inline-flex align-items-center gap-1 ms-1 px-2 py-1" style="font-size: 0.72rem; border-color: #fca5a5 !important; color: #b91c1c !important; background-color: #fef2f2 !important;" title="Open in Google Maps">
+                                <span>{{ $approval['latitude'] }}, {{ $approval['longitude'] }}</span>
+                                <i class="bi bi-box-arrow-up-right" style="font-size: 0.62rem;"></i>
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
             <div class="d-flex gap-2">

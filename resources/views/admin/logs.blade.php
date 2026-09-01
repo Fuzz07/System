@@ -3,6 +3,18 @@
 
 @php $actionIcons = ['LOGIN' => ['bi-box-arrow-in-right', 'teal'], 'LOGOUT' => ['bi-box-arrow-left', 'secondary'], 'REGISTER' => ['bi-person-plus', 'success'], 'PROPOSAL_SUBMIT' => ['bi-file-earmark-text', 'primary'], 'PROPOSAL_APPROVE' => ['bi-check2-circle', 'success'], 'PROPOSAL_REJECT' => ['bi-x-circle', 'danger'], 'EXPENSE_SUBMIT' => ['bi-receipt', 'warning'], 'EXPENSE_APPROVE' => ['bi-check2', 'success'], 'EXPENSE_REJECT' => ['bi-x', 'danger'], 'BUDGET_CREATE' => ['bi-wallet2', 'primary'], 'BUDGET_APPROVE' => ['bi-check-circle', 'success'], 'USER_ADD' => ['bi-person-plus-fill', 'success'], 'USER_DELETE' => ['bi-person-x', 'danger'], 'ANNOUNCEMENT_POST' => ['bi-megaphone', 'info'], 'LIQUIDATION_UPLOAD' => ['bi-folder-check', 'primary'], 'FEEDBACK_SUBMIT' => ['bi-chat-dots', 'info']]; @endphp
 
+<style>
+    .location-map-link {
+        transition: all 0.2s ease;
+    }
+    .location-map-link:hover {
+        background-color: #fee2e2 !important;
+        border-color: #f87171 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15), 0 2px 4px -2px rgba(239, 68, 68, 0.15) !important;
+    }
+</style>
+
 @section('content')
     <div class="page-header">
         <div>
@@ -99,7 +111,7 @@
                             <td style="font-size:.82rem;font-weight:600;">{{ $log->user->fullname ?? 'System' }}</td>
                             <td>{!! $log->user ? \App\Helpers\SscHelper::roleBadge($log->user->role) : '<span class="badge bg-secondary" style="font-size:.7rem;">System</span>' !!}
                             </td>
-                            <td style="font-size:.78rem;color:#718096;max-width:280px;">{{ $log->details ?? '—' }}</td>
+                            <td style="font-size:.78rem;color:#718096;max-width:320px;word-break:break-word;">{!! \App\Helpers\SscHelper::formatLogDetails($log->details) !!}</td>
                             <td style="font-size:.72rem;color:#a0aec0;font-family:monospace;">{{ $log->ip_address ?? '—' }}</td>
                             <td style="font-size:.75rem;white-space:nowrap;color:#718096;">
                                 {{ $log->created_at?->format('M d, Y') }}<br><span

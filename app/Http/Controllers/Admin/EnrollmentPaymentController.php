@@ -190,24 +190,30 @@ class EnrollmentPaymentController extends Controller
     }
 
     /**
-     * Credit the fee to the paying student's own department budget, so each
-     * department accumulates (and later spends) only what it collected.
+     * Credit the fee to the unified Enrollment Fees budget row.
      */
     protected function addEnrollmentBudget(EnrollmentPayment $payment)
     {
-        $department = Budget::normalizeDepartment($payment->user?->department);
+        $schoolYear = $payment->semester ?: SscHelper::getActiveSchoolYear();
 
         $budget = Budget::firstOrCreate(
             [
-                'title'       => Budget::enrollmentTitleFor($department),
-                'department'  => $department,
-                'school_year' => SscHelper::getActiveSchoolYear(),
+                'title'       => Budget::ENROLLMENT_TITLE_PREFIX,
+                'school_year' => $schoolYear,
             ],
-            ['allocated_amount' => 0, 'remaining_balance' => 0, 'status' => 'Pending', 'created_by' => Auth::id()]
+            [
+                'department'        => 'All Departments',
+                'allocated_amount'  => 0,
+                'remaining_balance' => 0,
+                'status'            => 'Approved',
+                'created_by'        => Auth::id() ?: 1,
+                'notes'             => 'Consolidated enrollment fees collection for all departments.',
+            ]
         );
 
         $budget->allocated_amount += $payment->amount;
         $budget->remaining_balance += $payment->amount;
+        $budget->status = 'Approved';
         $budget->save();
 
         return $budget;

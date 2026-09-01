@@ -27,9 +27,9 @@ class BudgetController extends Controller
         }
 
         if ($filter === 'enrollment') {
-            $query->where('title', 'like', Budget::ENROLLMENT_TITLE_PREFIX . '%');
+            $query->where('title', Budget::ENROLLMENT_TITLE_PREFIX);
         } elseif ($filter === 'custom') {
-            $query->where('title', 'not like', Budget::ENROLLMENT_TITLE_PREFIX . '%');
+            $query->where('title', '!=', Budget::ENROLLMENT_TITLE_PREFIX);
         }
 
         if ($sort === 'amount_desc') {
@@ -39,8 +39,9 @@ class BudgetController extends Controller
         } elseif ($sort === 'latest') {
             $query->orderByDesc('id');
         } else {
-            // Default: Sorted by department enrollment fees first, then sorted by department name, then amount
-            $query->orderByRaw("CASE WHEN title LIKE 'Enrollment Fees%' THEN 0 ELSE 1 END")
+            // Default: Enrollment Fees consolidated row first, then all other budgets alphabetically
+            $enrollmentTitle = Budget::ENROLLMENT_TITLE_PREFIX;
+            $query->orderByRaw("CASE WHEN title = ? THEN 0 ELSE 1 END", [$enrollmentTitle])
                 ->orderBy('department', 'asc')
                 ->orderByDesc('allocated_amount')
                 ->orderBy('title', 'asc');
@@ -49,7 +50,8 @@ class BudgetController extends Controller
         $budgets = $query->get();
 
         $totalAllocated = Budget::where('status', 'Approved')->sum('allocated_amount');
-        $totalEnrollmentFees = Budget::enrollmentFees()->where('status', 'Approved')->sum('allocated_amount');
+        $totalEnrollmentFees = Budget::where('title', Budget::ENROLLMENT_TITLE_PREFIX)
+            ->where('status', 'Approved')->sum('allocated_amount');
         $totalRemaining = Budget::where('status', 'Approved')->sum('remaining_balance');
         $departmentsCount = Budget::distinct('department')->count('department');
 

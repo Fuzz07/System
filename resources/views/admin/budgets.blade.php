@@ -94,13 +94,13 @@
             <div class="col-md-3">
                 <select name="filter" class="form-select form-control-custom" onchange="this.form.submit()">
                     <option value="all" @selected($filter === 'all')>All Budget Types</option>
-                    <option value="enrollment" @selected($filter === 'enrollment')>🎓 Department Enrollment Fees Only</option>
+                    <option value="enrollment" @selected($filter === 'enrollment')>🎓 Enrollment Fees Only</option>
                     <option value="custom" @selected($filter === 'custom')>📋 Custom / Other Budgets</option>
                 </select>
             </div>
             <div class="col-md-3">
                 <select name="sort" class="form-select form-control-custom" onchange="this.form.submit()">
-                    <option value="dept_enrollment" @selected($sort === 'dept_enrollment')>Sort: Department Enrollment Fees First</option>
+                    <option value="dept_enrollment" @selected($sort === 'dept_enrollment')>Sort: Enrollment Fees First</option>
                     <option value="amount_desc" @selected($sort === 'amount_desc')>Sort: Highest Amount</option>
                     <option value="title_asc" @selected($sort === 'title_asc')>Sort: Title (A - Z)</option>
                     <option value="latest" @selected($sort === 'latest')>Sort: Newest First</option>
@@ -134,14 +134,14 @@
             <tbody>
             @forelse($budgets as $b)
                 @php
-                    $isEnrollmentFee = str_starts_with($b->title, \App\Models\Budget::ENROLLMENT_TITLE_PREFIX);
+                    $isEnrollmentFee = ($b->title === \App\Models\Budget::ENROLLMENT_TITLE_PREFIX);
                 @endphp
-                <tr style="{{ $isEnrollmentFee ? 'background-color: rgba(79, 70, 229, 0.02);' : '' }}">
+                <tr style="{{ $isEnrollmentFee ? 'background-color: rgba(16, 185, 129, 0.03);' : '' }}">
                     <td>
                         <div class="fw-bold text-dark">{{ $b->title }}</div>
                         @if($isEnrollmentFee)
-                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mt-1" style="font-size:0.65rem; font-weight:700;">
-                                <i class="bi bi-mortarboard-fill me-1"></i> Department Enrollment Fee
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mt-1" style="font-size:0.65rem; font-weight:700;">
+                                <i class="bi bi-mortarboard-fill me-1"></i> Consolidated Enrollment Fees
                             </span>
                         @endif
                     </td>

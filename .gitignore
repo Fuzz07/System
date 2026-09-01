@@ -3,6 +3,8 @@
 .phpunit.result.cache
 .env
 .env.testing
+.gitignore
+.gitattributes
 /public/storage
 /storage/*.key
 /storage/framework/cache/data/*
@@ -14,15 +16,15 @@
 .idea/
 npm-debug.log
 yarn-error.log
+docs/
+scratch/
 
-# Mobile Build & Caches
 student-mobile-app/.gradle/
 student-mobile-app/app/build/
 student-mobile-app/build/
 student-mobile-app/local.properties
 student-mobile-app/.idea/
 
-# Firebase Secrets
 storage/firebase-key.json
 firebase-key-base64.txt
 

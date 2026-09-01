@@ -211,4 +211,38 @@ class SscHelper
             'label' => "{$platform} • {$browser}",
         ];
     }
+
+    /**
+     * Formats activity log details, converting latitude and longitude coordinates into clickable Google Maps links.
+     */
+    public static function formatLogDetails(?string $details): string
+    {
+        if (empty($details)) {
+            return '<span class="text-muted">—</span>';
+        }
+
+        $escaped = e($details);
+
+        // Matches formats like:
+        // - "Location: Lat 14.5995, Lng 120.9842"
+        // - "Lat: 14.5995, Lng: 120.9842"
+        // - "Lat 14.5995, Lng 120.9842"
+        // - "Latitude: 14.5995, Longitude: 120.9842"
+        // - "Coords: 14.5995, 120.9842"
+        // - "Coordinates: 14.5995, 120.9842"
+        $pattern = '/(?:Location:\s*)?(?:Lat(?:itude)?[:\s]*([+-]?\d+(?:\.\d+)?)\s*,\s*Lng(?:itude)?[:\s]*([+-]?\d+(?:\.\d+)?)|(?:Coords|Coordinates)[:\s]*([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?))/i';
+
+        return preg_replace_callback($pattern, function ($matches) {
+            $lat = !empty($matches[1]) ? $matches[1] : $matches[3];
+            $lng = !empty($matches[2]) ? $matches[2] : $matches[4];
+
+            $mapsUrl = 'https://www.google.com/maps?q=' . urlencode("{$lat},{$lng}");
+
+            return '<a href="' . $mapsUrl . '" target="_blank" rel="noopener noreferrer" class="badge bg-white text-danger border text-decoration-none shadow-sm d-inline-flex align-items-center gap-1 mx-1 my-1 px-2 py-1 location-map-link" title="Open in Google Maps (' . $lat . ', ' . $lng . ')" style="font-size: 0.72rem; vertical-align: middle; border-color: #fca5a5 !important; color: #b91c1c !important; background-color: #fef2f2 !important; cursor: pointer; text-decoration: none !important;">'
+                . '<i class="bi bi-geo-alt-fill" style="color: #ef4444; font-size: 0.78rem;"></i> '
+                . '<span>Lat ' . $lat . ', Lng ' . $lng . '</span> '
+                . '<i class="bi bi-box-arrow-up-right" style="font-size: 0.62rem; opacity: 0.75;"></i>'
+                . '</a>';
+        }, $escaped);
+    }
 }

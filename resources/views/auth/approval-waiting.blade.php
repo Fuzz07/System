@@ -40,7 +40,13 @@
                 <div class="mb-1"><i class="bi bi-globe"></i> IP Address: <span style="font-family: monospace;">{{ $requestData['ip'] }}</span></div>
                 <div class="mb-1"><i class="bi bi-laptop"></i> Platform: <span>{{ $requestData['user_agent'] }}</span></div>
                 @if(!empty($requestData['latitude']) && !empty($requestData['longitude']))
-                    <div><i class="bi bi-geo-alt-fill" style="color: var(--accent);"></i> Location Coords: <span>{{ $requestData['latitude'] }}, {{ $requestData['longitude'] }}</span></div>
+                    <div class="d-flex align-items-center flex-wrap gap-1">
+                        <i class="bi bi-geo-alt-fill text-danger"></i> Location Coords:
+                        <a href="https://www.google.com/maps?q={{ urlencode($requestData['latitude'] . ',' . $requestData['longitude']) }}" target="_blank" rel="noopener noreferrer" class="badge bg-white text-danger border text-decoration-none shadow-sm d-inline-flex align-items-center gap-1 ms-1 px-2 py-1" style="font-size: 0.72rem; border-color: #fca5a5 !important; color: #b91c1c !important; background-color: #fef2f2 !important;" title="Open in Google Maps">
+                            <span>{{ $requestData['latitude'] }}, {{ $requestData['longitude'] }}</span>
+                            <i class="bi bi-box-arrow-up-right" style="font-size: 0.62rem;"></i>
+                        </a>
+                    </div>
                 @endif
             </div>
         </div>
