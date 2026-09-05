@@ -88,4 +88,21 @@ class ActivityLogIpTest extends TestCase
         $formatted5 = SscHelper::formatLogDetails(null);
         $this->assertStringContainsString('—', $formatted5);
     }
+
+    public function test_activity_log_records_accurate_timestamp_in_configured_timezone(): void
+    {
+        $this->assertEquals('Asia/Manila', config('app.timezone'));
+
+        $before = now();
+        SscHelper::logActivity(null, 'TEST_TIMEZONE', 'Checking log time accuracy');
+        $after = now();
+
+        $log = ActivityLog::where('action', 'TEST_TIMEZONE')->first();
+
+        $this->assertNotNull($log, 'Activity log entry was not created.');
+        $this->assertNotNull($log->created_at, 'Activity log created_at timestamp is null.');
+        $this->assertEquals('+08:00', $log->created_at->format('P'), 'Timezone offset should be +08:00 (Asia/Manila).');
+        $this->assertTrue($log->created_at->greaterThanOrEqualTo($before->subSecond()));
+        $this->assertTrue($log->created_at->lessThanOrEqualTo($after->addSecond()));
+    }
 }

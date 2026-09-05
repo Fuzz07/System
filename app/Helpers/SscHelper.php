@@ -55,6 +55,7 @@ class SscHelper
             'action'     => $action,
             'details'    => $details,
             'ip_address' => request()->ip(),
+            'created_at' => Carbon::now(),
         ]);
     }
 
