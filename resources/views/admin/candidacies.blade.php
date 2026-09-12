@@ -231,12 +231,15 @@
                             <div style="font-weight:700; color:var(--navy-900);">{{ $c->position }}</div>
                         </td>
                         <td>
-                            <div class="text-truncate text-muted small" style="max-width:200px; cursor:pointer;" title="Click to expand" data-bs-toggle="collapse" data-bs-target="#platformCollapse{{ $c->id }}">
-                                <i class="bi bi-eye"></i> View manifesto
-                            </div>
-                            <div class="collapse mt-2 p-3 bg-light rounded-3 text-muted small" id="platformCollapse{{ $c->id }}" style="white-space:pre-wrap; line-height:1.5;">
-                                {{ $c->platform }}
-                            </div>
+                            <button
+                                type="button"
+                                class="btn btn-link text-muted small text-decoration-none p-0"
+                                data-bs-toggle="modal"
+                                data-bs-target="#manifestoModal{{ $c->id }}"
+                                aria-label="View {{ $c->user->fullname }}'s manifesto"
+                            >
+                                <i class="bi bi-eye me-1" aria-hidden="true"></i> View manifesto
+                            </button>
                         </td>
                         <td>
                             @if($c->status === 'pending')
@@ -273,6 +276,31 @@
         </div>
     </div>
 </div>
+
+{{-- Candidate Manifesto Modals --}}
+@foreach($candidacies as $c)
+    <div class="modal fade" id="manifestoModal{{ $c->id }}" tabindex="-1" aria-labelledby="manifestoModalLabel{{ $c->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow" style="border-radius:16px; overflow:hidden;">
+                <div class="modal-header border-bottom px-4 py-3">
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark" id="manifestoModalLabel{{ $c->id }}">
+                            {{ $c->user->fullname }}'s Manifesto
+                        </h5>
+                        <div class="text-muted small mt-1">Candidate for {{ $c->position }} &middot; {{ $c->department }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-4">
+                    <div class="text-dark" style="white-space:pre-wrap; line-height:1.75; overflow-wrap:anywhere;">{{ filled($c->platform) ? $c->platform : 'No manifesto was provided.' }}</div>
+                </div>
+                <div class="modal-footer border-top px-4 py-3">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
 
 {{-- Election Archive & Previous Winners Section --}}
 <div class="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
