@@ -121,30 +121,30 @@ class ChatbotController extends Controller
                     return 'Please sign in to the student portal to check your enrollment fee, payment record, and proof status.';
                 }
 
-                $schoolYear = $activeYear?->label;
-                $payment = $schoolYear && $student
+                $academicTerm = $activeYear?->academic_term;
+                $payment = $academicTerm && $student
                     ? EnrollmentPayment::query()
                         ->where('user_id', $student->id)
-                        ->where('semester', $schoolYear)
+                        ->whereIn('semester', $activeYear->enrollmentTermKeys())
                         ->latest()
                         ->first()
                     : null;
 
-                if (!$schoolYear) {
+                if (!$academicTerm) {
                     return 'No active school year is configured, so I cannot verify your current enrollment payment. Please contact the SSC or an administrator.';
                 }
 
                 if ($payment?->status === 'paid') {
-                    return "Your enrollment fee for school year {$schoolYear} is marked as paid. You can verify the payment details on the Enrollment page.";
+                    return "Your enrollment fee for {$academicTerm} is marked as paid. You can verify the payment details on the Enrollment page.";
                 }
 
                 if ($payment) {
                     $proof = $payment->proof_status ? " Your proof status is {$payment->proof_status}." : '';
-                    return "Your enrollment payment for school year {$schoolYear} is currently {$payment->status}.{$proof} Open the Enrollment page to review the record or upload the required proof.";
+                    return "Your enrollment payment for {$academicTerm} is currently {$payment->status}.{$proof} Open the Enrollment page to review the record or upload the required proof.";
                 }
 
                 $amount = number_format((float) config('ssc.enrollment_fee_amount', 50), 2);
-                return "There is no enrollment payment record for your account for school year {$schoolYear}. The configured fee is PHP {$amount}; open the Enrollment page to view the approved payment methods and submit proof.";
+                return "There is no enrollment payment record for your account for {$academicTerm}. The configured fee is PHP {$amount}; open the Enrollment page to view the approved payment methods and submit proof.";
             }
 
             if ($this->matches($normalized, ['vote', 'voting', 'election', 'ballot'])) {
@@ -364,6 +364,8 @@ PROMPT;
             } else {
                 $lines[] = 'Active school year and election state: ' . json_encode([
                     'school_year' => $activeYear->label,
+                    'semester' => $activeYear->semester_label,
+                    'academic_term' => $activeYear->academic_term,
                     'candidacy_open' => (bool) $activeYear->candidacy_open,
                     'voting_open' => (bool) $activeYear->voting_open,
                     'voting_starts_at' => $activeYear->voting_starts_at?->toIso8601String(),
@@ -374,7 +376,7 @@ PROMPT;
                 if ($student) {
                     $payment = EnrollmentPayment::query()
                         ->where('user_id', $student->id)
-                        ->where('semester', $activeYear->label)
+                        ->whereIn('semester', $activeYear->enrollmentTermKeys())
                         ->latest()
                         ->first();
                     $candidacy = Candidacy::query()

@@ -39,7 +39,8 @@
 <div class="container-fluid">
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <h4>Enrollment Fee</h4>
+            <h4>Semester Enrollment Fee</h4>
+            <p class="mb-1"><span class="badge bg-primary">{{ $currentSy }}</span></p>
             <p class="text-muted">Amount: {{ \App\Helpers\SscHelper::formatCurrency($amount) }}</p>
 
             @if(session('success'))

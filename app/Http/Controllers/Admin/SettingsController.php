@@ -151,15 +151,33 @@ class SettingsController extends Controller
 
     public function addSchoolYear(Request $request)
     {
-        $request->validate(['sy_label' => 'required|regex:/^\d{4}-\d{4}$/|unique:school_years,label']);
-        SchoolYear::create(['label' => $request->sy_label, 'is_active' => 0]);
-        return redirect()->route('admin.settings')->with('success', "School year '{$request->sy_label}' added.");
+        $validated = $request->validate([
+            'sy_label' => ['required', 'regex:/^\d{4}-\d{4}$/', 'unique:school_years,label'],
+            'semester' => ['required', \Illuminate\Validation\Rule::in(array_keys(SchoolYear::SEMESTERS))],
+        ]);
+
+        SchoolYear::create([
+            'label' => $validated['sy_label'],
+            'semester' => $validated['semester'],
+            'is_active' => false,
+        ]);
+
+        $semesterLabel = SchoolYear::SEMESTERS[$validated['semester']];
+
+        return redirect()->route('admin.settings')->with('success', "School year '{$validated['sy_label']}' ({$semesterLabel}) added.");
     }
 
-    public function activateSchoolYear(SchoolYear $schoolYear)
+    public function activateSchoolYear(Request $request, SchoolYear $schoolYear)
     {
+        $validated = $request->validate([
+            'semester' => ['required', \Illuminate\Validation\Rule::in(array_keys(SchoolYear::SEMESTERS))],
+        ]);
+
         SchoolYear::query()->update(['is_active' => 0]);
-        $schoolYear->update(['is_active' => 1]);
+        $schoolYear->update([
+            'is_active' => 1,
+            'semester' => $validated['semester'],
+        ]);
 
         // ── Keep SSC_CURRENT_SCHOOL_YEAR .env key in sync ──────────────────
         // This ensures any code still reading config('ssc.current_school_year')
@@ -181,8 +199,13 @@ class SettingsController extends Controller
             file_put_contents($envPath, $envContent);
         }
 
-        SscHelper::logActivity(Auth::id(), 'SETTINGS_CHANGE', "Changed active school year to {$schoolYear->label}");
-        return redirect()->route('admin.settings')->with('success', "Active school year updated to {$schoolYear->label}. Enrollment payments will now reset for all students under the new semester.");
+        $semesterLabel = $schoolYear->semester_label;
+        SscHelper::logActivity(Auth::id(), 'SETTINGS_CHANGE', "Changed active academic term to {$schoolYear->label} - {$semesterLabel}");
+
+        return redirect()->route('admin.settings')->with(
+            'success',
+            "Active academic term updated to {$schoolYear->label} - {$semesterLabel}. Enrollment payment records now use this semester."
+        );
     }
 
     public function deleteSchoolYear(SchoolYear $schoolYear)

@@ -4,7 +4,10 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Enrollment Payments</h4>
+        <div>
+            <h4 class="mb-0">Semester Enrollment Payments</h4>
+            <small class="text-muted">Current term: {{ $currentSy }}</small>
+        </div>
     </div>
 
     @php

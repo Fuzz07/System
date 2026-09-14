@@ -19,11 +19,12 @@ class EnrollmentPaymentController extends Controller
         $dept = $request->input('department');
         $year = $request->input('year_level');
         $status = $request->input('status', 'all');
-        $currentSy = SscHelper::getActiveSchoolYear();
+        $currentSy = SscHelper::getActiveAcademicTerm();
+        $currentTermKeys = SscHelper::getActiveEnrollmentTermKeys();
 
         $students = User::where('role', 'student')
-            ->with(['enrollmentPayments' => function ($q) use ($currentSy) {
-                $q->where('semester', $currentSy)->orderByDesc('created_at');
+            ->with(['enrollmentPayments' => function ($q) use ($currentTermKeys) {
+                $q->whereIn('semester', $currentTermKeys)->orderByDesc('created_at');
             }]);
 
         if ($search) {
@@ -42,16 +43,16 @@ class EnrollmentPaymentController extends Controller
         }
 
         if ($status === 'unpaid') {
-            $students->whereDoesntHave('enrollmentPayments', function ($q) use ($currentSy) {
-                $q->where('semester', $currentSy)->where('status', 'paid');
+            $students->whereDoesntHave('enrollmentPayments', function ($q) use ($currentTermKeys) {
+                $q->whereIn('semester', $currentTermKeys)->where('status', 'paid');
             });
         } elseif ($status === 'pending') {
-            $students->whereHas('enrollmentPayments', function ($q) use ($currentSy) {
-                $q->where('semester', $currentSy)->where('status', 'pending');
+            $students->whereHas('enrollmentPayments', function ($q) use ($currentTermKeys) {
+                $q->whereIn('semester', $currentTermKeys)->where('status', 'pending');
             });
         } elseif ($status === 'paid') {
-            $students->whereHas('enrollmentPayments', function ($q) use ($currentSy) {
-                $q->where('semester', $currentSy)->where('status', 'paid');
+            $students->whereHas('enrollmentPayments', function ($q) use ($currentTermKeys) {
+                $q->whereIn('semester', $currentTermKeys)->where('status', 'paid');
             });
         }
 
@@ -59,7 +60,7 @@ class EnrollmentPaymentController extends Controller
 
         $departments = User::where('role', 'student')->select('department')->distinct()->pluck('department');
         $years = User::where('role', 'student')->select('year_level')->distinct()->pluck('year_level');
-        $distribution = $this->departmentDistribution($currentSy);
+        $distribution = $this->departmentDistribution($currentSy, $currentTermKeys);
 
         return view('admin.enrollment_payments', compact('students', 'search', 'dept', 'year', 'status', 'departments', 'years', 'currentSy', 'distribution'));
     }
@@ -94,11 +95,12 @@ class EnrollmentPaymentController extends Controller
 
     public function markPaidWalkIn(User $student)
     {
-        $currentSy = SscHelper::getActiveSchoolYear();
+        $currentSy = SscHelper::getActiveAcademicTerm();
+        $currentTermKeys = SscHelper::getActiveEnrollmentTermKeys();
         $amount = config('ssc.enrollment_fee_amount', 50);
 
         $payment = EnrollmentPayment::where('user_id', $student->id)
-            ->where('semester', $currentSy)
+            ->whereIn('semester', $currentTermKeys)
             ->latest()
             ->first();
 
@@ -194,7 +196,7 @@ class EnrollmentPaymentController extends Controller
      */
     protected function addEnrollmentBudget(EnrollmentPayment $payment)
     {
-        $schoolYear = $payment->semester ?: SscHelper::getActiveSchoolYear();
+        $schoolYear = $payment->semester ?: SscHelper::getActiveAcademicTerm();
 
         $budget = Budget::firstOrCreate(
             [
@@ -225,8 +227,9 @@ class EnrollmentPaymentController extends Controller
      *
      * @return array<string, array<string, mixed>>
      */
-    protected function departmentDistribution(string $schoolYear): array
+    protected function departmentDistribution(string $schoolYear, ?array $termKeys = null): array
     {
+        $termKeys ??= [$schoolYear];
         $rows = [];
 
         $studentRows = User::where('role', 'student')
@@ -242,7 +245,7 @@ class EnrollmentPaymentController extends Controller
 
         $paymentRows = EnrollmentPayment::query()
             ->join('users', 'users.id', '=', 'enrollment_payments.user_id')
-            ->where('enrollment_payments.semester', $schoolYear)
+            ->whereIn('enrollment_payments.semester', $termKeys)
             ->whereIn('enrollment_payments.status', ['paid', 'pending'])
             ->groupBy('users.department', 'enrollment_payments.status')
             ->selectRaw('users.department as department, enrollment_payments.status as status, COUNT(*) as total, SUM(enrollment_payments.amount) as amount')
@@ -260,7 +263,7 @@ class EnrollmentPaymentController extends Controller
             }
         }
 
-        $budgets = Budget::enrollmentFees()->where('school_year', $schoolYear)->get();
+        $budgets = Budget::enrollmentFees()->whereIn('school_year', $termKeys)->get();
 
         foreach ($budgets as $budget) {
             // Keeps the legacy pooled row visible until it is split or removed.

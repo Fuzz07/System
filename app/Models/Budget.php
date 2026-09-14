@@ -38,7 +38,12 @@ class Budget extends Model
 
     public static function consolidateEnrollmentBudgets(?string $schoolYear = null): ?self
     {
-        $schoolYear = $schoolYear ?: \App\Helpers\SscHelper::getActiveSchoolYear();
+        $usingActiveTerm = !$schoolYear;
+        $schoolYear = $schoolYear ?: \App\Helpers\SscHelper::getActiveAcademicTerm();
+        $termKeys = $usingActiveTerm
+            ? \App\Helpers\SscHelper::getActiveEnrollmentTermKeys()
+            : [$schoolYear];
+
         if (!$schoolYear || $schoolYear === 'N/A') {
             return null;
         }
@@ -60,12 +65,12 @@ class Budget extends Model
         );
 
         // Sum all paid enrollment payments for this school year across all departments
-        $totalPaid = (float) \App\Models\EnrollmentPayment::where('semester', $schoolYear)
+        $totalPaid = (float) \App\Models\EnrollmentPayment::whereIn('semester', $termKeys)
             ->where('status', 'paid')
             ->sum('amount');
 
         // Check for any split per-department enrollment fee rows and merge them
-        $splitBudgets = self::where('school_year', $schoolYear)
+        $splitBudgets = self::whereIn('school_year', $termKeys)
             ->where('id', '!=', $mainBudget->id)
             ->where('title', 'like', self::ENROLLMENT_TITLE_PREFIX . '%')
             ->get();

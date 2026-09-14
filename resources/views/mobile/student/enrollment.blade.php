@@ -7,8 +7,8 @@
 <div class="m-card elevated" style="margin-top: 16px;">
     <div class="m-card-header">
         <div>
-            <div class="m-card-title">Enrollment Fee</div>
-            <div class="m-card-sub">Pay your enrollment fee and upload proof for verification.</div>
+            <div class="m-card-title">Semester Enrollment Fee</div>
+            <div class="m-card-sub">{{ $currentSy }} · Pay this semester's enrollment fee and upload proof for verification.</div>
         </div>
     </div>
 

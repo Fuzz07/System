@@ -14,26 +14,28 @@ class EnrollmentController extends Controller
     public function index()
     {
         $student = Auth::user();
-        $currentSy = SscHelper::getActiveSchoolYear();
+        $currentSy = SscHelper::getActiveAcademicTerm();
+        $currentTermKeys = SscHelper::getActiveEnrollmentTermKeys();
 
         $payment = EnrollmentPayment::where('user_id', $student->id)
-            ->where('semester', $currentSy)
+            ->whereIn('semester', $currentTermKeys)
             ->orderByDesc('created_at')
             ->first();
 
         $amount = config('ssc.enrollment_fee_amount', 50);
 
-        return view('student.enrollment', compact('payment', 'amount'));
+        return view('student.enrollment', compact('payment', 'amount', 'currentSy'));
     }
 
     public function store(Request $request)
     {
         $student = Auth::user();
         $amount = config('ssc.enrollment_fee_amount', 50);
-        $currentSy = SscHelper::getActiveSchoolYear();
+        $currentSy = SscHelper::getActiveAcademicTerm();
+        $currentTermKeys = SscHelper::getActiveEnrollmentTermKeys();
 
         $payment = EnrollmentPayment::where('user_id', $student->id)
-            ->where('semester', $currentSy)
+            ->whereIn('semester', $currentTermKeys)
             ->orderByDesc('created_at')
             ->first();
 

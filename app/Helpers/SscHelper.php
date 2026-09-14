@@ -65,6 +65,21 @@ class SscHelper
         return $sy ? $sy->label : 'N/A';
     }
 
+    public static function getActiveAcademicTerm(): string
+    {
+        $schoolYear = SchoolYear::where('is_active', 1)->first();
+
+        return $schoolYear ? $schoolYear->academic_term : 'N/A';
+    }
+
+    /** @return array<int, string> */
+    public static function getActiveEnrollmentTermKeys(): array
+    {
+        $schoolYear = SchoolYear::where('is_active', 1)->first();
+
+        return $schoolYear ? $schoolYear->enrollmentTermKeys() : ['N/A'];
+    }
+
     public static function getUploadUrl(?string $path): string
     {
         if (!$path) {

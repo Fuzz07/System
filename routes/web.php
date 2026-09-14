@@ -451,22 +451,24 @@ Route::group([], function () use ($baseDomain) {
 
         Route::get('/enrollment', function () {
             $student = Auth::user();
-            $currentSy = \App\Helpers\SscHelper::getActiveSchoolYear();
+            $currentSy = \App\Helpers\SscHelper::getActiveAcademicTerm();
+            $currentTermKeys = \App\Helpers\SscHelper::getActiveEnrollmentTermKeys();
             $payment = \App\Models\EnrollmentPayment::where('user_id', $student->id)
-                ->where('semester', $currentSy)
+                ->whereIn('semester', $currentTermKeys)
                 ->orderByDesc('created_at')
                 ->first();
             $amount = config('ssc.enrollment_fee_amount', 50);
-            return view('mobile.student.enrollment', compact('payment', 'amount'));
+            return view('mobile.student.enrollment', compact('payment', 'amount', 'currentSy'));
         })->name('enrollment');
 
         Route::post('/enrollment', function (\Illuminate\Http\Request $request) {
             $student = Auth::user();
             $amount = config('ssc.enrollment_fee_amount', 50);
-            $currentSy = \App\Helpers\SscHelper::getActiveSchoolYear();
+            $currentSy = \App\Helpers\SscHelper::getActiveAcademicTerm();
+            $currentTermKeys = \App\Helpers\SscHelper::getActiveEnrollmentTermKeys();
 
             $payment = \App\Models\EnrollmentPayment::where('user_id', $student->id)
-                ->where('semester', $currentSy)
+                ->whereIn('semester', $currentTermKeys)
                 ->orderByDesc('created_at')
                 ->first();
 

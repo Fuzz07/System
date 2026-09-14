@@ -30,12 +30,17 @@
                 </div>
             </div>
             <div class="card-body p-4">
-                <form method="POST" action="{{ route('admin.settings.sy.add') }}" class="d-flex gap-2 mb-4">
+                <form method="POST" action="{{ route('admin.settings.sy.add') }}" class="d-flex flex-wrap gap-2 mb-4">
                     @csrf
-                    <div class="input-group">
+                    <div class="input-group flex-grow-1" style="min-width: 220px;">
                         <span class="input-group-text bg-light border-end-0" style="font-size: 0.85rem;"><i class="bi bi-plus-circle text-muted"></i></span>
                         <input type="text" name="sy_label" class="form-control form-control-sm border-start-0" placeholder="YYYY-YYYY (e.g. 2026-2027)" required pattern="\d{4}-\d{4}">
                     </div>
+                    <select name="semester" class="form-select form-select-sm" style="width: 155px;" required aria-label="Semester">
+                        @foreach(\App\Models\SchoolYear::SEMESTERS as $value => $label)
+                            <option value="{{ $value }}" @selected(old('semester', \App\Models\SchoolYear::SEMESTER_FIRST) === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
                     <button type="submit" class="btn btn-primary btn-sm px-3" style="font-weight: 600; min-width: 90px;"><i class="bi bi-plus me-1"></i> Add SY</button>
                 </form>
 
@@ -44,6 +49,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>School Year</th>
+                                <th>Semester</th>
                                 <th>Status</th>
                                 <th class="text-end">Actions</th>
                             </tr>
@@ -52,6 +58,7 @@
                             @foreach($schoolYears as $sy)
                             <tr>
                                 <td style="font-weight: 700; color: #0f172a;">{{ $sy->label }}</td>
+                                <td>{{ $sy->semester_label }}</td>
                                 <td>
                                     @if($sy->is_active)
                                         <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i> Active</span>
@@ -60,17 +67,22 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
+                                    <form method="POST" action="{{ route('admin.settings.sy.activate', $sy) }}" class="d-inline-flex align-items-center gap-1">
+                                        @csrf @method('PATCH')
+                                        <select name="semester" class="form-select form-select-sm" style="width: 132px; font-size: 0.72rem;" aria-label="Semester for {{ $sy->label }}">
+                                            @foreach(\App\Models\SchoolYear::SEMESTERS as $value => $label)
+                                                <option value="{{ $value }}" @selected($sy->semester === $value)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button class="btn {{ $sy->is_active ? 'btn-outline-primary' : 'btn-outline-success' }} btn-sm me-1" style="font-size: 0.72rem; font-weight: 600;">
+                                            {{ $sy->is_active ? 'Update Term' : 'Set Active' }}
+                                        </button>
+                                    </form>
                                     @if(!$sy->is_active)
-                                        <form method="POST" action="{{ route('admin.settings.sy.activate', $sy) }}" class="d-inline">
-                                            @csrf @method('PATCH')
-                                            <button class="btn btn-outline-success btn-sm me-1" style="font-size: 0.72rem; font-weight: 600;">Set Active</button>
-                                        </form>
                                         <form method="POST" action="{{ route('admin.settings.sy.delete', $sy) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete school year {{ $sy->label }}?')">
                                             @csrf @method('DELETE')
                                             <button class="btn btn-outline-danger btn-sm" style="font-size: 0.72rem;"><i class="bi bi-trash"></i></button>
                                         </form>
-                                    @else
-                                        <span class="text-muted" style="font-size: 0.78rem; font-weight: 600;"><i class="bi bi-star-fill text-warning me-1"></i> Current</span>
                                     @endif
                                 </td>
                             </tr>
@@ -100,7 +112,7 @@
                         <div>
                             <h6 class="mb-1" style="font-weight: 700; color: #0f172a;">SSC Officer Candidacy Filing</h6>
                             <div style="font-size: 0.82rem;" class="text-muted">
-                                Active School Year: <strong>{{ $activeSy->label }}</strong> &nbsp;•&nbsp; 
+                                Active Academic Term: <strong>{{ $activeSy->academic_term }}</strong> &nbsp;•&nbsp;
                                 Status: 
                                 @if($activeSy->candidacy_open)
                                     <span class="badge bg-success px-2 py-1">OPEN</span>

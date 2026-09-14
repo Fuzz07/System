@@ -18,7 +18,11 @@ class SplitEnrollmentBudgets extends Command
 
     public function handle(): int
     {
-        $schoolYear = $this->option('school-year') ?: SscHelper::getActiveSchoolYear();
+        $requestedSchoolYear = $this->option('school-year');
+        $schoolYear = $requestedSchoolYear ?: SscHelper::getActiveAcademicTerm();
+        $termKeys = $requestedSchoolYear
+            ? [$requestedSchoolYear]
+            : SscHelper::getActiveEnrollmentTermKeys();
         $apply = (bool) $this->option('apply');
 
         if ($schoolYear === 'N/A') {
@@ -30,7 +34,7 @@ class SplitEnrollmentBudgets extends Command
         $this->line($apply ? 'Mode: APPLY (changes will be written)' : 'Mode: dry run (re-run with --apply to write)');
         $this->newLine();
 
-        $collected = $this->collectedByDepartment($schoolYear);
+        $collected = $this->collectedByDepartment($termKeys);
 
         if ($collected->isEmpty()) {
             $this->warn('No paid enrollment payments found for this school year. Nothing to do.');
@@ -100,13 +104,13 @@ class SplitEnrollmentBudgets extends Command
     }
 
     /** @return \Illuminate\Support\Collection<string, float> */
-    protected function collectedByDepartment(string $schoolYear)
+    protected function collectedByDepartment(array $termKeys)
     {
         $totals = [];
 
         $rows = EnrollmentPayment::query()
             ->join('users', 'users.id', '=', 'enrollment_payments.user_id')
-            ->where('enrollment_payments.semester', $schoolYear)
+            ->whereIn('enrollment_payments.semester', $termKeys)
             ->where('enrollment_payments.status', 'paid')
             ->groupBy('users.department')
             ->selectRaw('users.department as department, SUM(enrollment_payments.amount) as amount')

@@ -97,10 +97,78 @@ class EnrollmentPaymentSemesterTest extends TestCase
         $response->assertSessionHas('success');
         $this->assertDatabaseHas('enrollment_payments', [
             'user_id' => $student->id,
-            'semester' => $schoolYear->label,
+            'semester' => $schoolYear->label . ' - First Semester',
             'method' => 'gcash',
             'status' => 'pending',
             'proof_status' => 'pending',
+        ]);
+    }
+
+    public function test_switching_semester_starts_a_separate_payment_period(): void
+    {
+        $schoolYear = SchoolYear::create([
+            'label' => '2026-2027',
+            'semester' => SchoolYear::SEMESTER_FIRST,
+            'is_active' => true,
+        ]);
+        $student = User::create([
+            'fullname' => 'Semester Switch Student',
+            'email' => 'semester.switch@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'status' => 'active',
+        ]);
+
+        EnrollmentPayment::create([
+            'user_id' => $student->id,
+            'amount' => 50,
+            'semester' => $schoolYear->academic_term,
+            'method' => 'walk_in',
+            'status' => 'paid',
+            'reference' => 'FIRST-SEMESTER-PAYMENT',
+        ]);
+
+        $schoolYear->update(['semester' => SchoolYear::SEMESTER_SECOND]);
+
+        $this->actingAs($student)
+            ->get(route('student.enrollment.index'))
+            ->assertOk()
+            ->assertViewHas('currentSy', '2026-2027 - Second Semester')
+            ->assertViewHas('payment', null);
+
+        $schoolYear->update(['semester' => SchoolYear::SEMESTER_FIRST]);
+
+        $this->actingAs($student)
+            ->get(route('student.enrollment.index'))
+            ->assertOk()
+            ->assertViewHas('payment', fn ($payment) => $payment?->reference === 'FIRST-SEMESTER-PAYMENT');
+    }
+
+    public function test_second_semester_submission_is_stored_as_a_separate_term(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        SchoolYear::create([
+            'label' => '2026-2027',
+            'semester' => SchoolYear::SEMESTER_SECOND,
+            'is_active' => true,
+        ]);
+        $student = User::create([
+            'fullname' => 'Second Semester Student',
+            'email' => 'second.semester@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($student)->post(route('student.enrollment.store'), [
+            'payment_method' => 'gcash',
+            'proof' => \Illuminate\Http\UploadedFile::fake()->image('second-semester-receipt.jpg'),
+        ])->assertRedirect(route('student.enrollment.index'));
+
+        $this->assertDatabaseHas('enrollment_payments', [
+            'user_id' => $student->id,
+            'semester' => '2026-2027 - Second Semester',
+            'status' => 'pending',
         ]);
     }
 }
