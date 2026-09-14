@@ -15,6 +15,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
@@ -46,6 +47,7 @@ class ChatbotActivity : AppCompatActivity() {
     private val MESSENGER_AFTER_MESSAGES = 3
     private var userMessageCount = 0
     private var messengerOffered = false
+    private val conversationHistory = mutableListOf<Pair<String, String>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,8 +70,8 @@ class ChatbotActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
 
         // Add initial bot messages
-        addMessage("Hello! 👋 I'm your SSC Virtual Assistant. How can I help you today?", "bot")
-        addMessage("I can assist you with your student concerns. Try asking about: proposals, anonymous feedback, tracking budgets, contacting officers, voting, or candidacy.", "bot")
+        addMessage("Hello. I am the SSC portal assistant. How may I help you today?", "bot")
+        addMessage("I can provide verified portal information about payments, proposals, budgets, announcements, confidential feedback, candidacy, and voting.", "bot")
 
         buttonSend.setOnClickListener {
             val text = editTextMessage.text.toString().trim()
@@ -112,6 +114,8 @@ class ChatbotActivity : AppCompatActivity() {
 
     private fun handleUserSendMessage(text: String) {
         addMessage(text, "user")
+        val requestHistory = conversationHistory.takeLast(8)
+        rememberConversation("user", text)
         userMessageCount++
         editTextMessage.setText("")
 
@@ -125,16 +129,17 @@ class ChatbotActivity : AppCompatActivity() {
         thread {
             // Retry once on a transient failure (dropped connection, cold server, etc.)
             // before giving up and showing the local rule-based answer.
-            var answer = fetchServerAnswer(text, cookie)
+            var answer = fetchServerAnswer(text, cookie, requestHistory)
             if (answer == null) {
                 Thread.sleep(400)
-                answer = fetchServerAnswer(text, cookie)
+                answer = fetchServerAnswer(text, cookie, requestHistory)
             }
 
             if (answer != null) {
                 runOnUiThread {
                     removeMessageAt(typingIndex)
                     addMessage(answer, "bot")
+                    rememberConversation("assistant", answer)
                     maybeOfferMessenger()
                 }
             } else {
@@ -144,7 +149,11 @@ class ChatbotActivity : AppCompatActivity() {
     }
 
     /** Calls the student chatbot API once; returns the answer, or null on any failure. */
-    private fun fetchServerAnswer(text: String, cookie: String): String? {
+    private fun fetchServerAnswer(
+        text: String,
+        cookie: String,
+        history: List<Pair<String, String>>
+    ): String? {
         return try {
             // Determine base URL dynamically and robustly from portal URL
             val parsedUrl = java.net.URL(portalUrl)
@@ -168,6 +177,14 @@ class ChatbotActivity : AppCompatActivity() {
             // Attach CSRF Token if we can, but normally the Cookie session is sufficient for API
             val jsonParam = JSONObject().apply {
                 put("message", text)
+                put("history", JSONArray().apply {
+                    history.forEach { (role, content) ->
+                        put(JSONObject().apply {
+                            put("role", role)
+                            put("content", content)
+                        })
+                    }
+                })
             }
 
             val os = conn.outputStream
@@ -203,15 +220,24 @@ class ChatbotActivity : AppCompatActivity() {
     private fun fallbackResponse(typingIndex: Int, text: String) {
         runOnUiThread {
             removeMessageAt(typingIndex)
-            addMessage(getBotLocalResponse(text.toLowerCase()), "bot")
+            val answer = getBotLocalResponse(text.lowercase())
+            addMessage(answer, "bot")
+            rememberConversation("assistant", answer)
             maybeOfferMessenger()
+        }
+    }
+
+    private fun rememberConversation(role: String, content: String) {
+        conversationHistory.add(role to content)
+        while (conversationHistory.size > 8) {
+            conversationHistory.removeAt(0)
         }
     }
 
     private fun getBotLocalResponse(input: String): String {
         return when {
             input.contains("budget") -> {
-                "Want to track where your student fees go? 📊\n\nWe maintain full transparency of our budget:\n• Check the Dashboard to see summary charts of allocated versus spent funds.\n• Check the Proposals Portal to review specific project budgets, liquidation logs, and uploaded receipts for completed projects."
+                "Open the portal's Proposals page to review the latest visible project and budget records. I cannot quote a current amount while the live assistant service is unavailable."
             }
             input.contains("enroll") || input.contains("payment") || input.contains("gcash") -> {
                 "Need to settle your enrollment fee? 💳\n\nHead to the Enrollment page on your sidebar to:\n• View your current payment status for this school year.\n• Pay via GCash/bank transfer and upload proof, or wait for admin confirmation of a walk-in payment.\n• Once confirmed, your status updates automatically and you'll be notified."
@@ -223,13 +249,13 @@ class ChatbotActivity : AppCompatActivity() {
                 "Your Dashboard is your home base. 🏠\n\nIt gives you a quick overview of budget summaries, recent announcements, and your account status the moment you log in."
             }
             input.contains("proposal") -> {
-                "Want to submit a project proposal? 📝\n\nStudent organizations and department representatives can request Supreme Student Council (SSC) funding easily:\n1. Navigate to the Proposals Portal on your sidebar.\n2. Click the Submit Proposal button and fill in the project title, expected timeline, and estimated budget.\n3. Once submitted, it will appear on the discussions list for student feedback and voting."
+                "Students can view and discuss visible proposals on the Proposals page. New proposals are submitted through officer accounts."
             }
             input.contains("feedback") -> {
-                "Your voice is essential to build a better campus! 💬\n\nTo share feedback, suggestions, or concerns with the council:\n1. Open the Student Feedback Wall.\n2. Write your message and choose the type (Suggestion, Inquiry, or Concern).\n3. Check Submit Anonymously to keep your identity private if preferred."
+                "Open the Feedback page to submit a concern or suggestion. Feedback is linked to your signed-in account and treated as confidential; it is not anonymous."
             }
             input.contains("contact") || input.contains("officer") -> {
-                "Let's stay connected! 📞\n\nYou can reach the SSC officers through our official channels:\n• Email: ssc.official@mcclawis.edu.ph\n• Facebook: SSC Official Facebook Page\n• Office: Student Center, 2nd Floor, MCC Campus\n• Office Hours: Mon-Fri | 8:00 AM – 5:00 PM"
+                "Open the Officers page for the current SSC roster and available contact details."
             }
             input.contains("vote") || input.contains("voting") -> {
                 "Interested in participating in the elections? 🗳️\n\nWhen voting is active, you can cast your secure ballot in 3 simple steps:\n1. Open the Voting Portal in the app menu.\n2. Review candidate platform and position details.\n3. Select your preferred candidates and tap the Cast Ballot button to safely record your vote."
@@ -238,16 +264,16 @@ class ChatbotActivity : AppCompatActivity() {
                 "Are you running for office? 🚀\n\nStudents can file for official candidacy through our platform:\n1. Visit the Candidacy Portal.\n2. Select your desired role and enter your campaign platform details.\n3. Note that eligibility is limited by department restrictions and active election timelines set by the administration."
             }
             input.contains("location") || input.contains("where") || input.contains("map") || input.contains("address") -> {
-                "Our campus and the SSC Office are located at:\n📍 Madridejos Community College (MCC)\nBunakan, Madridejos, Cebu, Philippines.\n\n🏢 SSC Office Location: Student Center, 2nd Floor, MCC Campus."
+                "I cannot verify the current SSC office location while the live assistant service is unavailable. Please check the Officers page or contact an SSC officer."
             }
             input.contains("hello") || input.contains("hi") -> {
-                "Hi there! 👋 I'm your SSC assistant. I can help you with student concerns, proposals, anonymous feedback, and budget tracking. What can I do for you today?"
+                "Hello. I am the SSC portal assistant. I can help with payments, proposals, budgets, announcements, feedback, candidacy, voting, and portal navigation."
             }
             input.contains("thanks") || input.contains("thank") -> {
                 "You're very welcome! Let me know if there's anything else I can do to help you navigate the system. 🚀"
             }
             else -> {
-                "I'm sorry, I don't have a specific answer for that.\n\nTry asking about:\n• proposals\n• anonymous feedback\n• track budgets\n• contact ssc\n• voting\n• candidacy"
+                "I do not have enough verified information to answer that accurately while the live assistant service is unavailable. Please use the relevant portal page or contact an SSC officer."
             }
         }
     }

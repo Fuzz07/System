@@ -22,17 +22,17 @@
         </div>
         <button class="chatbot-close-btn" id="chatbotClose"><i class="bi bi-x-lg"></i></button>
       </div>
-      <h2 class="home-welcome-text">Hi there 👋</h2>
-      <p class="home-welcome-sub">How can we help you today?</p>
+      <h2 class="home-welcome-text">Welcome</h2>
+      <p class="home-welcome-sub">How may the SSC assist you today?</p>
     </div>
 
     <!-- Messages Log -->
     <div class="chatbot-messages" id="chatbotMessages">
       <div class="chat-msg bot-msg">
-        Hello! 👋 I'm your SSC Virtual Assistant. How can I help you today?
+        Hello. I am the SSC portal assistant. How may I help you today?
       </div>
       <div class="chat-msg bot-msg">
-        I can assist you with your student concerns. Tap a shortcut below or type your question.
+        I can provide verified portal information about payments, proposals, budgets, announcements, feedback, candidacy, and voting.
       </div>
     </div>
 
@@ -45,7 +45,7 @@
       </div>
       <div class="chatbot-shortcuts" id="chatbotShortcuts">
         <button class="shortcut-btn" data-query="feedback">
-          <span class="btn-emoji">💬</span> Post Anonymous Feedback
+          <span class="btn-emoji">💬</span> Submit Confidential Feedback
         </button>
         <button class="shortcut-btn" data-query="budget">
           <span class="btn-emoji">📊</span> Track Project Budgets
@@ -53,8 +53,8 @@
         <button class="shortcut-btn" data-query="contact">
           <span class="btn-emoji">📞</span> Contact SSC Officers
         </button>
-        <button class="shortcut-btn" data-query="location">
-          <span class="btn-emoji">📍</span> SSC Office & School Location
+        <button class="shortcut-btn" data-query="payment">
+          <span class="btn-emoji">💳</span> Check Enrollment Payment
         </button>
       </div>
     </div>
@@ -910,6 +910,8 @@
     const MESSENGER_AFTER_MESSAGES = 3;
     let userMessageCount = 0;
     let messengerOffered = false;
+    const conversationHistory = [];
+    const MAX_HISTORY_MESSAGES = 8;
 
     shortcuts.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -935,6 +937,8 @@
     // matter which path produced the reply (API, local fallback, or timeout).
     function botReply(text) {
       addMessage(text, 'bot');
+      conversationHistory.push({ role: 'assistant', content: text });
+      if (conversationHistory.length > MAX_HISTORY_MESSAGES) conversationHistory.shift();
       maybeOfferMessenger();
     }
 
@@ -964,6 +968,10 @@
       if (!text) return;
 
       addMessage(text, 'user');
+      // Send only earlier turns as history; the current message is a separate field.
+      const requestHistory = conversationHistory.slice(-MAX_HISTORY_MESSAGES);
+      conversationHistory.push({ role: 'user', content: text });
+      if (conversationHistory.length > MAX_HISTORY_MESSAGES) conversationHistory.shift();
       userMessageCount++;
       chatbotInput.value = '';
 
@@ -984,7 +992,7 @@
             'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
           },
-          body: JSON.stringify({ message: text })
+          body: JSON.stringify({ message: text, history: requestHistory })
         }, 15000)
         .then(res => res.json())
         .then(data => {
@@ -1021,32 +1029,45 @@
     });
 
     function getBotResponse(input) {
-      const responses = {
-        'budget': "Want to track where your student fees go? 📊\n\nWe maintain full transparency of our budget:\n• Visit the <a href='{{ route('student.overview') }}' class='chat-link'>Dashboard</a> to see summary charts of allocated versus spent funds.\n• Check the <a href='{{ route('student.proposals') }}' class='chat-link'>Proposals Portal</a> to review specific project budgets, liquidation logs, and uploaded receipts for completed projects.",
-        'dashboard': "Your <a href='{{ route('student.overview') }}' class='chat-link'>Dashboard</a> is your home base. 🏠\n\nIt gives you a quick overview of budget summaries, recent announcements, and your account status the moment you log in.",
-        'overview': "Your <a href='{{ route('student.overview') }}' class='chat-link'>Dashboard</a> is your home base. 🏠\n\nIt gives you a quick overview of budget summaries, recent announcements, and your account status the moment you log in.",
-        'enroll': "Need to settle your enrollment fee? 💳\n\nHead to the <a href='{{ route('student.enrollment.index') }}' class='chat-link'>Enrollment</a> page on your sidebar to:\n• View your current payment status for this school year.\n• Pay via GCash/bank transfer and upload proof, or wait for admin confirmation of a walk-in payment.\n• Once confirmed, your status updates automatically and you'll be notified.",
-        'payment': "Need to settle your enrollment fee? 💳\n\nHead to the <a href='{{ route('student.enrollment.index') }}' class='chat-link'>Enrollment</a> page on your sidebar to:\n• View your current payment status for this school year.\n• Pay via GCash/bank transfer and upload proof, or wait for admin confirmation of a walk-in payment.\n• Once confirmed, your status updates automatically and you'll be notified.",
-        'announcement': "Want to stay in the loop? 📰\n\nAll official SSC announcements, project updates, and campus news are posted on the <a href='{{ route('student.announcements') }}' class='chat-link'>Announcements</a> page, accessible from your sidebar.",
-        'news': "Want to stay in the loop? 📰\n\nAll official SSC announcements, project updates, and campus news are posted on the <a href='{{ route('student.announcements') }}' class='chat-link'>Announcements</a> page, accessible from your sidebar.",
-        'proposal': "Want to submit a project proposal? 📝\n\nStudent organizations and department representatives can request Supreme Student Council (SSC) funding easily:\n1. Navigate to the <a href='{{ route('student.proposals') }}' class='chat-link'>Proposals Portal</a> on your sidebar.\n2. Click the <b>Submit Proposal</b> button and fill in the project title, expected timeline, and estimated budget.\n3. Once submitted, it will appear on the discussions list for student feedback and voting.\n4. The SSC Board will review and vote on official approval.",
-        'feedback': "Your voice is essential to build a better campus! 💬\n\nTo share feedback, suggestions, or concerns with the council:\n1. Open the <a href='{{ route('student.feedback') }}' class='chat-link'>Student Feedback Wall</a>.\n2. Write your message and choose the type (Suggestion, Inquiry, or Concern).\n3. Check <b>Submit Anonymously</b> to keep your identity private if preferred.\n4. All submissions are read and addressed directly by the SSC Executive Committee.",
-        'contact': "Let's stay connected! 📞\n\nYou can reach the SSC officers through our official channels:\n• <b>Email:</b> <a href='mailto:ssc.official@mcclawis.edu.ph' class='chat-link'>ssc.official@mcclawis.edu.ph</a>\n• <b>Facebook:</b> <a href='https://www.facebook.com/share/17N13YJMUC/' target='_blank' class='chat-link'>SSC Official Page</a>\n• <b>Office:</b> Student Center, 2nd Floor, MCC Campus\n• <b>Office Hours:</b> Mon-Fri | 8:00 AM – 5:00 PM",
-        'vote': "Interested in participating in the elections? 🗳️\n\nWhen voting is active, you can cast your secure ballot in 3 simple steps:\n1. Open the <a href='{{ route('student.voting') }}' class='chat-link'>Voting Portal</a> on your sidebar.\n2. Review candidate platform and position details.\n3. Select your preferred candidates and tap the <b>Cast Ballot</b> button to safely record your vote.",
-        'voting': "Interested in participating in the elections? 🗳️\n\nWhen voting is active, you can cast your secure ballot in 3 simple steps:\n1. Open the <a href='{{ route('student.voting') }}' class='chat-link'>Voting Portal</a> on your sidebar.\n2. Review candidate platform and position details.\n3. Select your preferred candidates and tap the <b>Cast Ballot</b> button to safely record your vote.",
-        'candidacy': "Are you running for office? 🚀\n\nStudents can file for official candidacy through our platform:\n1. Visit the <a href='{{ route('student.candidacy') }}' class='chat-link'>Candidacy Portal</a>.\n2. Select your desired role and enter your campaign platform details.\n3. Note that eligibility is limited by department restrictions and active election timelines set by the administration.",
-        'hello': "Hi there! 👋 I'm your SSC assistant. I can help you with student concerns, proposals, anonymous feedback, and budget tracking. What can I do for you today?",
-        'hi': "Hello! 🌟 Hope you're having a good day. Need help with project proposals, tracking budgets, or posting feedback?",
-        'thanks': "You're very welcome! Let me know if there's anything else I can do to help you navigate the system. 🚀",
-        'thank': "Anytime! Stay awesome. Let me know if you have other student concerns!",
-        'location': "Our campus and the SSC Office are located at:<br>📍 <b>Madridejos Community College (MCC)</b><br>Bunakan, Madridejos, Cebu, Philippines.<br><br>🏢 <b>SSC Office Location:</b> Student Center, 2nd Floor, MCC Campus.<br><br>🗺️ <b>Google Maps Location:</b><br><div class='map-container mb-2' style='width:100%; height:160px; border-radius:8px; overflow:hidden; border:1px solid #cbd5e1;'><iframe src='https://maps.google.com/maps?q=Madridejos%20Community%20College,%20Cebu,%20Philippines&t=&z=15&ie=UTF8&iwloc=&output=embed' width='100%' height='100%' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe></div><a href='https://maps.google.com/maps?q=Madridejos%20Community%20College,%20Cebu,%20Philippines' target='_blank' class='chat-link'><i class='bi bi-box-arrow-up-right'></i> Open in Google Maps</a>"
-      };
+      const normalized = input.toLowerCase().trim();
+      const includesAny = terms => terms.some(term => normalized.includes(term));
 
-      for (const key in responses) {
-        if (input.includes(key)) return responses[key];
+      if (includesAny(['enrollment', 'payment', 'gcash', 'instapay', 'fee'])) {
+        return "Open the <a href='{{ route('student.enrollment.index') }}' class='chat-link'>Enrollment page</a> to view your current fee, payment record, approved payment methods, and proof status. I cannot verify your live account status while the assistant service is unavailable.";
+      }
+      if (includesAny(['voting', 'vote', 'election', 'ballot'])) {
+        return "Open the <a href='{{ route('student.voting') }}' class='chat-link'>Voting page</a> to see whether voting is currently open and to view your official ballot status. Do not rely on a cached chat response for election availability.";
+      }
+      if (includesAny(['candidacy', 'candidate', 'running for office'])) {
+        return "Open the <a href='{{ route('student.candidacy') }}' class='chat-link'>Candidacy page</a> to check whether filing is open, review the requirements, and see your application status.";
+      }
+      if (includesAny(['budget', 'fund', 'allocation', 'expense', 'transparency'])) {
+        return "Please review the current records in the <a href='{{ route('student.proposals') }}' class='chat-link'>Proposals page</a>. I cannot quote a current budget amount while the live assistant service is unavailable.";
+      }
+      if (includesAny(['announcement', 'news', 'update'])) {
+        return "Open the <a href='{{ route('student.announcements') }}' class='chat-link'>Announcements page</a> for the latest official SSC posts. The page is the authoritative source when live chat data is unavailable.";
+      }
+      if (includesAny(['proposal', 'project'])) {
+        return "Students can view and discuss visible proposals on the <a href='{{ route('student.proposals') }}' class='chat-link'>Proposals page</a>. New proposals are submitted through officer accounts.";
+      }
+      if (includesAny(['feedback', 'concern', 'suggestion', 'complaint'])) {
+        return "Open the <a href='{{ route('student.feedback') }}' class='chat-link'>Feedback page</a> to submit a concern or suggestion. Feedback is linked to your signed-in account and treated as confidential; it is not anonymous.";
+      }
+      if (includesAny(['contact', 'officer', 'reach the ssc'])) {
+        return "Open the <a href='{{ route('student.officers') }}' class='chat-link'>Officers page</a> for the current SSC roster and available contact details.";
+      }
+      if (includesAny(['dashboard', 'overview'])) {
+        return "The <a href='{{ route('student.overview') }}' class='chat-link'>Dashboard</a> shows current announcements, active proposals, and your account information.";
+      }
+      if (/^(hi|hello|hey|good\s+(morning|afternoon|evening))\b/.test(normalized)) {
+        return "Hello. I am the SSC portal assistant. I can help with payments, proposals, budgets, announcements, feedback, candidacy, voting, and portal navigation.";
+      }
+      if (/\b(thank you|thanks|thank)\b/.test(normalized)) {
+        return "You are welcome. Let me know if you need help with another SSC or student portal matter.";
       }
 
-      return "I'm sorry, I don't have a specific answer for that. \n\nTry asking about: \n• proposals \n• anonymous feedback \n• track budgets \n• contact ssc \n• voting \n• candidacy";
+      return "I do not have enough verified information to answer that accurately while the live assistant service is unavailable. Please use the relevant portal page or contact an SSC officer.";
     }
+
   });
 </script>

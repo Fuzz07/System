@@ -40,4 +40,10 @@ return [
         'service_account_key_path' => env('FIREBASE_SERVICE_ACCOUNT_KEY_PATH', 'storage/firebase-key.json'),
     ],
 
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+        'chat_model' => env('OPENAI_CHAT_MODEL', 'gpt-4o-mini'),
+        'timeout' => env('OPENAI_TIMEOUT', 15),
+    ],
+
 ];
