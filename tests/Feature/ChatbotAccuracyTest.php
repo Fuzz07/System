@@ -14,6 +14,28 @@ class ChatbotAccuracyTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_landing_page_displays_the_guest_chatbot(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('id="ssc-chatbot"', false)
+            ->assertSee('SSC portal assistant')
+            ->assertSee('Submit Confidential Feedback');
+    }
+
+    public function test_guest_chatbot_requires_sign_in_for_account_information(): void
+    {
+        config(['services.openai.key' => null]);
+        SchoolYear::create(['label' => '2026-2027', 'is_active' => true]);
+
+        $this->postJson(route('chatbot.chat'), ['message' => 'Have I paid my enrollment fee?'])
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'answer' => 'Please sign in to the student portal to check your enrollment fee, payment record, and proof status.',
+            ]);
+    }
+
     public function test_local_responder_uses_the_students_current_payment_record(): void
     {
         config(['services.openai.key' => null]);

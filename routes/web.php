@@ -198,6 +198,10 @@ Route::group([], function () use ($baseDomain) {
         return view('welcome');
     })->name('home');
 
+    Route::post('/chatbot/chat', [Student\ChatbotController::class, 'chat'])
+        ->middleware('throttle:20,1')
+        ->name('chatbot.chat');
+
     // ─── Auth Routes ───
     Route::get('/login/auth/{portal}', [AuthController::class, 'showLogin'])->name('login.portal');
     Route::post('/login/auth/{portal}', [AuthController::class, 'login'])->name('login.submit.portal');

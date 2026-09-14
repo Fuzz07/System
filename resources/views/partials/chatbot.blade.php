@@ -1,3 +1,17 @@
+@php
+  $chatbotIsStudent = Auth::check() && Auth::user()->role === 'student';
+  $chatbotSignInUrl = route('login.student');
+  $chatbotEndpoint = $chatbotIsStudent ? route('student.chatbot.chat') : route('chatbot.chat');
+  $chatbotOverviewUrl = $chatbotIsStudent ? route('student.overview') : $chatbotSignInUrl;
+  $chatbotEnrollmentUrl = $chatbotIsStudent ? route('student.enrollment.index') : $chatbotSignInUrl;
+  $chatbotVotingUrl = $chatbotIsStudent ? route('student.voting') : $chatbotSignInUrl;
+  $chatbotCandidacyUrl = $chatbotIsStudent ? route('student.candidacy') : $chatbotSignInUrl;
+  $chatbotProposalsUrl = $chatbotIsStudent ? route('student.proposals') : $chatbotSignInUrl;
+  $chatbotAnnouncementsUrl = $chatbotIsStudent ? route('student.announcements') : $chatbotSignInUrl;
+  $chatbotFeedbackUrl = $chatbotIsStudent ? route('student.feedback') : $chatbotSignInUrl;
+  $chatbotOfficersUrl = $chatbotIsStudent ? route('student.officers') : url('/#officers');
+@endphp
+
 <!-- ===== CHATBOT WIDGET ===== -->
 <div id="ssc-chatbot" class="chatbot-container">
   <!-- Draggable/floating Toggle Button & Label -->
@@ -983,7 +997,7 @@
 
       // Try the Laravel/OpenAI backend first, always falling back to the local
       // rule-based responder so the widget never leaves the user without an answer.
-      const chatRoute = "{{ Route::has('student.chatbot.chat') ? route('student.chatbot.chat') : '' }}";
+      const chatRoute = @json($chatbotEndpoint);
       if (chatRoute) {
         fetchWithTimeout(chatRoute, {
           method: 'POST',
@@ -1033,31 +1047,31 @@
       const includesAny = terms => terms.some(term => normalized.includes(term));
 
       if (includesAny(['enrollment', 'payment', 'gcash', 'instapay', 'fee'])) {
-        return "Open the <a href='{{ route('student.enrollment.index') }}' class='chat-link'>Enrollment page</a> to view your current fee, payment record, approved payment methods, and proof status. I cannot verify your live account status while the assistant service is unavailable.";
+        return "<a href='{{ $chatbotEnrollmentUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'Open the Enrollment page' : 'Sign in to the student portal' }}</a> to view your current fee, payment record, approved payment methods, and proof status. I cannot verify your live account status while the assistant service is unavailable.";
       }
       if (includesAny(['voting', 'vote', 'election', 'ballot'])) {
-        return "Open the <a href='{{ route('student.voting') }}' class='chat-link'>Voting page</a> to see whether voting is currently open and to view your official ballot status. Do not rely on a cached chat response for election availability.";
+        return "<a href='{{ $chatbotVotingUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'Open the Voting page' : 'Sign in to the student portal' }}</a> to see whether voting is currently open and to view your official ballot status. Do not rely on a cached chat response for election availability.";
       }
       if (includesAny(['candidacy', 'candidate', 'running for office'])) {
-        return "Open the <a href='{{ route('student.candidacy') }}' class='chat-link'>Candidacy page</a> to check whether filing is open, review the requirements, and see your application status.";
+        return "<a href='{{ $chatbotCandidacyUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'Open the Candidacy page' : 'Sign in to the student portal' }}</a> to check whether filing is open, review the requirements, and see your application status.";
       }
       if (includesAny(['budget', 'fund', 'allocation', 'expense', 'transparency'])) {
-        return "Please review the current records in the <a href='{{ route('student.proposals') }}' class='chat-link'>Proposals page</a>. I cannot quote a current budget amount while the live assistant service is unavailable.";
+        return "Please <a href='{{ $chatbotProposalsUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'review the Proposals page' : 'sign in to review portal records' }}</a>. I cannot quote a current budget amount while the live assistant service is unavailable.";
       }
       if (includesAny(['announcement', 'news', 'update'])) {
-        return "Open the <a href='{{ route('student.announcements') }}' class='chat-link'>Announcements page</a> for the latest official SSC posts. The page is the authoritative source when live chat data is unavailable.";
+        return "<a href='{{ $chatbotAnnouncementsUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'Open the Announcements page' : 'Sign in to the student portal' }}</a> for the latest official SSC posts. The portal is the authoritative source when live chat data is unavailable.";
       }
       if (includesAny(['proposal', 'project'])) {
-        return "Students can view and discuss visible proposals on the <a href='{{ route('student.proposals') }}' class='chat-link'>Proposals page</a>. New proposals are submitted through officer accounts.";
+        return "Students can view and discuss visible proposals after they <a href='{{ $chatbotProposalsUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'open the Proposals page' : 'sign in to the portal' }}</a>. New proposals are submitted through officer accounts.";
       }
       if (includesAny(['feedback', 'concern', 'suggestion', 'complaint'])) {
-        return "Open the <a href='{{ route('student.feedback') }}' class='chat-link'>Feedback page</a> to submit a concern or suggestion. Feedback is linked to your signed-in account and treated as confidential; it is not anonymous.";
+        return "<a href='{{ $chatbotFeedbackUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'Open the Feedback page' : 'Sign in to the student portal' }}</a> to submit a concern or suggestion. Feedback is linked to your signed-in account and treated as confidential; it is not anonymous.";
       }
       if (includesAny(['contact', 'officer', 'reach the ssc'])) {
-        return "Open the <a href='{{ route('student.officers') }}' class='chat-link'>Officers page</a> for the current SSC roster and available contact details.";
+        return "Open the <a href='{{ $chatbotOfficersUrl }}' class='chat-link'>Officers section</a> for the current SSC roster and available contact details.";
       }
       if (includesAny(['dashboard', 'overview'])) {
-        return "The <a href='{{ route('student.overview') }}' class='chat-link'>Dashboard</a> shows current announcements, active proposals, and your account information.";
+        return "The <a href='{{ $chatbotOverviewUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'Dashboard' : 'student portal' }}</a> shows current announcements, active proposals, and account information after sign-in.";
       }
       if (/^(hi|hello|hey|good\s+(morning|afternoon|evening))\b/.test(normalized)) {
         return "Hello. I am the SSC portal assistant. I can help with payments, proposals, budgets, announcements, feedback, candidacy, voting, and portal navigation.";
