@@ -46,7 +46,9 @@ class SettingsController extends Controller
             }
         }
 
-        return view('admin.settings', compact('schoolYears', 'dbStats', 'activeSessions'));
+        $maintenanceData = \App\Helpers\MaintenanceHelper::getData();
+
+        return view('admin.settings', compact('schoolYears', 'dbStats', 'activeSessions', 'maintenanceData'));
     }
 
     public function logoutDevice(Request $request, string $sessionId)
@@ -341,6 +343,84 @@ class SettingsController extends Controller
             'Content-Type' => 'application/sql; charset=utf-8',
             'Content-Disposition' => 'attachment; filename="ssc_database_backup_' . date('Y_m_d_His') . '.sql"',
         ]);
+    }
+
+    public function requestMaintenanceOtp(Request $request)
+    {
+        $user = Auth::user();
+        $targetAction = $request->input('target_action') === 'disable' ? 'disable' : 'enable';
+        $otp = (string) rand(100000, 999999);
+
+        session([
+            'maintenance_mode_otp' => $otp,
+            'maintenance_mode_otp_action' => $targetAction,
+            'maintenance_mode_otp_expires_at' => now()->addMinutes(3),
+        ]);
+
+        $actionLabel = $targetAction === 'enable' ? 'ENABLE' : 'DISABLE';
+        $actionDesc = $targetAction === 'enable'
+            ? 'lock down public/student portals and activate Maintenance Mode'
+            : 'restore public and student access to normal operational status';
+
+        try {
+            \Illuminate\Support\Facades\Mail::send([], [], function ($message) use ($user, $otp, $actionLabel, $actionDesc) {
+                $message->to($user->email)
+                    ->subject("Maintenance Mode {$actionLabel} Security Verification Code")
+                    ->html("
+                        <div style='font-family: sans-serif; padding: 24px; max-width: 600px; margin: auto; border: 1px solid #cbd5e1; border-radius: 12px; background: #ffffff;'>
+                            <h2 style='color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-top: 0;'>SSC Admin Security Authorization</h2>
+                            <p style='color: #334155; font-size: 15px; line-height: 1.6;'>
+                                You requested to <strong>{$actionLabel}</strong> System Maintenance Mode ({$actionDesc}).
+                            </p>
+                            <p style='color: #334155; font-size: 15px;'>Please enter the following 6-digit verification code to authorize this action:</p>
+                            <div style='background: #f8fafc; border: 2px dashed #cbd5e1; padding: 18px; border-radius: 8px; text-align: center; font-size: 36px; font-weight: bold; letter-spacing: 6px; color: #1e3a8a; margin: 20px 0;'>{$otp}</div>
+                            <p style='color: #64748b; font-size: 13px; line-height: 1.5;'>
+                                This verification code is valid for 3 minutes. If you did not initiate this change, please sign in and secure your administrator account immediately.
+                            </p>
+                        </div>
+                    ");
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Verification code sent to ' . $user->email . '! Check your email inbox.',
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Maintenance OTP email failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send verification code email. Please try again.',
+            ], 500);
+        }
+    }
+
+    public function toggleMaintenance(Request $request)
+    {
+        $sessionOtp = session('maintenance_mode_otp');
+        $expectedAction = session('maintenance_mode_otp_action');
+        $expiresAt = session('maintenance_mode_otp_expires_at');
+        $inputOtp = trim($request->input('otp', ''));
+        $targetAction = $request->input('action', $expectedAction);
+
+        if (empty($sessionOtp) || empty($expiresAt) || now()->greaterThan($expiresAt) || $inputOtp !== $sessionOtp) {
+            return redirect()->route('admin.settings')->with('danger', 'Security Check Failed: Invalid or expired OTP verification code for Maintenance Mode.');
+        }
+
+        // Clear OTP session
+        session()->forget(['maintenance_mode_otp', 'maintenance_mode_otp_action', 'maintenance_mode_otp_expires_at']);
+
+        $user = Auth::user();
+
+        if ($targetAction === 'enable') {
+            $customMessage = trim($request->input('message', ''));
+            \App\Helpers\MaintenanceHelper::enable($user->id, $user->fullname, $customMessage ?: null);
+            SscHelper::logActivity($user->id, 'MAINTENANCE_ENABLED', 'Activated System Maintenance Mode');
+            return redirect()->route('admin.settings')->with('success', 'System Maintenance Mode has been ACTIVATED. Non-admin users are now shown the maintenance screen.');
+        } else {
+            \App\Helpers\MaintenanceHelper::disable();
+            SscHelper::logActivity($user->id, 'MAINTENANCE_DISABLED', 'Deactivated System Maintenance Mode');
+            return redirect()->route('admin.settings')->with('success', 'System Maintenance Mode has been DEACTIVATED. The system is now fully operational.');
+        }
     }
 
     private function escapeSqlValue($value)

@@ -143,6 +143,80 @@
 
     <!-- Right Column: Database Backup & Active Devices -->
     <div class="col-lg-6">
+        <!-- System Maintenance Mode Card -->
+        <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px; overflow: hidden;">
+            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom" style="border-top: 4px solid {{ $maintenanceData['active'] ? '#ef4444' : '#f59e0b' }};">
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: {{ $maintenanceData['active'] ? '#fef2f2' : '#fffbeb' }}; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-tools {{ $maintenanceData['active'] ? 'text-danger' : 'text-warning' }}"></i>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0" style="font-size: 1.05rem; font-weight: 700; color: #0f172a;">System Maintenance Mode</h5>
+                    </div>
+                </div>
+                @if($maintenanceData['active'])
+                    <span class="badge bg-danger px-3 py-2" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                        <i class="bi bi-exclamation-octagon-fill me-1"></i> MAINTENANCE ACTIVE
+                    </span>
+                @else
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2" style="font-size: 0.75rem; font-weight: 600;">
+                        <i class="bi bi-check-circle-fill me-1"></i> OPERATIONAL
+                    </span>
+                @endif
+            </div>
+            <div class="card-body p-4">
+                @if($maintenanceData['active'])
+                    <div class="alert alert-danger mb-3 p-3" style="border-radius: 8px; border-left: 4px solid #dc2626;">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-cone-striped fs-5 text-danger flex-shrink-0 mt-1"></i>
+                            <div>
+                                <strong style="font-size: 0.9rem;">Maintenance Mode is currently ACTIVE.</strong>
+                                <p class="mb-1 text-muted" style="font-size: 0.82rem;">
+                                    Public, student, officer, and dean portals are locked and displaying the scheduled maintenance screen. Administrators retain full access to manage the system.
+                                </p>
+                                <div class="mt-2 pt-2 border-top border-danger border-opacity-25" style="font-size: 0.78rem; color: #991b1b;">
+                                    <span><strong>Enabled:</strong> {{ $maintenanceData['enabled_at'] ?? 'Recently' }} by {{ $maintenanceData['enabled_by_name'] ?? 'Admin' }}</span>
+                                    <br>
+                                    <span><strong>Broadcast Message:</strong> <em>"{{ $maintenanceData['message'] }}"</em></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted" style="font-size: 0.8rem;">
+                            <i class="bi bi-shield-lock text-primary me-1"></i> Requires email OTP code to deactivate
+                        </span>
+                        <button type="button" id="btnDeactivateMaintenance" onclick="startMaintenanceOtpFlow('disable')" class="btn btn-sm btn-success fw-bold px-3 py-2" style="font-size: 0.82rem;">
+                            <i class="bi bi-check-circle-fill me-1"></i> Deactivate Maintenance Mode
+                        </button>
+                    </div>
+                @else
+                    <p class="text-muted mb-3" style="font-size: 0.82rem; line-height: 1.5;">
+                        When maintenance mode is activated, all public, student, and staff pages are blocked and display a scheduled maintenance screen. Only administrators can access the system.
+                    </p>
+
+                    <div class="mb-3">
+                        <label for="maintenanceCustomMessage" class="form-label fw-bold text-dark mb-1" style="font-size: 0.8rem;">
+                            Custom Maintenance Notice (Optional)
+                        </label>
+                        <input type="text" id="maintenanceCustomMessage" class="form-control form-control-sm" 
+                               placeholder="e.g. Scheduled server maintenance in progress. Expected back in 1 hour." 
+                               value="The system is currently undergoing scheduled maintenance. Please check back shortly.">
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <span class="text-muted" style="font-size: 0.8rem;">
+                            <i class="bi bi-shield-lock text-primary me-1"></i> Requires email OTP code to activate
+                        </span>
+                        <button type="button" id="btnActivateMaintenance" onclick="startMaintenanceOtpFlow('enable')" class="btn btn-sm btn-outline-danger fw-bold px-3 py-2" style="font-size: 0.82rem;">
+                            <i class="bi bi-power me-1"></i> Activate Maintenance Mode
+                        </button>
+                    </div>
+                @endif
+            </div>
+        </div>
+
         <!-- Database Overview & OTP Backup Export -->
         <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px; overflow: hidden;">
             <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom" style="border-top: 4px solid #f59e0b;">
@@ -369,7 +443,137 @@
     </div>
 </div>
 
+<!-- Modal: OTP Verification for Maintenance Mode Toggle -->
+<div class="modal fade" id="maintenanceOtpModal" tabindex="-1" aria-labelledby="maintenanceOtpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
+            <div class="modal-header text-white py-3" id="maintenanceModalHeader" style="background: #1e3a8a;">
+                <h5 class="modal-title fw-bold" id="maintenanceOtpModalLabel" style="font-size: 1.1rem;">
+                    <i class="bi bi-shield-lock me-2"></i>Maintenance Mode Authorization
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ route('admin.settings.maintenance.toggle') }}">
+                @csrf
+                <input type="hidden" name="action" id="maintenanceTargetAction" value="enable">
+                <input type="hidden" name="message" id="maintenanceModalMessage" value="">
+
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3">
+                        <div id="maintenanceModalIconBg" style="width: 60px; height: 60px; border-radius: 50%; background: #eff6ff; display: inline-flex; align-items: center; justify-content: center;" class="mb-2">
+                            <i id="maintenanceModalIcon" class="bi bi-cone-striped text-primary" style="font-size: 1.8rem;"></i>
+                        </div>
+                        <h6 style="font-weight: 700; color: #0f172a;" id="maintenanceModalActionTitle">Security Authorization Required</h6>
+                        <p class="text-muted" style="font-size: 0.85rem;" id="otpMaintenanceStatusMsg">
+                            A secure 6-digit verification code has been sent to <strong>{{ Auth::user()->email }}</strong>.
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="otpMaintenanceCodeInput" class="form-label fw-bold text-dark" style="font-size: 0.85rem;">Enter 6-Digit OTP Code</label>
+                        <input type="text" name="otp" id="otpMaintenanceCodeInput" class="form-control form-control-lg text-center fw-bold" 
+                               placeholder="123456" maxlength="6" pattern="\d{6}" required autofocus 
+                               style="letter-spacing: 8px; font-size: 1.6rem; color: #1e3a8a; background: #f8fafc;">
+                    </div>
+
+                    <div style="font-size: 0.78rem;" class="text-muted mb-2">
+                        <i class="bi bi-clock-history me-1"></i> Code is valid for 3 minutes.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2 px-4 d-flex justify-content-between">
+                    <button type="button" onclick="resendMaintenanceOtp()" class="btn btn-link btn-sm text-decoration-none text-muted" style="font-weight: 600;">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Resend Code
+                    </button>
+                    <div>
+                        <button type="button" class="btn btn-secondary btn-sm me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="btnConfirmMaintenance" class="btn btn-primary btn-sm fw-bold px-3">
+                            <i class="bi bi-check2-circle me-1"></i> Confirm &amp; Save
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+let currentMaintenanceAction = 'enable';
+
+function startMaintenanceOtpFlow(action) {
+    currentMaintenanceAction = action;
+    const isEnable = (action === 'enable');
+    const btn = document.getElementById(isEnable ? 'btnActivateMaintenance' : 'btnDeactivateMaintenance');
+    const originalHtml = btn ? btn.innerHTML : '';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending Code...';
+    }
+
+    const messageInput = document.getElementById('maintenanceCustomMessage');
+    const customMessage = messageInput ? messageInput.value : '';
+
+    fetch("{{ route('admin.settings.maintenance.request_otp') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({
+            target_action: action
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+
+        if (data.success) {
+            document.getElementById('maintenanceTargetAction').value = action;
+            document.getElementById('maintenanceModalMessage').value = customMessage;
+
+            const modalHeader = document.getElementById('maintenanceModalHeader');
+            const confirmBtn = document.getElementById('btnConfirmMaintenance');
+            const title = document.getElementById('maintenanceModalActionTitle');
+            const statusMsg = document.getElementById('otpMaintenanceStatusMsg');
+
+            if (statusMsg) {
+                statusMsg.innerHTML = data.message;
+            }
+
+            if (isEnable) {
+                modalHeader.style.background = '#dc2626';
+                confirmBtn.className = 'btn btn-danger btn-sm fw-bold px-3';
+                confirmBtn.innerHTML = '<i class="bi bi-power me-1"></i> Confirm & Activate';
+                title.innerText = 'Authorize Activation of Maintenance Mode';
+            } else {
+                modalHeader.style.background = '#16a34a';
+                confirmBtn.className = 'btn btn-success btn-sm fw-bold px-3';
+                confirmBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Confirm & Deactivate';
+                title.innerText = 'Authorize Deactivation of Maintenance Mode';
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('maintenanceOtpModal'));
+            modal.show();
+        } else {
+            alert(data.message || 'Failed to send OTP code. Please try again.');
+        }
+    })
+    .catch(error => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+        alert('Error connecting to server. Please try again.');
+    });
+}
+
+function resendMaintenanceOtp() {
+    startMaintenanceOtpFlow(currentMaintenanceAction);
+}
+
 function requestExportOtp() {
     const btn = document.getElementById('btnExportSql');
     if (btn) {

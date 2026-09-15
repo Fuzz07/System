@@ -67,6 +67,19 @@
         </header>
 
         <main class="page-content">
+            {{-- Persistent Maintenance Mode Warning for Admins --}}
+            @if(\App\Helpers\MaintenanceHelper::isDown() && Auth::check() && Auth::user()->role === 'admin')
+            <div class="alert alert-warning d-flex align-items-center justify-content-between mb-4 shadow-sm" style="border-radius:var(--radius-sm); border-left: 4px solid #f59e0b; background: #fffbeb; color: #92400e; font-weight: 600;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-cone-striped fs-5 text-warning"></i>
+                    <span><strong>MAINTENANCE MODE ACTIVE:</strong> The system is currently closed to regular users and students. Only administrators can access the system.</span>
+                </div>
+                <a href="{{ route('admin.settings') }}" class="btn btn-warning btn-sm text-dark fw-bold px-3 py-1 text-nowrap">
+                    Manage in Settings
+                </a>
+            </div>
+            @endif
+
             {{-- Flash Messages --}}
             @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius:var(--radius-sm);border:none;font-weight:600;">
