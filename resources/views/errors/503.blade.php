@@ -221,17 +221,7 @@
             box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
         }
 
-        .btn-admin {
-            background: rgba(255, 255, 255, 0.08);
-            color: #e2e8f0;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
 
-        .btn-admin:hover {
-            background: rgba(255, 255, 255, 0.14);
-            color: #ffffff;
-            transform: translateY(-1px);
-        }
 
         .footer-note {
             margin-top: 26px;
@@ -274,9 +264,6 @@
             <button onclick="window.location.reload();" class="btn btn-refresh">
                 <i class="bi bi-arrow-clockwise"></i> Check Again
             </button>
-            <a href="{{ url('/admin/dashboard') }}" class="btn btn-admin">
-                <i class="bi bi-shield-lock"></i> Admin Portal
-            </a>
         </div>
 
         <div class="footer-note">
