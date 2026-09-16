@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Budget extends Model
 {
+    /** Departments that can receive a manually created budget. */
+    public const DEPARTMENTS = ['BEED', 'BSED', 'BSBA', 'BSHM', 'BSIT'];
+
     /** Title prefix for the auto-maintained per-department enrollment fee budgets. */
     public const ENROLLMENT_TITLE_PREFIX = 'Enrollment Fees';
 

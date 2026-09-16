@@ -194,15 +194,46 @@
                 <h5 class="modal-title" style="font-weight:700;"><i class="bi bi-wallet2"></i> Create New Budget</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="{{ route('admin.budgets.store') }}">
+            <form method="POST" action="{{ route('admin.budgets.store') }}" id="budgetForm">
                 @csrf
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label-custom">Budget Title <span class="text-danger">*</span></label><input type="text" name="title" class="form-control-custom" required></div>
-                        <div class="col-md-6"><label class="form-label-custom">Department <span class="text-danger">*</span></label><input type="text" name="department" class="form-control-custom" required></div>
-                        <div class="col-md-6"><label class="form-label-custom">Allocated Amount (₱) <span class="text-danger">*</span></label><input type="number" name="allocated_amount" class="form-control-custom" min="1" step="0.01" required></div>
-                        <div class="col-md-6"><label class="form-label-custom">School Year <span class="text-danger">*</span></label><input type="text" name="school_year" class="form-control-custom" placeholder="e.g. 2025-2026" required></div>
-                        <div class="col-12"><label class="form-label-custom">Notes</label><textarea name="notes" class="form-control-custom" rows="3" style="resize:vertical;"></textarea></div>
+                        <div class="col-md-6">
+                            <label for="budgetTitle" class="form-label-custom">Budget Title <span class="text-danger">*</span></label>
+                            <input type="text" id="budgetTitle" name="title" value="{{ old('title') }}" class="form-control-custom @error('title') is-invalid @enderror" required>
+                            @error('title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="budgetDepartment" class="form-label-custom">Department <span class="text-danger">*</span></label>
+                            <select id="budgetDepartment" name="department" class="form-select form-control-custom @error('department') is-invalid @enderror" required>
+                                <option value="" disabled @selected(!old('department'))>Select a department</option>
+                                @foreach($departmentOptions as $department)
+                                    <option value="{{ $department }}" @selected(old('department') === $department)>{{ $department }}</option>
+                                @endforeach
+                            </select>
+                            @error('department')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="allocatedAmount" class="form-label-custom">Allocated Amount (₱) <span class="text-danger">*</span></label>
+                            <input type="text" id="allocatedAmount" name="allocated_amount" value="{{ old('allocated_amount') }}" class="form-control-custom @error('allocated_amount') is-invalid @enderror" inputmode="decimal" pattern="[1-9][0-9]*(\.[0-9]{1,2})?" placeholder="e.g. 15000.00" aria-describedby="allocatedAmountHelp" required>
+                            <div id="allocatedAmountHelp" class="form-text">The amount must begin with 1-9; leading zeroes are not allowed.</div>
+                            @error('allocated_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label for="budgetSchoolYear" class="form-label-custom">School Year <span class="text-danger">*</span></label>
+                            <select id="budgetSchoolYear" name="school_year" class="form-select form-control-custom @error('school_year') is-invalid @enderror" required>
+                                <option value="" disabled>Select a school year</option>
+                                @foreach($schoolYearOptions as $schoolYear)
+                                    <option value="{{ $schoolYear }}" @selected(old('school_year', $defaultSchoolYear) === $schoolYear)>{{ $schoolYear }}</option>
+                                @endforeach
+                            </select>
+                            @error('school_year')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12">
+                            <label for="budgetNotes" class="form-label-custom">Notes</label>
+                            <textarea id="budgetNotes" name="notes" class="form-control-custom @error('notes') is-invalid @enderror" rows="3" style="resize:vertical;">{{ old('notes') }}</textarea>
+                            @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
@@ -214,3 +245,25 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const amountInput = document.getElementById('allocatedAmount');
+
+    if (amountInput) {
+        const validateAmount = function () {
+            const hasLeadingZero = /^0/.test(amountInput.value.trim());
+            amountInput.setCustomValidity(hasLeadingZero ? 'The allocated amount cannot start with 0.' : '');
+        };
+
+        amountInput.addEventListener('input', validateAmount);
+        validateAmount();
+    }
+
+    @if(isset($errors) && $errors->any())
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('budgetModal')).show();
+    @endif
+});
+</script>
+@endpush
