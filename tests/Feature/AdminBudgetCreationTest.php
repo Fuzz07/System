@@ -32,10 +32,38 @@ class AdminBudgetCreationTest extends TestCase
         $response->assertViewHas('departmentOptions', Budget::DEPARTMENTS);
         $response->assertSee('<select id="budgetDepartment"', false);
         $response->assertSee('<select id="budgetSchoolYear"', false);
+        $response->assertSee('Budget Management Report');
+        $response->assertSee('Department Summary');
+        $response->assertSee('Detailed Budget Breakdown');
 
         foreach (Budget::DEPARTMENTS as $department) {
             $response->assertSee('value="'.$department.'"', false);
         }
+    }
+
+    public function test_print_report_contains_a_normalized_financial_breakdown(): void
+    {
+        Budget::create([
+            'title' => 'Laboratory Equipment',
+            'department' => 'BSIT',
+            'allocated_amount' => 1000,
+            'remaining_balance' => 750,
+            'school_year' => '2026-2027',
+            'status' => 'Approved',
+            'created_by' => auth()->id(),
+            'notes' => 'Computer laboratory supplies.',
+        ]);
+
+        $response = $this->withViewErrors([])->get(route('admin.budgets'));
+
+        $response->assertOk();
+        $response->assertSee('Approved Allocation');
+        $response->assertSee('Funds Used');
+        $response->assertSee('Remaining Balance');
+        $response->assertSee('₱1,000.00');
+        $response->assertSee('₱250.00');
+        $response->assertSee('₱750.00');
+        $response->assertSee('Computer laboratory supplies.');
     }
 
     public function test_a_budget_can_be_created_with_valid_dropdown_values(): void

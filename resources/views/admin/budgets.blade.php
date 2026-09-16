@@ -3,17 +3,245 @@
 
 @section('content')
 <style>
+.print-budget-report { display: none; }
+
 @media print {
+    @page { size: A4 landscape; margin: 10mm; }
     body { background-color: white !important; }
-    .sidebar, .topbar, .sidebar-overlay, .btn, .modal, .alert, .search-card { display: none !important; }
+    .sidebar, .topbar, .sidebar-overlay, .alert, .budget-screen-content, .modal { display: none !important; }
     .main-wrapper { margin-left: 0 !important; width: 100% !important; padding: 0 !important; }
     .page-content { padding: 0 !important; overflow: visible !important; height: auto !important; }
-    .card { box-shadow: none !important; border: none !important; }
-    table.table-custom th:last-child, table.table-custom td:last-child { display: none !important; }
-    .budget-bar-fill, .badge { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    .page-header { margin-bottom: 20px !important; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    .print-budget-report {
+        display: block !important;
+        color: #111827;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 9pt;
+        line-height: 1.35;
+        width: 100%;
+    }
+    .print-report-header {
+        align-items: center;
+        border-bottom: 2px solid #0f172a;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        padding-bottom: 9px;
+    }
+    .print-report-brand { align-items: center; display: flex; gap: 10px; }
+    .print-report-logo { height: 48px; object-fit: contain; width: 48px; }
+    .print-report-title { font-size: 16pt; font-weight: 700; letter-spacing: .2px; margin: 0; }
+    .print-report-subtitle { color: #475569; font-size: 8pt; margin-top: 2px; }
+    .print-report-meta { color: #475569; font-size: 8pt; text-align: right; }
+    .print-summary-table { border-collapse: separate; border-spacing: 6px 0; margin: 0 -6px 13px; table-layout: fixed; width: calc(100% + 12px); }
+    .print-summary-table td { border: 1px solid #cbd5e1; padding: 7px 9px; vertical-align: top; }
+    .print-summary-label { color: #64748b; font-size: 7pt; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; }
+    .print-summary-value { color: #0f172a; font-size: 12pt; font-weight: 700; margin-top: 2px; }
+    .print-section { margin-top: 12px; page-break-inside: auto; }
+    .print-section-title { border-bottom: 1px solid #94a3b8; font-size: 10pt; font-weight: 700; margin: 0 0 5px; padding-bottom: 3px; }
+    .print-table { border-collapse: collapse; table-layout: fixed; width: 100%; }
+    .print-table th, .print-table td { border: 1px solid #cbd5e1; padding: 5px 6px; vertical-align: top; }
+    .print-table th { background: #e2e8f0 !important; color: #0f172a; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; }
+    .print-table thead { display: table-header-group; }
+    .print-table tfoot { display: table-footer-group; }
+    .print-table tr { page-break-inside: avoid; }
+    .print-table .amount { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+    .print-table .center { text-align: center; }
+    .print-budget-note { color: #64748b; font-size: 7pt; margin-top: 1px; overflow-wrap: anywhere; }
+    .print-status { font-size: 7pt; font-weight: 700; letter-spacing: .2px; text-transform: uppercase; }
+    .print-filter-line { color: #475569; font-size: 7.5pt; margin: -4px 0 9px; }
+    .print-signatures { display: flex; gap: 60px; justify-content: flex-end; margin-top: 28px; page-break-inside: avoid; }
+    .print-signature { border-top: 1px solid #334155; min-width: 180px; padding-top: 4px; text-align: center; }
+    .print-signature small { color: #64748b; display: block; font-size: 7pt; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 }
 </style>
+
+@php
+    $printApprovedBudgets = $budgets->where('status', 'Approved');
+    $printAllocated = (float) $printApprovedBudgets->sum('allocated_amount');
+    $printRemaining = (float) $printApprovedBudgets->sum('remaining_balance');
+    $printUsed = max(0, $printAllocated - $printRemaining);
+    $printDepartmentGroups = $budgets
+        ->groupBy(fn ($budget) => $budget->department ?: 'Unassigned')
+        ->sortKeys();
+    $printFilterLabels = [
+        'all' => 'All budget types',
+        'enrollment' => 'Enrollment fees only',
+        'custom' => 'Custom / other budgets',
+    ];
+    $printSortLabels = [
+        'dept_enrollment' => 'Enrollment fees first',
+        'amount_desc' => 'Highest amount',
+        'title_asc' => 'Title A-Z',
+        'latest' => 'Newest first',
+    ];
+@endphp
+
+<section class="print-budget-report" aria-hidden="true">
+    <header class="print-report-header">
+        <div class="print-report-brand">
+            <img src="{{ asset('assets/images/ssc_logo.png') }}" alt="SSC logo" class="print-report-logo">
+            <div>
+                <div class="print-report-title">Budget Management Report</div>
+                <div class="print-report-subtitle">Supreme Student Council &mdash; Budget allocation and utilization breakdown</div>
+            </div>
+        </div>
+        <div class="print-report-meta">
+            <strong>Generated:</strong> {{ now()->format('F d, Y h:i A') }}<br>
+            <strong>Prepared by:</strong> {{ Auth::user()->fullname }}
+        </div>
+    </header>
+
+    <div class="print-filter-line">
+        <strong>Report scope:</strong> {{ $printFilterLabels[$filter] ?? 'All budget types' }}
+        @if($search)
+            &nbsp;&bull;&nbsp; <strong>Search:</strong> “{{ $search }}”
+        @endif
+        &nbsp;&bull;&nbsp; <strong>Order:</strong> {{ $printSortLabels[$sort] ?? 'Default' }}
+        &nbsp;&bull;&nbsp; <strong>Status count:</strong>
+        {{ $budgets->where('status', 'Approved')->count() }} approved,
+        {{ $budgets->where('status', 'Pending')->count() }} pending,
+        {{ $budgets->where('status', 'Rejected')->count() }} rejected
+    </div>
+
+    <table class="print-summary-table" aria-label="Budget report totals">
+        <tr>
+            <td>
+                <div class="print-summary-label">Budget Records</div>
+                <div class="print-summary-value">{{ $budgets->count() }}</div>
+            </td>
+            <td>
+                <div class="print-summary-label">Approved Allocation</div>
+                <div class="print-summary-value">{{ \App\Helpers\SscHelper::formatCurrency($printAllocated) }}</div>
+            </td>
+            <td>
+                <div class="print-summary-label">Funds Used</div>
+                <div class="print-summary-value">{{ \App\Helpers\SscHelper::formatCurrency($printUsed) }}</div>
+            </td>
+            <td>
+                <div class="print-summary-label">Remaining Balance</div>
+                <div class="print-summary-value">{{ \App\Helpers\SscHelper::formatCurrency($printRemaining) }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <section class="print-section">
+        <h2 class="print-section-title">Department Summary</h2>
+        <table class="print-table" aria-label="Budget summary by department">
+            <thead>
+                <tr>
+                    <th style="width:24%;">Department</th>
+                    <th class="center" style="width:10%;">Records</th>
+                    <th class="amount" style="width:20%;">Approved Allocation</th>
+                    <th class="amount" style="width:18%;">Funds Used</th>
+                    <th class="amount" style="width:20%;">Remaining</th>
+                    <th class="center" style="width:8%;">Used</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($printDepartmentGroups as $department => $departmentBudgets)
+                    @php
+                        $departmentApproved = $departmentBudgets->where('status', 'Approved');
+                        $departmentAllocated = (float) $departmentApproved->sum('allocated_amount');
+                        $departmentRemaining = (float) $departmentApproved->sum('remaining_balance');
+                        $departmentUsed = max(0, $departmentAllocated - $departmentRemaining);
+                        $departmentUsedPercent = $departmentAllocated > 0
+                            ? min(100, round(($departmentUsed / $departmentAllocated) * 100))
+                            : 0;
+                    @endphp
+                    <tr>
+                        <td><strong>{{ $department }}</strong></td>
+                        <td class="center">{{ $departmentBudgets->count() }}</td>
+                        <td class="amount">{{ \App\Helpers\SscHelper::formatCurrency($departmentAllocated) }}</td>
+                        <td class="amount">{{ \App\Helpers\SscHelper::formatCurrency($departmentUsed) }}</td>
+                        <td class="amount">{{ \App\Helpers\SscHelper::formatCurrency($departmentRemaining) }}</td>
+                        <td class="center">{{ $departmentUsedPercent }}%</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="center">No budget records match the selected report scope.</td></tr>
+                @endforelse
+            </tbody>
+            @if($budgets->isNotEmpty())
+                <tfoot>
+                    <tr>
+                        <td><strong>Approved Totals</strong></td>
+                        <td class="center">{{ $budgets->count() }}</td>
+                        <td class="amount"><strong>{{ \App\Helpers\SscHelper::formatCurrency($printAllocated) }}</strong></td>
+                        <td class="amount"><strong>{{ \App\Helpers\SscHelper::formatCurrency($printUsed) }}</strong></td>
+                        <td class="amount"><strong>{{ \App\Helpers\SscHelper::formatCurrency($printRemaining) }}</strong></td>
+                        <td class="center">{{ $printAllocated > 0 ? min(100, round(($printUsed / $printAllocated) * 100)) : 0 }}%</td>
+                    </tr>
+                </tfoot>
+            @endif
+        </table>
+    </section>
+
+    <section class="print-section">
+        <h2 class="print-section-title">Detailed Budget Breakdown</h2>
+        <table class="print-table" aria-label="Detailed budget breakdown">
+            <thead>
+                <tr>
+                    <th class="center" style="width:4%;">#</th>
+                    <th style="width:24%;">Budget / Notes</th>
+                    <th style="width:12%;">Department</th>
+                    <th class="center" style="width:10%;">School Year</th>
+                    <th class="amount" style="width:14%;">Allocated</th>
+                    <th class="amount" style="width:13%;">Used</th>
+                    <th class="amount" style="width:14%;">Remaining</th>
+                    <th class="center" style="width:9%;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($budgets as $index => $budget)
+                    @php
+                        $budgetUsed = max(0, (float) $budget->allocated_amount - (float) $budget->remaining_balance);
+                    @endphp
+                    <tr>
+                        <td class="center">{{ $index + 1 }}</td>
+                        <td>
+                            <strong>{{ $budget->title }}</strong>
+                            @if($budget->notes)
+                                <div class="print-budget-note">{{ $budget->notes }}</div>
+                            @endif
+                        </td>
+                        <td>{{ $budget->department ?: 'Unassigned' }}</td>
+                        <td class="center">{{ $budget->school_year ?: 'N/A' }}</td>
+                        <td class="amount">{{ \App\Helpers\SscHelper::formatCurrency((float) $budget->allocated_amount) }}</td>
+                        <td class="amount">{{ \App\Helpers\SscHelper::formatCurrency($budgetUsed) }}<div class="print-budget-note">{{ $budget->used_percent }}%</div></td>
+                        <td class="amount">{{ \App\Helpers\SscHelper::formatCurrency((float) $budget->remaining_balance) }}</td>
+                        <td class="center"><span class="print-status">{{ $budget->status }}</span></td>
+                    </tr>
+                @empty
+                    <tr><td colspan="8" class="center">No budget records match the selected report scope.</td></tr>
+                @endforelse
+            </tbody>
+            @if($budgets->isNotEmpty())
+                <tfoot>
+                    <tr>
+                        <td colspan="4"><strong>Approved Budget Totals</strong></td>
+                        <td class="amount"><strong>{{ \App\Helpers\SscHelper::formatCurrency($printAllocated) }}</strong></td>
+                        <td class="amount"><strong>{{ \App\Helpers\SscHelper::formatCurrency($printUsed) }}</strong></td>
+                        <td class="amount"><strong>{{ \App\Helpers\SscHelper::formatCurrency($printRemaining) }}</strong></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            @endif
+        </table>
+    </section>
+
+    <div class="print-signatures">
+        <div class="print-signature">
+            {{ Auth::user()->fullname }}
+            <small>Prepared by / Administrator</small>
+        </div>
+        <div class="print-signature">
+            &nbsp;
+            <small>Reviewed by / Authorized Officer</small>
+        </div>
+    </div>
+</section>
+
+<div class="budget-screen-content">
 
 <div class="page-header d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -243,6 +471,7 @@
             </form>
         </div>
     </div>
+</div>
 </div>
 @endsection
 
