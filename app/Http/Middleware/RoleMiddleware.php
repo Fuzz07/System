@@ -9,7 +9,15 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, string ...$roles): mixed
     {
-        if (!$request->user() || !in_array($request->user()->role, $roles)) {
+        $user = $request->user() ?? auth('api')->user();
+
+        if (!$user || !in_array($user->role, $roles)) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Forbidden. You do not have the required permissions for this action.',
+                ], 403);
+            }
             abort(403, 'Unauthorized access.');
         }
 

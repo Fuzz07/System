@@ -754,7 +754,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="dfd-level-2-enrollment" name="Level 2 - 2.0 Enrollment Payment">
-    <mxGraphModel dx="1768" dy="1111" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+    <mxGraphModel dx="1571" dy="988" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -816,8 +816,8 @@
         <mxCell id="f3_2_5" edge="1" entryDx="0" entryDy="0" entryX="0.85" entryY="0" exitDx="0" exitDy="0" exitX="0.25" exitY="1" parent="1" source="e3_cloud" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontFamily=Helvetica;fontColor=#000000;align=center;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacing=2;" target="p3_2_2" value="Return secure Cloudinary HTTPS URL">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1354" y="297" />
-              <mxPoint x="748" y="297" />
+              <mxPoint x="1354" y="310.89" />
+              <mxPoint x="748" y="310.89" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -872,7 +872,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="dfd-level-2-budget" name="Level 2 - 3.0 Budget Allocation">
-    <mxGraphModel dx="1664" dy="1046" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+    <mxGraphModel dx="1414" dy="889" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1345,7 +1345,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="dfd-level-2-announcements" name="Level 2 - 6.0 Announcements &amp; Feedback">
-    <mxGraphModel dx="4040" dy="2540" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1400" math="0" shadow="0">
+    <mxGraphModel dx="2020" dy="1270" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1400" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
