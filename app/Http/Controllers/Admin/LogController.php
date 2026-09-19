@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 
 class LogController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:admin');
+    }
+
     public function index(Request $request)
     {
         $search = trim($request->input('search', ''));

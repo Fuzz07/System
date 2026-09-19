@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Validator;
 
 class StudentApiController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+        $this->middleware('role:student');
+    }
+
     /**
      * Get detailed student profile.
      */

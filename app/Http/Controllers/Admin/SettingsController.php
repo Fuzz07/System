@@ -253,7 +253,7 @@ class SettingsController extends Controller
     public function requestExportOtp(Request $request)
     {
         $user = Auth::user();
-        $otp = (string) rand(100000, 999999);
+        $otp = (string) random_int(100000, 999999);
 
         session([
             'export_sql_otp' => $otp,
@@ -349,7 +349,7 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
         $targetAction = $request->input('target_action') === 'disable' ? 'disable' : 'enable';
-        $otp = (string) rand(100000, 999999);
+        $otp = (string) random_int(100000, 999999);
 
         session([
             'maintenance_mode_otp' => $otp,

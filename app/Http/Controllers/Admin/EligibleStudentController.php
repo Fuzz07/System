@@ -84,55 +84,69 @@ class EligibleStudentController extends Controller
             'csv_file.mimes'    => 'File must be a CSV (.csv or .txt) file.',
         ]);
 
-        $file    = $request->file('csv_file');
-        $handle  = fopen($file->getRealPath(), 'r');
+        $file = $request->file('csv_file');
+        if (! $file || ! $file->isValid()) {
+            return redirect()->route('admin.eligible_students.index')->with('danger', 'Uploaded CSV file is invalid.');
+        }
+
+        $realPath = $file->getRealPath();
+        if (! $realPath || ! is_readable($realPath)) {
+            return redirect()->route('admin.eligible_students.index')->with('danger', 'Cannot read uploaded CSV file.');
+        }
+
+        $handle = fopen($realPath, 'r');
+        if (! $handle) {
+            return redirect()->route('admin.eligible_students.index')->with('danger', 'Failed to open CSV file.');
+        }
 
         $imported  = 0;
         $skipped   = 0;
         $invalid   = 0;
         $firstRow  = true;
 
-        while (($row = fgetcsv($handle)) !== false) {
-            // Skip header row
-            if ($firstRow) {
-                $firstRow = false;
-                // If it looks like a header (first cell is 'email' literally), skip
-                if (isset($row[0]) && strtolower(trim($row[0])) === 'email') {
+        try {
+            while (($row = fgetcsv($handle)) !== false) {
+                // Skip header row
+                if ($firstRow) {
+                    $firstRow = false;
+                    // If it looks like a header (first cell is 'email' literally), skip
+                    if (isset($row[0]) && strtolower(trim($row[0])) === 'email') {
+                        continue;
+                    }
+                }
+
+                $email = strtolower(trim($row[0] ?? ''));
+                $name  = trim($row[1] ?? '');
+                $dept  = trim($row[2] ?? '');
+                $year  = trim($row[3] ?? '');
+
+                if (empty($email)) continue;
+
+                // Validate domain
+                if (!str_ends_with($email, '@mcclawis.edu.ph')) {
+                    $invalid++;
                     continue;
                 }
+
+                // Skip duplicates silently
+                if (EligibleStudent::where('email', $email)->exists()) {
+                    $skipped++;
+                    continue;
+                }
+
+                EligibleStudent::create([
+                    'email'        => $email,
+                    'student_name' => $name ?: null,
+                    'department'   => $dept ?: null,
+                    'year_level'   => $year ?: null,
+                    'imported_by'  => Auth::id(),
+                ]);
+
+                $imported++;
             }
-
-            $email = strtolower(trim($row[0] ?? ''));
-            $name  = trim($row[1] ?? '');
-            $dept  = trim($row[2] ?? '');
-            $year  = trim($row[3] ?? '');
-
-            if (empty($email)) continue;
-
-            // Validate domain
-            if (!str_ends_with($email, '@mcclawis.edu.ph')) {
-                $invalid++;
-                continue;
-            }
-
-            // Skip duplicates silently
-            if (EligibleStudent::where('email', $email)->exists()) {
-                $skipped++;
-                continue;
-            }
-
-            EligibleStudent::create([
-                'email'        => $email,
-                'student_name' => $name ?: null,
-                'department'   => $dept ?: null,
-                'year_level'   => $year ?: null,
-                'imported_by'  => Auth::id(),
-            ]);
-
-            $imported++;
+        } finally {
+            fclose($handle);
         }
-
-        fclose($handle);
 
         SscHelper::logActivity(Auth::id(), 'ELIGIBLE_STUDENT_IMPORT', "CSV Import: {$imported} added, {$skipped} duplicates skipped, {$invalid} invalid domain.");
 

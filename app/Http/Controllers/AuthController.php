@@ -185,15 +185,15 @@ class AuthController extends Controller
                     // Instead of blocking, we initiate a Device Login Approval Request!
                     $approvalId = \Illuminate\Support\Str::random(32);
                     $tempToken = \Illuminate\Support\Str::random(60);
-                    $otp = (string) rand(100000, 999999);
+                    $otp = (string) random_int(100000, 999999);
 
                     $requestData = [
                         'id' => $approvalId,
                         'user_id' => $user->id,
                         'email' => $user->email,
                         'ip' => $request->ip(),
-                        'latitude' => $request->input('latitude'),
-                        'longitude' => $request->input('longitude'),
+                        'latitude' => $lat,
+                        'longitude' => $lng,
                         'user_agent' => $request->userAgent() ?? 'Unknown Browser',
                         'status' => 'pending',
                         'temp_device_token' => $tempToken,
@@ -225,13 +225,13 @@ class AuthController extends Controller
             }
 
             // ── Generate and Send OTP ─────────────────────
-            $otp = (string) rand(100000, 999999);
+            $otp = (string) random_int(100000, 999999);
             session([
                 'admin_login_user_id' => $user->id,
                 'admin_login_otp' => $otp,
                 'admin_login_otp_expires_at' => now()->addMinutes(3),
-                'admin_login_latitude' => $request->input('latitude'),
-                'admin_login_longitude' => $request->input('longitude'),
+                'admin_login_latitude' => $lat,
+                'admin_login_longitude' => $lng,
             ]);
 
             try {
@@ -456,7 +456,7 @@ class AuthController extends Controller
      */
     private function sendRegistrationOtp(string $email): bool
     {
-        $otp = (string) rand(100000, 999999);
+        $otp = (string) random_int(100000, 999999);
         $expiresAt = now()->addMinutes(3);
 
         try {
@@ -695,7 +695,7 @@ class AuthController extends Controller
         }
 
 
-        $otp = (string) rand(100000, 999999);
+        $otp = (string) random_int(100000, 999999);
         session([
             'reset_password_otp' => $otp,
             'reset_password_email' => $request->email,

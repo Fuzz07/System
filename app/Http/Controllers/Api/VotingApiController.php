@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\Validator;
 
 class VotingApiController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+        $this->middleware('role:student');
+    }
+
     /**
      * Get election status, relevant positions, and student ballot progress.
      */
@@ -152,7 +158,7 @@ class VotingApiController extends Controller
     public function startBallot(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'position' => 'required|string',
+            'position' => 'required|string|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -162,6 +168,9 @@ class VotingApiController extends Controller
                 'errors'  => $validator->errors(),
             ], 422);
         }
+
+        $validated = $validator->validated();
+        $position = trim($validated['position']);
 
         $student = auth('api')->user();
         $activeSy = SchoolYear::where('is_active', 1)->first();
@@ -173,9 +182,21 @@ class VotingApiController extends Controller
             ], 403);
         }
 
+        $existsCandidate = Candidacy::where('school_year', $activeSy->label)
+            ->where('status', 'approved')
+            ->where('position', $position)
+            ->exists();
+
+        if (! $existsCandidate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or ineligible election position.',
+            ], 422);
+        }
+
         $exists = StudentBallot::where('user_id', $student->id)
             ->where('school_year', $activeSy->label)
-            ->where('position', $request->position)
+            ->where('position', $position)
             ->first();
 
         if ($exists) {
@@ -199,32 +220,32 @@ class VotingApiController extends Controller
                 'success' => true,
                 'message' => 'Ballot already active.',
                 'data'    => [
-                    'position'          => $request->position,
+                    'position'          => $position,
                     'seconds_remaining' => 60 - $elapsed,
                 ],
             ]);
         }
 
-        $ballot = StudentBallot::create([
-            'user_id'     => $student->id,
-            'position'    => $request->position,
-            'school_year' => $activeSy->label,
-            'started_at'  => now(),
-            'ip_address'  => $request->ip(),
-            'user_agent'  => $request->userAgent(),
-        ]);
+        $ballot = new StudentBallot();
+        $ballot->user_id     = $student->id;
+        $ballot->position    = $position;
+        $ballot->school_year = $activeSy->label;
+        $ballot->started_at  = now();
+        $ballot->ip_address  = $request->ip();
+        $ballot->user_agent  = $request->userAgent();
+        $ballot->save();
 
         SscHelper::logActivity(
             $student->id,
             'API_VOTING_TIMER_START',
-            "Started voting countdown for {$request->position}"
+            "Started voting countdown for {$position}"
         );
 
         return response()->json([
             'success' => true,
             'message' => 'Ballot timer started. You have 60 seconds to cast your vote.',
             'data'    => [
-                'position'          => $request->position,
+                'position'          => $position,
                 'seconds_remaining' => 60,
                 'started_at'        => $ballot->started_at->toIso8601String(),
             ],
@@ -248,6 +269,9 @@ class VotingApiController extends Controller
             ], 422);
         }
 
+        $validated = $validator->validated();
+        $candidacyId = (int) $validated['candidacy_id'];
+
         $student = auth('api')->user();
         $activeSy = SchoolYear::where('is_active', 1)->first();
 
@@ -258,7 +282,7 @@ class VotingApiController extends Controller
             ], 403);
         }
 
-        $candidacy = Candidacy::where('id', $request->candidacy_id)
+        $candidacy = Candidacy::where('id', $candidacyId)
             ->where('school_year', $activeSy->label)
             ->where('status', 'approved')
             ->first();
