@@ -361,6 +361,10 @@ Route::group([], function () use ($baseDomain) {
         
         Route::get('/enrollment', [Student\EnrollmentController::class, 'index'])->name('enrollment.index');
         Route::post('/enrollment', [Student\EnrollmentController::class, 'store'])->name('enrollment.store');
+        Route::post('/enrollment/paymongo/checkout', [Student\EnrollmentController::class, 'startPayMongo'])
+            ->name('enrollment.paymongo.checkout');
+        Route::get('/enrollment/paymongo/return/{payment}', [Student\EnrollmentController::class, 'returnFromPayMongo'])
+            ->middleware('signed')->name('enrollment.paymongo.return');
     });
 
     // ─── Mobile Student Routes (PWA) ───
@@ -451,77 +455,12 @@ Route::group([], function () use ($baseDomain) {
             return view('mobile.student.officers', compact('officers'));
         })->name('officers');
 
-        Route::get('/enrollment', function () {
-            $student = Auth::user();
-            $currentSy = \App\Helpers\SscHelper::getActiveAcademicTerm();
-            $currentTermKeys = \App\Helpers\SscHelper::getActiveEnrollmentTermKeys();
-            $payment = \App\Models\EnrollmentPayment::where('user_id', $student->id)
-                ->whereIn('semester', $currentTermKeys)
-                ->orderByDesc('created_at')
-                ->first();
-            $amount = config('ssc.enrollment_fee_amount', 50);
-            return view('mobile.student.enrollment', compact('payment', 'amount', 'currentSy'));
-        })->name('enrollment');
-
-        Route::post('/enrollment', function (\Illuminate\Http\Request $request) {
-            $student = Auth::user();
-            $amount = config('ssc.enrollment_fee_amount', 50);
-            $currentSy = \App\Helpers\SscHelper::getActiveAcademicTerm();
-            $currentTermKeys = \App\Helpers\SscHelper::getActiveEnrollmentTermKeys();
-
-            $payment = \App\Models\EnrollmentPayment::where('user_id', $student->id)
-                ->whereIn('semester', $currentTermKeys)
-                ->orderByDesc('created_at')
-                ->first();
-
-            if ($payment && $payment->status === 'paid') {
-                return redirect()->route('mobile.student.enrollment')->with('info', 'Your enrollment fee is already marked as paid.');
-            }
-
-            $request->validate([
-                'payment_method' => 'nullable|in:gcash,instapay',
-                'proof' => 'required|file|extensions:jpg,jpeg,png,pdf,mp4|max:5120',
-            ], [
-                'proof.required' => 'Please attach a proof of payment before submitting.',
-                'proof.file' => 'The proof of payment must be a valid file.',
-                'proof.extensions' => 'The proof of payment must be an image (jpg, jpeg, png), PDF, or MP4 video.',
-                'proof.max' => 'The proof of payment must not exceed 5MB.',
-            ]);
-
-            $method = $request->input('payment_method', $payment->method ?? 'gcash');
-            $prefix = $method === 'instapay' ? 'INSTAPAY-' : 'GCASH-';
-
-            if (! $payment) {
-                $payment = \App\Models\EnrollmentPayment::create([
-                    'user_id' => $student->id,
-                    'amount' => $amount,
-                    'semester' => $currentSy,
-                    'method' => $method,
-                    'status' => 'pending',
-                    'reference' => $prefix . strtoupper(uniqid()),
-                    'proof_status' => 'pending',
-                ]);
-            } else {
-                if ($request->filled('payment_method')) {
-                    $payment->update(['method' => $method]);
-                }
-            }
-
-            try {
-                $proofPath = \App\Helpers\SscHelper::uploadToCloudinary($request->file('proof'), 'enrollment_proofs');
-            } catch (\Exception $e) {
-                \Log::warning('Cloudinary upload failed for mobile student enrollment proof, falling back to local public disk: ' . $e->getMessage());
-                $proofPath = $request->file('proof')->store('enrollment_proofs', 'public');
-            }
-
-            $payment->update([
-                'proof_path' => $proofPath,
-                'proof_status' => 'pending',
-                'proof_notes' => null,
-            ]);
-
-            return redirect()->route('mobile.student.enrollment')->with('success', 'Payment proof uploaded successfully. Admin will verify it soon.');
-        })->name('enrollment.store');
+        Route::get('/enrollment', [Student\EnrollmentController::class, 'mobileIndex'])->name('enrollment');
+        Route::post('/enrollment', [Student\EnrollmentController::class, 'store'])->name('enrollment.store');
+        Route::post('/enrollment/paymongo/checkout', [Student\EnrollmentController::class, 'startPayMongo'])
+            ->name('enrollment.paymongo.checkout');
+        Route::get('/enrollment/paymongo/return/{payment}', [Student\EnrollmentController::class, 'returnFromPayMongo'])
+            ->middleware('signed')->name('enrollment.paymongo.return');
 
         Route::get('/candidacy', function () {
             return view('mobile.student.candidacy');

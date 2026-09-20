@@ -10,7 +10,8 @@ class EnrollmentPayment extends Model
 
     protected $fillable = [
         'user_id', 'amount', 'semester', 'method', 'status', 'reference',
-        'proof_path', 'proof_status', 'proof_notes', 'admin_marked_by', 'verified_by', 'paid_at'
+        'proof_path', 'proof_status', 'proof_notes', 'admin_marked_by', 'verified_by', 'paid_at',
+        'paymongo_checkout_session_id', 'paymongo_payment_id', 'paymongo_payment_method',
     ];
 
     protected $casts = [

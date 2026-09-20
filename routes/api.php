@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\BudgetApiController;
 use App\Http\Controllers\Api\OfficerApiController;
 use App\Http\Controllers\Api\StudentApiController;
 use App\Http\Controllers\Api\VotingApiController;
+use App\Http\Controllers\PayMongoWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +17,9 @@ use App\Http\Controllers\Api\VotingApiController;
 | Stateless REST API authenticated via JWT Bearer tokens.
 |
 */
+
+Route::post('/paymongo/webhook', PayMongoWebhookController::class)
+    ->name('api.paymongo.webhook');
 
 Route::prefix('v1')->group(function () {
 
@@ -48,6 +52,14 @@ Route::prefix('v1')->group(function () {
             Route::get('/student/profile', [StudentApiController::class, 'profile'])->name('api.student.profile');
             Route::get('/student/enrollment', [StudentApiController::class, 'enrollment'])->name('api.student.enrollment');
             Route::post('/student/enrollment/proof', [StudentApiController::class, 'uploadEnrollmentProof'])->name('api.student.enrollment.proof');
+
+            // PayMongo online checkout
+            Route::post('/student/enrollment/paymongo/checkout', [StudentApiController::class, 'startPayMongoCheckout'])
+                ->name('api.student.enrollment.paymongo.checkout');
+            Route::get('/student/enrollment/paymongo/verify/{payment}', [StudentApiController::class, 'verifyPayMongoCheckout'])
+                ->name('api.student.enrollment.paymongo.verify');
+            Route::get('/student/enrollment/paymongo/cancel/{payment}', [StudentApiController::class, 'cancelPayMongoCheckout'])
+                ->name('api.student.enrollment.paymongo.cancel');
 
             // Voting
             Route::get('/voting/status', [VotingApiController::class, 'status'])->name('api.voting.status');

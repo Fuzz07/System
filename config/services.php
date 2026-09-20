@@ -46,4 +46,16 @@ return [
         'timeout' => env('OPENAI_TIMEOUT', 15),
     ],
 
+    'paymongo' => [
+        'enabled' => env('PAYMONGO_ENABLED', true),
+        'secret_key' => env('PAYMONGO_SECRET_KEY'),
+        'webhook_secret' => env('PAYMONGO_WEBHOOK_SECRET'),
+        'api_url' => env('PAYMONGO_API_URL', 'https://api.paymongo.com'),
+        'payment_methods' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', env('PAYMONGO_PAYMENT_METHODS', 'gcash,qrph,card'))
+        ))),
+        'webhook_tolerance' => (int) env('PAYMONGO_WEBHOOK_TOLERANCE', 300),
+    ],
+
 ];
