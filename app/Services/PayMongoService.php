@@ -10,15 +10,23 @@ class PayMongoService
 {
     public function isConfigured(): bool
     {
+        $key = (string) config('services.paymongo.secret_key');
+
         return (bool) config('services.paymongo.enabled')
-            && filled(config('services.paymongo.secret_key'));
+            && filled($key)
+            && str_starts_with($key, 'sk_')
+            && ! str_contains(strtolower($key), 'replace');
     }
 
-    public function createCheckoutSession(array $attributes, string $idempotencyKey): array
+    public function createCheckoutSession(array $attributes, ?string $idempotencyKey = null): array
     {
-        $response = $this->client()
-            ->withHeader('Idempotency-Key', $idempotencyKey)
-            ->post('/v2/checkout_sessions', ['data' => ['attributes' => $attributes]]);
+        $client = $this->client();
+
+        if (filled($idempotencyKey)) {
+            $client = $client->withHeader('Idempotency-Key', $idempotencyKey);
+        }
+
+        $response = $client->post('/v2/checkout_sessions', ['data' => ['attributes' => $attributes]]);
 
         return $this->checkoutSessionFrom($response);
     }

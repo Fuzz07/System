@@ -186,7 +186,7 @@ class EnrollmentController extends Controller
                     'student_id' => (string) $student->id,
                     'academic_term' => (string) $payment->semester,
                 ],
-            ]);
+            ], $payment->reference);
 
             $checkoutUrl = data_get($session, 'attributes.checkout_url');
             if (! $this->isPayMongoCheckoutUrl($checkoutUrl)) {
