@@ -334,7 +334,7 @@ class AuthController extends Controller
         if (config('ssc.enforce_eligibility_whitelist', true)) {
             if (!\App\Models\EligibleStudent::whereRaw('LOWER(email) = ?', [$validated['email']])->exists()) {
                 return back()->withErrors([
-                    'email' => 'This Microsoft 365 account is not eligible to register. Please contact the SSC admin to have your account added to the eligible list.',
+                    'email' => 'This Microsoft 365 account exists, but it is not yet authorized for SSC registration. Please contact the SSC administrator.',
                 ])->withInput();
             }
         }
@@ -412,48 +412,66 @@ class AuthController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
+                'code' => 'invalid_email',
                 'message' => $e->validator->errors()->first('email'),
-            ]);
+            ], 422);
         }
 
 
         if (User::whereRaw('LOWER(email) = ?', [$request->email])->exists()) {
             return response()->json([
                 'success' => false,
+                'code' => 'already_registered',
                 'message' => 'This Microsoft 365 school account is already registered. Please sign in or use Forgot Password to regain access.',
-            ]);
+            ], 409);
         }
 
         // ── Eligibility Whitelist Check ──────────────────────────────────────
-        if (config('ssc.enforce_eligibility_whitelist', true)) {
-            if (!\App\Models\EligibleStudent::whereRaw('LOWER(email) = ?', [$request->email])->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This Microsoft 365 account is not eligible to register. Please contact the SSC admin to have your account added to the eligible list.',
-                ]);
-            }
-        }
-
-
         try {
             $msResponse = Http::timeout(6)
                 ->post('https://login.microsoftonline.com/common/GetCredentialType', [
                     'Username' => $request->email
                 ]);
 
-            if ($msResponse->successful()) {
-                $credentials = $msResponse->json();
-                $ifExistsResult = is_array($credentials) ? ($credentials['IfExistsResult'] ?? null) : null;
-                if ((int) $ifExistsResult === 1) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'This Microsoft 365 account does not exist. Please double-check your school email address spelling or contact the school IT administrator.',
-                    ]);
-                }
+            if (!$msResponse->successful()) {
+                throw new \RuntimeException('Microsoft returned HTTP ' . $msResponse->status());
+            }
+
+            $credentials = $msResponse->json();
+            $ifExistsResult = is_array($credentials) ? ($credentials['IfExistsResult'] ?? null) : null;
+
+            if ($ifExistsResult !== null && (int) $ifExistsResult === 1) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'microsoft_account_not_found',
+                    'message' => 'We could not find this Microsoft 365 school account. Check the email address for typing errors, or contact the school IT administrator.',
+                ], 422);
+            }
+
+            // Microsoft reports an existing account as 0 or 5. Any other
+            // result is inconclusive and must not silently pass validation.
+            if ($ifExistsResult === null || !in_array((int) $ifExistsResult, [0, 5], true)) {
+                throw new \RuntimeException('Microsoft returned an inconclusive account result.');
             }
         } catch (\Exception $e) {
             Log::warning('MS Account check failed during AJAX checkEmail', ['error' => $e->getMessage()]);
 
+            return response()->json([
+                'success' => false,
+                'code' => 'microsoft_service_unavailable',
+                'message' => 'We could not confirm your Microsoft 365 account right now. Please wait a moment and try again.',
+            ], 503);
+        }
+
+        // Keep account-existence and school-eligibility errors distinct.
+        if (config('ssc.enforce_eligibility_whitelist', true)) {
+            if (!\App\Models\EligibleStudent::whereRaw('LOWER(email) = ?', [$request->email])->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'code' => 'not_eligible',
+                    'message' => 'This Microsoft 365 account exists, but it is not yet authorized for SSC registration. Please contact the SSC administrator.',
+                ], 403);
+            }
         }
 
 
@@ -461,8 +479,9 @@ class AuthController extends Controller
         if (!$this->sendRegistrationOtp($request->email)) {
             return response()->json([
                 'success' => false,
+                'code' => 'otp_delivery_failed',
                 'message' => 'Failed to send verification email. Please try again later or contact support.',
-            ]);
+            ], 503);
         }
 
         session([

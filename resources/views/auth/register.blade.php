@@ -108,22 +108,326 @@
         .field-hint.is-error { color: var(--danger); }
         .field-hint.is-ok { color: var(--success); }
         .btn-primary-custom:disabled { opacity: .55; cursor: not-allowed; }
+
+        /* Registration-specific layout */
+        .registration-page {
+            align-items: center;
+            overflow-y: auto;
+            padding: 28px;
+        }
+        .registration-shell {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: minmax(330px, .82fr) minmax(590px, 1.18fr);
+            width: min(1180px, 100%);
+            min-height: 720px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, .18);
+            border-radius: 30px;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 35px 90px rgba(2, 6, 23, .52);
+        }
+        .registration-visual {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+            padding: 34px;
+            isolation: isolate;
+            color: #fff;
+            background: #071a3e;
+        }
+        .registration-visual::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            background:
+                linear-gradient(180deg, rgba(4, 18, 48, .2), rgba(4, 18, 48, .95)),
+                url('{{ asset('assets/images/registration-visual-v1.jpg') }}') center / cover no-repeat;
+        }
+        .registration-visual::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(circle at 75% 20%, rgba(45, 212, 191, .22), transparent 35%);
+        }
+        .registration-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .registration-brand-logo {
+            width: 54px;
+            height: 54px;
+            padding: 5px;
+            object-fit: contain;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, .94);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .24);
+        }
+        .registration-brand strong { display: block; font-size: .96rem; letter-spacing: .02em; }
+        .registration-brand span { display: block; margin-top: 2px; color: rgba(255, 255, 255, .68); font-size: .72rem; }
+        .registration-visual-copy { max-width: 360px; margin-top: auto; }
+        .registration-visual-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 14px;
+            padding: 7px 11px;
+            border: 1px solid rgba(94, 234, 212, .35);
+            border-radius: 999px;
+            background: rgba(15, 118, 110, .2);
+            color: #99f6e4;
+            font-size: .72rem;
+            font-weight: 700;
+        }
+        .registration-visual h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.65rem, 2.5vw, 2.35rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -.04em;
+        }
+        .registration-visual p { margin: 0; color: rgba(226, 232, 240, .78); font-size: .9rem; line-height: 1.65; }
+        .registration-trust-list {
+            display: grid;
+            gap: 9px;
+            margin: 22px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+        .registration-trust-list li {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: #e2e8f0;
+            font-size: .8rem;
+            font-weight: 600;
+        }
+        .registration-trust-list i {
+            display: inline-grid;
+            width: 25px;
+            height: 25px;
+            place-items: center;
+            border-radius: 8px;
+            background: rgba(45, 212, 191, .16);
+            color: #5eead4;
+        }
+        .registration-form-panel {
+            min-width: 0;
+            padding: 38px 44px 30px;
+            color: #0f172a;
+            background: rgba(255, 255, 255, .98);
+        }
+        .registration-mobile-brand { display: none; }
+        .registration-eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 7px;
+            color: #4f46e5;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .11em;
+            text-transform: uppercase;
+        }
+        .registration-title { margin: 0; color: #0f172a; font-size: 1.8rem; font-weight: 850; letter-spacing: -.035em; }
+        .registration-subtitle { margin: 7px 0 0; color: #64748b; font-size: .87rem; }
+        .registration-steps {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 25px 0 28px;
+            padding: 0;
+            list-style: none;
+        }
+        .registration-steps::before {
+            content: '';
+            position: absolute;
+            top: 17px;
+            right: 16.66%;
+            left: 16.66%;
+            height: 2px;
+            background: #e2e8f0;
+        }
+        .registration-step { position: relative; z-index: 1; text-align: center; color: #94a3b8; font-size: .69rem; font-weight: 700; }
+        .registration-step-number {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            margin: 0 auto 7px;
+            place-items: center;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            background: #fff;
+            color: #94a3b8;
+            transition: .2s ease;
+        }
+        .registration-step.is-active { color: #4338ca; }
+        .registration-step.is-active .registration-step-number {
+            border-color: #4f46e5;
+            background: #4f46e5;
+            color: #fff;
+            box-shadow: 0 0 0 5px rgba(79, 70, 229, .1);
+        }
+        .registration-step.is-complete { color: #0f766e; }
+        .registration-step.is-complete .registration-step-number { border-color: #14b8a6; background: #ecfdf5; color: #0f766e; }
+        .form-section-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 2px 0 14px;
+            color: #1e293b;
+            font-size: .82rem;
+            font-weight: 800;
+        }
+        .form-section-heading span {
+            display: grid;
+            width: 30px;
+            height: 30px;
+            place-items: center;
+            border-radius: 9px;
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+        .registration-form-panel .form-label-custom { margin-bottom: 6px; color: #334155; font-size: .77rem; }
+        .registration-form-panel .form-control-custom,
+        .registration-form-panel .form-select-custom {
+            min-height: 44px;
+            padding: 10px 13px;
+            border-color: #dbe3ef;
+            background: #f8fafc;
+        }
+        .registration-form-panel .form-control-custom:focus,
+        .registration-form-panel .form-select-custom:focus { border-color: #6366f1; background: #fff; }
+        .registration-form-panel .btn-primary-custom {
+            min-height: 48px;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #4f46e5, #2563eb);
+            box-shadow: 0 10px 24px rgba(79, 70, 229, .23);
+        }
+        .registration-form-panel .btn-primary-custom:hover { background: linear-gradient(135deg, #4338ca, #1d4ed8); }
+        .registration-form-panel .alert { border: 0; }
+        .registration-error {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            padding: 13px 14px;
+            border-left: 4px solid #ef4444 !important;
+            background: #fff1f2;
+            color: #9f1239;
+        }
+        .registration-error > i { margin-top: 1px; font-size: 1rem; }
+        .registration-error-copy { flex: 1; min-width: 0; }
+        .registration-error-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+        .registration-error-actions a {
+            padding: 6px 9px;
+            border-radius: 7px;
+            background: rgba(190, 18, 60, .09);
+            color: #9f1239;
+            font-size: .72rem;
+            font-weight: 800;
+            text-decoration: none;
+        }
+        .step-graphic {
+            display: grid;
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 16px;
+            place-items: center;
+            border-radius: 22px;
+            background: linear-gradient(145deg, #eef2ff, #ecfeff);
+            color: #4f46e5;
+            font-size: 1.9rem;
+            box-shadow: inset 0 0 0 1px rgba(99, 102, 241, .1), 0 14px 30px rgba(79, 70, 229, .1);
+        }
+        .registration-signin { margin-top: 21px; text-align: center; color: #64748b; font-size: .8rem; }
+        .registration-signin a { color: #4338ca; font-weight: 800; text-decoration: none; }
+        .registration-signin a:hover { text-decoration: underline; }
+        .field-hint { color: #64748b; }
+
+        @media (max-width: 991.98px) {
+            .registration-page { align-items: flex-start; padding: 18px; }
+            .registration-shell { grid-template-columns: 1fr; width: min(720px, 100%); min-height: auto; margin: auto; }
+            .registration-visual { min-height: 205px; padding: 24px 28px; }
+            .registration-visual::before { background-position: center 58%; }
+            .registration-visual-copy { margin-top: 40px; }
+            .registration-visual-copy h2 { max-width: 480px; font-size: 1.55rem; }
+            .registration-visual-copy p, .registration-trust-list { display: none; }
+            .registration-form-panel { padding: 32px 34px 28px; }
+        }
+        @media (max-width: 575.98px) {
+            .registration-page { padding: 0; background: #fff; }
+            .registration-page::before, .registration-page::after, .registration-page > .auth-bg { display: none; }
+            .registration-shell { border: 0; border-radius: 0; box-shadow: none; }
+            .registration-visual { display: none; }
+            .registration-form-panel { padding: 22px 18px 28px; }
+            .registration-mobile-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+            .registration-mobile-brand img { width: 42px; height: 42px; object-fit: contain; }
+            .registration-mobile-brand strong { display: block; color: #0f172a; font-size: .82rem; }
+            .registration-mobile-brand span { display: block; color: #64748b; font-size: .68rem; }
+            .registration-title { font-size: 1.55rem; }
+            .registration-steps { margin: 22px 0 25px; }
+            .registration-step-label { display: none; }
+        }
     </style>
 </head>
 <body>
-<div class="login-page">
+<div class="login-page registration-page">
     @include('partials.auth-backdrop')
 
-    <div class="login-card" style="max-width:560px;">
-        <div class="login-logo" style="background: none; box-shadow: none; width: 100px; height: 100px;">
-            <img src="{{ asset('assets/images/ssc_logo.png') }}" alt="SSC Logo" style="width: 100%; height: 100%; object-fit: contain;">
-        </div>
-        <h1 class="login-title">Student Registration</h1>
-        <p class="login-sub">Create your SSC transparency portal account</p>
+    <main class="registration-shell">
+        <aside class="registration-visual" aria-label="SSC student portal benefits">
+            <div class="registration-brand">
+                <img class="registration-brand-logo" src="{{ asset('assets/images/ssc_logo.png') }}" alt="SSC logo">
+                <div>
+                    <strong>SSC Transparency Portal</strong>
+                    <span>Madridejos Community College</span>
+                </div>
+            </div>
+
+            <div class="registration-visual-copy">
+                <div class="registration-visual-kicker"><i class="bi bi-shield-check"></i> Secure student registration</div>
+                <h2>Your voice. Your council. Your campus.</h2>
+                <p>Create one verified account to access council updates, transparent budget information, elections, and student services.</p>
+                <ul class="registration-trust-list">
+                    <li><i class="bi bi-microsoft"></i> Verified with your school Microsoft 365 account</li>
+                    <li><i class="bi bi-lock"></i> Protected by email code and security checks</li>
+                    <li><i class="bi bi-bar-chart"></i> Built for open and accountable student governance</li>
+                </ul>
+            </div>
+        </aside>
+
+        <section class="registration-form-panel">
+            <div class="registration-mobile-brand">
+                <img src="{{ asset('assets/images/ssc_logo.png') }}" alt="SSC logo">
+                <div><strong>SSC Transparency Portal</strong><span>Madridejos Community College</span></div>
+            </div>
+
+            <header>
+                <div class="registration-eyebrow"><i class="bi bi-person-badge"></i> Student access</div>
+                <h1 class="registration-title">Create your account</h1>
+                <p class="registration-subtitle">Complete the three secure steps below. It only takes a few minutes.</p>
+            </header>
+
+            <ol class="registration-steps" aria-label="Registration progress">
+                <li class="registration-step is-active" data-stage="1"><span class="registration-step-number">1</span><span class="registration-step-label">Student details</span></li>
+                <li class="registration-step" data-stage="2"><span class="registration-step-number">2</span><span class="registration-step-label">Email verification</span></li>
+                <li class="registration-step" data-stage="3"><span class="registration-step-number">3</span><span class="registration-step-label">Account security</span></li>
+            </ol>
 
         @if($errors->any())
-        <div class="alert alert-danger" style="border-radius:var(--radius-sm);font-size:.85rem;">
-            <ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        <div class="alert registration-error mb-3" role="alert">
+            <i class="bi bi-exclamation-octagon-fill"></i>
+            <div class="registration-error-copy">
+                <strong>We could not complete your registration.</strong>
+                <ul class="mb-0 mt-1 ps-3">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+            </div>
         </div>
         @endif
 
@@ -135,6 +439,7 @@
 
             <!-- STEP 1: Basic Information & MS Account Verification -->
             <div id="step-1">
+                <div class="form-section-heading"><span><i class="bi bi-person-vcard"></i></span> Personal information</div>
                 <div class="row g-2 mb-3">
                     <div class="col-md-4">
                         <label class="form-label-custom" for="first_name">First Name</label>
@@ -168,6 +473,7 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-section-heading mt-4"><span><i class="bi bi-microsoft"></i></span> School account details</div>
                 <div class="row g-2 mb-4">
                     <div class="col-md-4">
                         <label class="form-label-custom" for="department">Course / Department</label>
@@ -189,7 +495,7 @@
                     </div>
                 </div>
 
-                <div id="step-1-error" class="alert alert-danger d-none mb-3" role="alert" aria-live="assertive" style="border-radius:var(--radius-sm);font-size:.85rem;"></div>
+                <div id="step-1-error" class="alert registration-error d-none mb-3" role="alert" aria-live="assertive"></div>
 
                 <button type="button" id="btn-next-step" class="btn-primary-custom w-100 justify-content-center" style="padding:14px;">
                     <span id="next-btn-text"><i class="bi bi-arrow-right-circle"></i> Verify &amp; Continue</span>
@@ -199,6 +505,11 @@
 
             <!-- STEP 1.5: OTP Verification -->
             <div id="step-otp" class="d-none">
+                <div class="step-graphic"><i class="bi bi-envelope-check"></i></div>
+                <div class="text-center mb-3">
+                    <h2 class="h5 fw-bold mb-1">Check your school inbox</h2>
+                    <p class="text-muted small mb-0">Enter the code we sent to <strong id="otp-email-display"></strong></p>
+                </div>
                 <div id="otp-message" class="alert alert-info mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;line-height:1.5;"></div>
 
                 <div class="mb-2 text-center">
@@ -242,6 +553,7 @@
 
             <!-- STEP 2: Password Creation & CAPTCHA Verification -->
             <div id="step-2" class="d-none">
+                <div class="step-graphic"><i class="bi bi-shield-lock"></i></div>
                 <div class="alert alert-success mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;">
                     <i class="bi bi-check-circle-fill"></i> MS Account verified successfully! Please secure your account by creating a password.
                 </div>
@@ -301,12 +613,11 @@
             </div>
         </form>
 
-        <div class="text-center mt-3">
-            <a href="{{ route('login.student') }}" class="text-muted" style="font-size:.82rem;text-decoration:none;">
-                <i class="bi bi-arrow-left"></i> Already have an account? Login
-            </a>
+        <div class="registration-signin">
+            Already registered? <a href="{{ route('login.student') }}">Sign in to your account <i class="bi bi-arrow-right"></i></a>
         </div>
-    </div>
+        </section>
+    </main>
 </div>
 
 <script>
@@ -328,8 +639,10 @@
         const otpResent = document.getElementById('otp-resent');
         const otpResentText = document.getElementById('otp-resent-text');
         const otpMessage = document.getElementById('otp-message');
+        const otpEmailDisplay = document.getElementById('otp-email-display');
         const otpCountdown = document.getElementById('otp-countdown');
         const otpAttempts = document.getElementById('otp-attempts');
+        const progressSteps = document.querySelectorAll('.registration-step');
 
         const nextBtnText = document.getElementById('next-btn-text');
         const nextBtnSpinner = document.getElementById('next-btn-spinner');
@@ -357,6 +670,13 @@
 
         if (!btnNextStep) return;
 
+        const endpoints = {
+            checkEmail: @json(route('register.check-email')),
+            verifyOtp: @json(route('register.verify-otp')),
+            resendOtp: @json(route('register.resend-otp')),
+            login: @json(route('login.student')),
+            forgotPassword: @json(route('password.request'))
+        };
         const csrfToken = () => registerForm.querySelector('input[name="_token"]').value;
         const emailInput = document.getElementById('email');
         const currentEmail = () => emailInput.value.trim().toLowerCase();
@@ -367,13 +687,66 @@
             step1Error.textContent = '';
         }
 
-        function showStepOneError(message, field = null) {
-            step1Error.textContent = message;
+        function showStepOneError(message, field = null, code = null) {
+            step1Error.replaceChildren();
+
+            const icon = document.createElement('i');
+            icon.className = code === 'microsoft_service_unavailable'
+                ? 'bi bi-wifi-off'
+                : 'bi bi-exclamation-octagon-fill';
+
+            const copy = document.createElement('div');
+            copy.className = 'registration-error-copy';
+            copy.textContent = message;
+
+            if (code === 'already_registered') {
+                const actions = document.createElement('div');
+                actions.className = 'registration-error-actions';
+
+                const loginLink = document.createElement('a');
+                loginLink.href = endpoints.login;
+                loginLink.textContent = 'Sign in';
+
+                const resetLink = document.createElement('a');
+                resetLink.href = endpoints.forgotPassword;
+                resetLink.textContent = 'Forgot password';
+
+                actions.append(loginLink, resetLink);
+                copy.append(actions);
+            }
+
+            step1Error.append(icon, copy);
             step1Error.classList.remove('d-none');
             if (field) {
                 field.classList.add('is-invalid-field');
                 field.focus();
             }
+        }
+
+        function setRegistrationStage(stage) {
+            progressSteps.forEach((step) => {
+                const number = Number(step.dataset.stage);
+                step.classList.toggle('is-active', number === stage);
+                step.classList.toggle('is-complete', number < stage);
+                const marker = step.querySelector('.registration-step-number');
+                marker.innerHTML = number < stage ? '<i class="bi bi-check-lg"></i>' : String(number);
+            });
+        }
+
+        async function requestJson(url, options) {
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type') || '';
+
+            if (!contentType.includes('application/json')) {
+                const error = new Error(response.status === 419
+                    ? 'Your session has expired. Refresh the page and try again.'
+                    : 'The server returned an unexpected response. Please try again.');
+                error.status = response.status;
+                throw error;
+            }
+
+            const data = await response.json();
+            return { response, data };
         }
 
         function clearStepOneFieldState(field) {
@@ -596,7 +969,7 @@
             clearStepOneError();
 
             try {
-                const response = await fetch('/register/check-email', {
+                const { data } = await requestJson(endpoints.checkEmail, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -606,16 +979,12 @@
                     body: JSON.stringify({ email: currentEmail() })
                 });
 
-                const data = await response.json();
-
-                btnNextStep.disabled = false;
-                nextBtnText.innerHTML = '<i class="bi bi-arrow-right-circle"></i> Verify &amp; Continue';
-                nextBtnSpinner.classList.add('d-none');
-
                 if (data.success) {
                     otpMessage.innerHTML = '<i class="bi bi-envelope-check-fill text-primary"></i> ' + (data.message || 'Verification code sent.');
+                    otpEmailDisplay.textContent = currentEmail();
                     step1.classList.add('d-none');
                     stepOtp.classList.remove('d-none');
+                    setRegistrationStage(2);
 
                     otpCodeInput.value = '';
                     otpCodeInput.disabled = false;
@@ -628,14 +997,15 @@
                     startResendCooldown(data.resend_available_in);
                     otpCodeInput.focus();
                 } else {
-                    showStepOneError(data.message || 'We could not verify this email address. Please try again.', emailInput);
+                    showStepOneError(data.message || 'We could not verify this email address. Please try again.', emailInput, data.code);
                 }
             } catch (err) {
                 console.error(err);
+                showStepOneError(err.message || 'We could not verify your Microsoft 365 account right now. Check your connection and try again.', emailInput, 'microsoft_service_unavailable');
+            } finally {
                 btnNextStep.disabled = false;
                 nextBtnText.innerHTML = '<i class="bi bi-arrow-right-circle"></i> Verify &amp; Continue';
                 nextBtnSpinner.classList.add('d-none');
-                showStepOneError('We could not verify your Microsoft 365 account right now. Check your connection and try again.', emailInput);
             }
         });
 
@@ -663,7 +1033,7 @@
             otpResent.classList.add('d-none');
 
             try {
-                const response = await fetch('/register/verify-otp', {
+                const { data } = await requestJson(endpoints.verifyOtp, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -673,8 +1043,6 @@
                     body: JSON.stringify({ email: currentEmail(), otp: otpVal })
                 });
 
-                const data = await response.json();
-
                 verifyBtnText.textContent = "Verify Code";
                 verifyBtnSpinner.classList.add('d-none');
 
@@ -683,6 +1051,7 @@
                     stopResendCooldown();
                     stepOtp.classList.add('d-none');
                     step2.classList.remove('d-none');
+                    setRegistrationStage(3);
                     setStepTwoActive(true);
                     passwordInput.focus();
                     return;
@@ -705,7 +1074,7 @@
                 verifyBtnText.textContent = "Verify Code";
                 verifyBtnSpinner.classList.add('d-none');
                 syncVerifyButton();
-                showOtpError('Connection error occurred. Please try again.', false);
+                showOtpError(err.message || 'We could not verify the code right now. Please try again.', false);
             }
         });
 
@@ -722,7 +1091,7 @@
             otpResent.classList.add('d-none');
 
             try {
-                const response = await fetch('/register/resend-otp', {
+                const { data } = await requestJson(endpoints.resendOtp, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -731,8 +1100,6 @@
                     },
                     body: JSON.stringify({ email: currentEmail() })
                 });
-
-                const data = await response.json();
 
                 if (data.success) {
                     otpCodeInput.disabled = false;
@@ -764,7 +1131,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                showOtpError('Connection error occurred. Please try again.', false);
+                showOtpError(err.message || 'We could not resend the code right now. Please try again.', false);
                 enableResend();
             }
         });
@@ -775,6 +1142,7 @@
             stopResendCooldown();
             stepOtp.classList.add('d-none');
             step1.classList.remove('d-none');
+            setRegistrationStage(1);
         });
 
         // Back to Step 1 from Step 2
@@ -782,6 +1150,7 @@
             setStepTwoActive(false);
             step2.classList.add('d-none');
             step1.classList.remove('d-none');
+            setRegistrationStage(1);
         });
 
         // ───────────────────────────────────────────────────────────────────
@@ -982,8 +1351,6 @@
         }
     });
 </script>
-    </div>
-</div>
 <script src="{{ asset('assets/js/main.js') }}"></script>
 @include('partials.pwa-installer', ['floating' => true])
 </body>

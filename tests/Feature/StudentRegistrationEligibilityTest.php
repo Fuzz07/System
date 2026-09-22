@@ -20,7 +20,7 @@ class StudentRegistrationEligibilityTest extends TestCase
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
         Cache::flush();
         Mail::fake();
-        Http::fake();
+        Http::fake(['*' => Http::response(['IfExistsResult' => 0])]);
     }
 
     /**
@@ -34,10 +34,11 @@ class StudentRegistrationEligibilityTest extends TestCase
             'email' => 'unlisted.student@mcclawis.edu.ph',
         ]);
 
-        $response->assertStatus(200);
+        $response->assertForbidden();
         $response->assertJson([
             'success' => false,
-            'message' => 'This Microsoft 365 account is not eligible to register. Please contact the SSC admin to have your account added to the eligible list.',
+            'code' => 'not_eligible',
+            'message' => 'This Microsoft 365 account exists, but it is not yet authorized for SSC registration. Please contact the SSC administrator.',
         ]);
     }
 
@@ -80,8 +81,9 @@ class StudentRegistrationEligibilityTest extends TestCase
             'email' => 'REGISTERED.STUDENT@MCCLAWIS.EDU.PH',
         ]);
 
-        $response->assertOk()->assertJson([
+        $response->assertConflict()->assertJson([
             'success' => false,
+            'code' => 'already_registered',
             'message' => 'This Microsoft 365 school account is already registered. Please sign in or use Forgot Password to regain access.',
         ]);
     }
@@ -101,10 +103,28 @@ class StudentRegistrationEligibilityTest extends TestCase
 
         Http::assertSent(fn ($request) => $request->url() === 'https://login.microsoftonline.com/common/GetCredentialType');
 
-        $response->assertOk()->assertJson([
+        $response->assertUnprocessable()->assertJson([
             'success' => false,
-            'message' => 'This Microsoft 365 account does not exist. Please double-check your school email address spelling or contact the school IT administrator.',
+            'code' => 'microsoft_account_not_found',
+            'message' => 'We could not find this Microsoft 365 school account. Check the email address for typing errors, or contact the school IT administrator.',
         ]);
+    }
+
+    public function test_microsoft_service_failure_does_not_silently_continue(): void
+    {
+        config(['ssc.enforce_eligibility_whitelist' => false]);
+        Http::swap(new \Illuminate\Http\Client\Factory());
+        Http::fake(['*' => Http::response([], 503)]);
+
+        $response = $this->postJson('/register/check-email', [
+            'email' => 'student@mcclawis.edu.ph',
+        ]);
+
+        $response->assertServiceUnavailable()->assertJson([
+            'success' => false,
+            'code' => 'microsoft_service_unavailable',
+        ]);
+        Mail::assertNothingSent();
     }
 
     /**
@@ -127,7 +147,17 @@ class StudentRegistrationEligibilityTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors([
-            'email' => 'This Microsoft 365 account is not eligible to register. Please contact the SSC admin to have your account added to the eligible list.',
+            'email' => 'This Microsoft 365 account exists, but it is not yet authorized for SSC registration. Please contact the SSC administrator.',
         ]);
+    }
+
+    public function test_registration_page_renders_the_guided_flow_and_visual(): void
+    {
+        $this->get('/register')
+            ->assertOk()
+            ->assertSee('registration-shell', false)
+            ->assertSee('Student details')
+            ->assertSee('Email verification')
+            ->assertSee('registration-visual-v1.jpg', false);
     }
 }

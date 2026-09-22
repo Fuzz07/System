@@ -20,7 +20,7 @@ class RegistrationOtpTest extends TestCase
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
         Cache::flush();
         Mail::fake();
-        Http::fake(); // do not reach out to Microsoft during tests
+        Http::fake(['*' => Http::response(['IfExistsResult' => 0])]); // do not reach out to Microsoft during tests
         config(['ssc.enforce_eligibility_whitelist' => false]);
     }
 
