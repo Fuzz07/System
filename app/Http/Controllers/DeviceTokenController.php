@@ -18,7 +18,7 @@ class DeviceTokenController extends Controller
             'device_type' => 'nullable|string|in:android,ios,web',
             'device_name' => 'nullable|string',
         ]);
-
+        
         $user = Auth::user();
 
         if (!$user) {

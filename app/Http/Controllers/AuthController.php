@@ -291,26 +291,48 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
-            'first_name' => 'required|string|max:100',
-            'middle_name' => 'nullable|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'age' => 'required|integer|min:10|max:100',
-            'year_level' => 'required|string',
-            'department' => 'required|string|max:100',
-            'student_id' => 'required|string|regex:/^\d{4}-\d{4}$/',
-            'email' => 'required|email|max:255|unique:users,email|ends_with:@mcclawis.edu.ph',
+        $request->merge([
+            'first_name' => trim((string) $request->input('first_name')),
+            'middle_name' => ($middleName = trim((string) $request->input('middle_name'))) !== '' ? $middleName : null,
+            'last_name' => trim((string) $request->input('last_name')),
+            'student_id' => trim((string) $request->input('student_id')),
+            'email' => Str::lower(trim((string) $request->input('email'))),
+        ]);
 
+        $validated = $request->validate([
+            'first_name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
+            'middle_name' => ['nullable', 'string', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
+            'last_name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
+            'dob' => ['required', 'date', 'after_or_equal:' . now()->subYears(100)->toDateString(), 'before_or_equal:' . now()->subYears(10)->toDateString()],
+            'year_level' => ['required', 'in:1st Year,2nd Year,3rd Year,4th Year'],
+            'department' => ['required', 'in:BEED,BSED,BSBA,BSHM,BSIT'],
+            'student_id' => ['required', 'regex:/^\d{4}-\d{4}$/', 'unique:users,student_id'],
+            'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email', 'ends_with:@mcclawis.edu.ph'],
             'password' => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
         ], [
-            'email.unique' => 'This Microsoft 365 school account is already registered under another student\'s profile. Please log in or use Forgot Password.',
+            'first_name.regex' => 'First name may contain letters, spaces, periods, apostrophes, and hyphens only.',
+            'middle_name.regex' => 'Middle name may contain letters, spaces, periods, apostrophes, and hyphens only.',
+            'last_name.regex' => 'Last name may contain letters, spaces, periods, apostrophes, and hyphens only.',
+            'dob.required' => 'Please enter your date of birth.',
+            'dob.before_or_equal' => 'You must be at least 10 years old to register.',
+            'dob.after_or_equal' => 'Please enter a valid date of birth.',
+            'student_id.regex' => 'Student ID must use the format YYYY-XXXX (for example, 2024-0001).',
+            'student_id.unique' => 'This Student ID is already associated with a registered account. Please contact the SSC administrator if you need help.',
+            'email.email' => 'Enter a valid Microsoft 365 school email address.',
+            'email.ends_with' => 'Use your @mcclawis.edu.ph Microsoft 365 school account.',
+            'email.unique' => 'This Microsoft 365 school account is already registered. Please sign in or use Forgot Password to regain access.',
             'password.regex' => 'Password must contain at least one letter and one number.',
             'password.min' => 'Password must be at least 8 characters.',
+            'password.confirmed' => 'The password confirmation does not match.',
         ]);
+
+        // Do not trust the readonly age input from the browser. It is derived
+        // from the validated date of birth before the account is saved.
+        $age = now()->diffInYears($validated['dob']);
 
         // ── Eligibility Whitelist Check ──────────────────────────────────────
         if (config('ssc.enforce_eligibility_whitelist', true)) {
-            if (!\App\Models\EligibleStudent::where('email', strtolower(trim($request->email)))->exists()) {
+            if (!\App\Models\EligibleStudent::whereRaw('LOWER(email) = ?', [$validated['email']])->exists()) {
                 return back()->withErrors([
                     'email' => 'This Microsoft 365 account is not eligible to register. Please contact the SSC admin to have your account added to the eligible list.',
                 ])->withInput();
@@ -320,7 +342,7 @@ class AuthController extends Controller
         $sessionVerified = session('register_email_verified');
         $sessionEmail = session('register_email');
 
-        if (!$sessionVerified || $sessionEmail !== $request->email) {
+        if (!$sessionVerified || $sessionEmail !== $validated['email']) {
             return back()->withErrors(['email' => 'Please verify your Microsoft 365 school account email address before creating your password.'])->withInput();
         }
 
@@ -328,19 +350,19 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Security check failed. Please verify that you are not a robot.'])->withInput();
         }
 
-        $fullname = trim($request->first_name . ' ' . ($request->middle_name ?? '') . ' ' . $request->last_name);
+        $fullname = trim($validated['first_name'] . ' ' . ($validated['middle_name'] ?? '') . ' ' . $validated['last_name']);
 
         $user = User::create([
-            'first_name' => $request->first_name,
-            'middle_name' => $request->middle_name,
-            'last_name' => $request->last_name,
-            'age' => $request->age,
-            'year_level' => $request->year_level,
-            'department' => $request->department,
-            'student_id' => $request->student_id,
+            'first_name' => $validated['first_name'],
+            'middle_name' => $validated['middle_name'],
+            'last_name' => $validated['last_name'],
+            'age' => $age,
+            'year_level' => $validated['year_level'],
+            'department' => $validated['department'],
+            'student_id' => $validated['student_id'],
             'fullname' => $fullname,
-            'email' => $request->email,
-            'password' => $request->password,
+            'email' => $validated['email'],
+            'password' => $validated['password'],
             'role' => 'student',
             'status' => 'inactive',
         ]);
@@ -376,11 +398,16 @@ class AuthController extends Controller
 
     public function checkEmail(Request $request)
     {
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
+        ]);
+
         try {
             $request->validate([
-                'email' => 'required|email|ends_with:@mcclawis.edu.ph',
+                'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@mcclawis.edu.ph'],
             ], [
-                'email.ends_with' => 'The email address must belong to the @mcclawis.edu.ph domain.',
+                'email.email' => 'Enter a valid Microsoft 365 school email address.',
+                'email.ends_with' => 'Use your @mcclawis.edu.ph Microsoft 365 school account.',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -390,16 +417,16 @@ class AuthController extends Controller
         }
 
 
-        if (User::where('email', $request->email)->exists()) {
+        if (User::whereRaw('LOWER(email) = ?', [$request->email])->exists()) {
             return response()->json([
                 'success' => false,
-                'message' => 'This Microsoft 365 school account is already registered under another student\'s profile. Please log in or use Forgot Password.',
+                'message' => 'This Microsoft 365 school account is already registered. Please sign in or use Forgot Password to regain access.',
             ]);
         }
 
         // ── Eligibility Whitelist Check ──────────────────────────────────────
         if (config('ssc.enforce_eligibility_whitelist', true)) {
-            if (!\App\Models\EligibleStudent::where('email', strtolower(trim($request->email)))->exists()) {
+            if (!\App\Models\EligibleStudent::whereRaw('LOWER(email) = ?', [$request->email])->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This Microsoft 365 account is not eligible to register. Please contact the SSC admin to have your account added to the eligible list.',
@@ -415,8 +442,9 @@ class AuthController extends Controller
                 ]);
 
             if ($msResponse->successful()) {
-                $ifExistsResult = $msResponse->json('IfExistsResult');
-                if ($ifExistsResult === 1) {
+                $credentials = $msResponse->json();
+                $ifExistsResult = is_array($credentials) ? ($credentials['IfExistsResult'] ?? null) : null;
+                if ((int) $ifExistsResult === 1) {
                     return response()->json([
                         'success' => false,
                         'message' => 'This Microsoft 365 account does not exist. Please double-check your school email address spelling or contact the school IT administrator.',
@@ -487,9 +515,16 @@ class AuthController extends Controller
      */
     public function resendOtp(Request $request)
     {
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
+        ]);
+
         try {
             $request->validate([
-                'email' => 'required|email|ends_with:@mcclawis.edu.ph',
+                'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@mcclawis.edu.ph'],
+            ], [
+                'email.email' => 'Enter a valid Microsoft 365 school email address.',
+                'email.ends_with' => 'Use your @mcclawis.edu.ph Microsoft 365 school account.',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -550,9 +585,14 @@ class AuthController extends Controller
 
     public function verifyOtp(Request $request)
     {
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
+            'otp' => trim((string) $request->input('otp')),
+        ]);
+
         try {
             $request->validate([
-                'email' => 'required|email',
+                'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@mcclawis.edu.ph'],
                 'otp' => 'required|string|size:6',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {

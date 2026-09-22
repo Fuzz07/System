@@ -97,11 +97,13 @@
         .pw-req i { font-size: .9rem; line-height: 1; }
         .pw-req.is-met { color: var(--success); }
         .pw-req.is-unmet-touched { color: var(--danger); }
-        .form-control-custom.is-invalid-field {
+        .form-control-custom.is-invalid-field,
+        .form-select-custom.is-invalid-field {
             border-color: var(--danger) !important;
             box-shadow: 0 0 0 3px rgba(239, 68, 68, .15) !important;
         }
-        .form-control-custom.is-valid-field { border-color: var(--success) !important; }
+        .form-control-custom.is-valid-field,
+        .form-select-custom.is-valid-field { border-color: var(--success) !important; }
         .field-hint { font-size: .74rem; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
         .field-hint.is-error { color: var(--danger); }
         .field-hint.is-ok { color: var(--success); }
@@ -125,7 +127,7 @@
         </div>
         @endif
 
-        <form method="POST" action="{{ route('register.submit') }}" id="registerForm">
+        <form method="POST" action="{{ route('register.submit') }}" id="registerForm" novalidate>
             @csrf
             <div style="display:none !important;" aria-hidden="true">
                 <input type="text" name="website_url" tabindex="-1" autocomplete="off">
@@ -135,30 +137,30 @@
             <div id="step-1">
                 <div class="row g-2 mb-3">
                     <div class="col-md-4">
-                        <label class="form-label-custom">First Name</label>
-                        <input type="text" name="first_name" class="form-control-custom" value="{{ old('first_name') }}" required>
+                        <label class="form-label-custom" for="first_name">First Name</label>
+                        <input type="text" id="first_name" name="first_name" class="form-control-custom" value="{{ old('first_name') }}" minlength="2" maxlength="100" autocomplete="given-name" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label-custom">Middle Name</label>
-                        <input type="text" name="middle_name" class="form-control-custom" value="{{ old('middle_name') }}">
+                        <label class="form-label-custom" for="middle_name">Middle Name <span class="text-muted fw-normal">(optional)</span></label>
+                        <input type="text" id="middle_name" name="middle_name" class="form-control-custom" value="{{ old('middle_name') }}" maxlength="100" autocomplete="additional-name">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label-custom">Last Name</label>
-                        <input type="text" name="last_name" class="form-control-custom" value="{{ old('last_name') }}" required>
+                        <label class="form-label-custom" for="last_name">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" class="form-control-custom" value="{{ old('last_name') }}" minlength="2" maxlength="100" autocomplete="family-name" required>
                     </div>
                 </div>
                 <div class="row g-2 mb-3">
                     <div class="col-md-5">
-                        <label class="form-label-custom">Date of Birth</label>
-                        <input type="date" id="dob_input" name="dob" class="form-control-custom" value="{{ old('dob') }}" max="{{ date('Y-m-d', strtotime('-10 years')) }}" required>
+                        <label class="form-label-custom" for="dob_input">Date of Birth</label>
+                        <input type="date" id="dob_input" name="dob" class="form-control-custom" value="{{ old('dob') }}" min="{{ date('Y-m-d', strtotime('-100 years')) }}" max="{{ date('Y-m-d', strtotime('-10 years')) }}" required>
                     </div>
                     <div class="col-md-3">
-                        <label class="form-label-custom">Age</label>
-                        <input type="number" id="age_input" name="age" class="form-control-custom bg-light" value="{{ old('age') }}" readonly tabindex="-1" required>
+                        <label class="form-label-custom" for="age_input">Age</label>
+                        <input type="number" id="age_input" name="age" class="form-control-custom bg-light" value="{{ old('age') }}" readonly tabindex="-1" aria-readonly="true">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label-custom">Year Level</label>
-                        <select name="year_level" class="form-select-custom" required>
+                        <label class="form-label-custom" for="year_level">Year Level</label>
+                        <select id="year_level" name="year_level" class="form-select-custom" required>
                             <option value="">Select</option>
                             @foreach(['1st Year','2nd Year','3rd Year','4th Year'] as $y)
                             <option value="{{ $y }}" {{ old('year_level') == $y ? 'selected' : '' }}>{{ $y }}</option>
@@ -168,8 +170,8 @@
                 </div>
                 <div class="row g-2 mb-4">
                     <div class="col-md-4">
-                        <label class="form-label-custom">Course / Dept</label>
-                        <select name="department" class="form-select-custom" required>
+                        <label class="form-label-custom" for="department">Course / Department</label>
+                        <select id="department" name="department" class="form-select-custom" required>
                             <option value="">Select Course</option>
                             @foreach(['BEED', 'BSED', 'BSBA', 'BSHM', 'BSIT'] as $dept)
                             <option value="{{ $dept }}" {{ old('department') == $dept ? 'selected' : '' }}>{{ $dept }}</option>
@@ -177,16 +179,17 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label-custom">Student ID</label>
-                        <input type="text" name="student_id" class="form-control-custom" pattern="\d{4}-\d{4}" title="Format: YYYY-XXXX" placeholder="YYYY-XXXX" value="{{ old('student_id') }}" required>
+                        <label class="form-label-custom" for="student_id">Student ID</label>
+                        <input type="text" id="student_id" name="student_id" class="form-control-custom" pattern="\d{4}-\d{4}" maxlength="9" title="Format: YYYY-XXXX" placeholder="YYYY-XXXX" value="{{ old('student_id') }}" autocomplete="off" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label-custom">MS Account</label>
-                        <input type="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph" value="{{ old('email') }}" required>
+                        <label class="form-label-custom" for="email">Microsoft 365 School Account</label>
+                        <input type="email" id="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph" value="{{ old('email') }}" autocomplete="email" maxlength="255" required>
+                        <div class="field-hint">Use your assigned @mcclawis.edu.ph email address.</div>
                     </div>
                 </div>
 
-                <div id="step-1-error" class="alert alert-danger d-none mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;"></div>
+                <div id="step-1-error" class="alert alert-danger d-none mb-3" role="alert" aria-live="assertive" style="border-radius:var(--radius-sm);font-size:.85rem;"></div>
 
                 <button type="button" id="btn-next-step" class="btn-primary-custom w-100 justify-content-center" style="padding:14px;">
                     <span id="next-btn-text"><i class="bi bi-arrow-right-circle"></i> Verify &amp; Continue</span>
@@ -355,7 +358,88 @@
         if (!btnNextStep) return;
 
         const csrfToken = () => registerForm.querySelector('input[name="_token"]').value;
-        const currentEmail = () => step1.querySelector('input[name="email"]').value.trim();
+        const emailInput = document.getElementById('email');
+        const currentEmail = () => emailInput.value.trim().toLowerCase();
+        const stepOneFields = step1.querySelectorAll('input, select');
+
+        function clearStepOneError() {
+            step1Error.classList.add('d-none');
+            step1Error.textContent = '';
+        }
+
+        function showStepOneError(message, field = null) {
+            step1Error.textContent = message;
+            step1Error.classList.remove('d-none');
+            if (field) {
+                field.classList.add('is-invalid-field');
+                field.focus();
+            }
+        }
+
+        function clearStepOneFieldState(field) {
+            field.setCustomValidity('');
+            field.classList.remove('is-invalid-field');
+        }
+
+        function stepOneValidationError(field) {
+            const value = field.value.trim();
+            const label = field.closest('div')?.querySelector('label')?.textContent?.replace(/\s*\(optional\)\s*/, '').trim() || 'This field';
+
+            if (field.required && !value) return `Please enter your ${label.toLowerCase()}.`;
+
+            if (['first_name', 'middle_name', 'last_name'].includes(field.name) && value) {
+                if (value.length < 2 && field.name !== 'middle_name') return `${label} must contain at least 2 characters.`;
+                if (!/^[\p{L}][\p{L}\s.'-]*$/u.test(value)) return `${label} may contain letters, spaces, periods, apostrophes, and hyphens only.`;
+            }
+
+            if (field.name === 'dob' && value) {
+                const [year, month, day] = value.split('-').map(Number);
+                const dob = new Date(year, month - 1, day);
+                const today = new Date();
+                let age = today.getFullYear() - dob.getFullYear();
+                if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
+                if (dob.getFullYear() !== year || dob.getMonth() !== month - 1 || dob.getDate() !== day || age < 10 || age > 100) {
+                    return 'Enter a valid date of birth. Registrants must be between 10 and 100 years old.';
+                }
+            }
+
+            if (field.name === 'student_id' && value && !/^\d{4}-\d{4}$/.test(value)) {
+                return 'Student ID must use the format YYYY-XXXX (for example, 2024-0001).';
+            }
+
+            if (field.name === 'email' && value) {
+                if (!field.validity.valid) return 'Enter a valid Microsoft 365 school email address.';
+                if (!value.endsWith('@mcclawis.edu.ph')) return 'Use your @mcclawis.edu.ph Microsoft 365 school account.';
+            }
+
+            return null;
+        }
+
+        function validateStepOne() {
+            clearStepOneError();
+            for (const field of stepOneFields) {
+                if (field.name === 'website_url' || field.readOnly) continue;
+                clearStepOneFieldState(field);
+                const message = stepOneValidationError(field);
+                if (message) {
+                    field.setCustomValidity(message);
+                    showStepOneError(message, field);
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        stepOneFields.forEach((field) => {
+            field.addEventListener(field.tagName === 'SELECT' ? 'change' : 'input', () => {
+                clearStepOneFieldState(field);
+                clearStepOneError();
+            });
+        });
+
+        emailInput.addEventListener('blur', () => {
+            emailInput.value = currentEmail();
+        });
 
         // ───────────────────────────────────────────────────────────────────
         //  OTP STEP HELPERS
@@ -503,23 +587,13 @@
         // ───────────────────────────────────────────────────────────────────
         btnNextStep.addEventListener('click', async (e) => {
             if (e) e.preventDefault();
-            const step1Inputs = step1.querySelectorAll('input, select');
-
-            for (let input of step1Inputs) {
-                if (input.hasAttribute('required') && !input.value) {
-                    input.reportValidity();
-                    return;
-                }
-                if (!input.checkValidity()) {
-                    input.reportValidity();
-                    return;
-                }
-            }
+            if (!validateStepOne()) return;
+            emailInput.value = currentEmail();
 
             btnNextStep.disabled = true;
             nextBtnText.textContent = "Verifying MS Account...";
             nextBtnSpinner.classList.remove('d-none');
-            step1Error.classList.add('d-none');
+            clearStepOneError();
 
             try {
                 const response = await fetch('/register/check-email', {
@@ -554,16 +628,14 @@
                     startResendCooldown(data.resend_available_in);
                     otpCodeInput.focus();
                 } else {
-                    step1Error.textContent = data.message || 'Email verification failed.';
-                    step1Error.classList.remove('d-none');
+                    showStepOneError(data.message || 'We could not verify this email address. Please try again.', emailInput);
                 }
             } catch (err) {
                 console.error(err);
                 btnNextStep.disabled = false;
                 nextBtnText.innerHTML = '<i class="bi bi-arrow-right-circle"></i> Verify &amp; Continue';
                 nextBtnSpinner.classList.add('d-none');
-                step1Error.textContent = 'Connection error occurred. Please check your network and try again.';
-                step1Error.classList.remove('d-none');
+                showStepOneError('We could not verify your Microsoft 365 account right now. Check your connection and try again.', emailInput);
             }
         });
 
@@ -891,21 +963,22 @@
         const dobInput = document.getElementById('dob_input');
         const ageInput = document.getElementById('age_input');
         if (dobInput && ageInput) {
-            dobInput.addEventListener('change', () => {
-                if (dobInput.value) {
-                    const dob = new Date(dobInput.value);
-                    const today = new Date();
-                    let age = today.getFullYear() - dob.getFullYear();
-                    const monthDiff = today.getMonth() - dob.getMonth();
-
-                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-                        age--;
-                    }
-                    ageInput.value = age > 0 ? age : 0;
-                } else {
+            const updateAge = () => {
+                if (!dobInput.value) {
                     ageInput.value = '';
+                    return;
                 }
-            });
+
+                const [year, month, day] = dobInput.value.split('-').map(Number);
+                const dob = new Date(year, month - 1, day);
+                const today = new Date();
+                let age = today.getFullYear() - dob.getFullYear();
+                if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
+                ageInput.value = age >= 0 ? age : '';
+            };
+
+            dobInput.addEventListener('change', updateAge);
+            updateAge();
         }
     });
 </script>
