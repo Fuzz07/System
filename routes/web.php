@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Officer;
 use App\Http\Controllers\Student;
@@ -40,6 +41,10 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
     Route::post('/login/approval-fallback/{approvalId}', [AuthController::class, 'triggerOtpFallback'])->name('admin.login.approval_fallback');
 
     Route::middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread');
+        Route::post('/notifications/read', [NotificationController::class, 'markAllRead'])->name('notifications.read');
+
         Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
         Route::post('/login-approvals/{approvalId}/approve', [Admin\DashboardController::class, 'approveLoginRequest'])->name('login_approvals.approve');
         Route::post('/login-approvals/{approvalId}/reject', [Admin\DashboardController::class, 'rejectLoginRequest'])->name('login_approvals.reject');
@@ -123,6 +128,10 @@ Route::domain('officer.' . $baseDomain)->group(function () {
     registerSubdomainAuthRoutes('officer');
 
     Route::middleware(['auth', 'role:officer,treasurer'])->name('officer.')->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread');
+        Route::post('/notifications/read', [NotificationController::class, 'markAllRead'])->name('notifications.read');
+
         Route::get('/dashboard', [Officer\DashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/proposals', [Officer\ProposalController::class, 'index'])->name('proposals');
@@ -156,6 +165,10 @@ Route::domain('dean.' . $baseDomain)->group(function () {
     registerSubdomainAuthRoutes('dean');
 
     Route::middleware(['auth', 'role:dean'])->name('dean.')->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread');
+        Route::post('/notifications/read', [NotificationController::class, 'markAllRead'])->name('notifications.read');
+
         Route::get('/dashboard', [App\Http\Controllers\Dean\DashboardController::class, 'index'])->name('dashboard');
         Route::post('/candidacies/{candidacy}/vote', [App\Http\Controllers\Dean\DashboardController::class, 'vote'])->name('candidacy.vote');
         Route::post('/candidacies/{candidacy}/reject', [App\Http\Controllers\Dean\DashboardController::class, 'reject'])->name('candidacy.reject');
@@ -175,6 +188,10 @@ Route::domain('treasurer.' . $baseDomain)->group(function () {
     registerSubdomainAuthRoutes('treasurer');
 
     Route::middleware(['auth', 'role:treasurer'])->name('treasurer.')->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread');
+        Route::post('/notifications/read', [NotificationController::class, 'markAllRead'])->name('notifications.read');
+
         Route::get('/dashboard', [App\Http\Controllers\Treasurer\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/release', [App\Http\Controllers\Treasurer\ReleaseController::class, 'index'])->name('release');
         Route::post('/release', [App\Http\Controllers\Treasurer\ReleaseController::class, 'store'])->name('release.submit');

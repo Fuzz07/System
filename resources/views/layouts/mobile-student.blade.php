@@ -97,7 +97,7 @@
         @endif
 
         {{-- Main Page Content --}}
-        <main class="page-content {{ $contentClass ?? '' }}" id="pageContent">
+        <main class="page-content {{ $contentClass ?? '' }}" id="pageContent" data-ssc-live-region>
             @yield('content')
         </main>
 
@@ -281,6 +281,7 @@
         })();
     </script>
     <script src="{{ asset('assets/js/main.js') }}?v=1.0.4"></script>
+    <script src="{{ asset('assets/js/live-updates.js') }}?v={{ @filemtime(public_path('assets/js/live-updates.js')) ?: 1 }}"></script>
 </body>
 
 </html>

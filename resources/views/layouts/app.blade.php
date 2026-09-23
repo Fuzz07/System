@@ -66,7 +66,7 @@
             </div>
         </header>
 
-        <main class="page-content">
+        <main class="page-content" data-ssc-live-region>
             {{-- Persistent Maintenance Mode Warning for Admins --}}
             @if(\App\Helpers\MaintenanceHelper::isDown() && Auth::check() && Auth::user()->role === 'admin')
             <div class="alert alert-warning d-flex align-items-center justify-content-between mb-4 shadow-sm" style="border-radius:var(--radius-sm); border-left: 4px solid #f59e0b; background: #fffbeb; color: #92400e; font-weight: 600;">
@@ -223,6 +223,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="{{ asset('assets/js/main.js') }}?v=1.0.4"></script>
+    <script src="{{ asset('assets/js/live-updates.js') }}?v={{ @filemtime(public_path('assets/js/live-updates.js')) ?: 1 }}"></script>
     @stack('scripts')
 </body>
 </html>

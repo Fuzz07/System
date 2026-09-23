@@ -10,7 +10,7 @@ Pass a surface so announcement links point at the right shell. Desktop is the
 default; the mobile layout passes: ['surface' => 'mobile']
 ═══════════════════════════════════════ --}}
 
-@if(Auth::check() && Auth::user()->isStudent())
+@auth
 
 @once
 <style>
@@ -247,9 +247,11 @@ default; the mobile layout passes: ['surface' => 'mobile']
         if (!wrap || !btn || !panel) return;
 
         var SURFACE = wrap.dataset.surface || 'desktop';
-        var URL_LIST = @json(route('student.notifications.index')) + '?surface=' + encodeURIComponent(SURFACE);
-        var URL_COUNT = @json(route('student.notifications.unread'));
-        var URL_READ = @json(route('student.notifications.read'));
+        var NOTIFICATION_PATH = @json(request()->routeIs('student.*', 'mobile.student.*') ? '/student/notifications' : '/notifications');
+        var NOTIFICATION_ROOT = window.location.origin + NOTIFICATION_PATH;
+        var URL_LIST = NOTIFICATION_ROOT + '?surface=' + encodeURIComponent(SURFACE);
+        var URL_COUNT = NOTIFICATION_ROOT + '/unread-count';
+        var URL_READ = NOTIFICATION_ROOT + '/read';
         var csrfMeta = document.querySelector('meta[name="csrf-token"]');
         var CSRF = csrfMeta ? csrfMeta.getAttribute('content') : '';
 
@@ -352,10 +354,23 @@ default; the mobile layout passes: ['surface' => 'mobile']
         });
 
         refreshCount();
-        setInterval(refreshCount, 60000);
+        setInterval(function () {
+            refreshCount();
+            if (panel.classList.contains('open')) {
+                fetch(URL_LIST, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                    .then(function (r) { return r.ok ? r.json() : []; })
+                    .then(render)
+                    .catch(function () { /* retain the last visible feed */ });
+            }
+        }, 10000);
+
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) refreshCount();
+        });
+        document.addEventListener('ssc:content-updated', refreshCount);
     })();
 </script>
 @endpush
 @endonce
 
-@endif
+@endauth
