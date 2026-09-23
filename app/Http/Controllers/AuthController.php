@@ -213,6 +213,13 @@ class AuthController extends Controller
                     // Log activity
                     SscHelper::logActivity($user->id, 'LOGIN_APPROVAL_REQUEST', "Unrecognized device login approval initiated for {$user->email} from IP {$request->ip()}");
 
+                    \App\Services\AdminAlertService::send(
+                        'New-device login approval requested',
+                        "An admin login for {$user->email} from IP {$request->ip()} requires approval.",
+                        route('admin.dashboard'),
+                        'admin_login_approval'
+                    );
+
                     $host = request()->getHost();
                     if (str_starts_with($host, 'admin.')) {
                         $waitingRoute = route('admin.login.approval_waiting', $approvalId);

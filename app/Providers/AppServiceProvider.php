@@ -8,6 +8,10 @@ use App\Models\Proposal;
 use App\Models\Expense;
 use App\Models\Feedback;
 use App\Models\User;
+use App\Models\Candidacy;
+use App\Models\EnrollmentPayment;
+use App\Models\Liquidation;
+use App\Observers\AdminRequestObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,6 +29,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Pagination\Paginator::useBootstrapFive();
+
+        foreach ([User::class, Proposal::class, Expense::class, Feedback::class, EnrollmentPayment::class, Candidacy::class, Liquidation::class] as $model) {
+            $model::observe(AdminRequestObserver::class);
+        }
 
         if (config('app.env') === 'production' || isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL']) || getenv('VERCEL') !== false) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
