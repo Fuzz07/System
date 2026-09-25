@@ -82,7 +82,7 @@
             form.addEventListener('submit', (e) => {
               if (!verifiedTokenInput.value) {
                 e.preventDefault();
-                alert('Please check the "I am not a robot" box to proceed.');
+                SSCAlert.warning('Please check the "I am not a robot" box to proceed.', 'Security check required');
               }
             });
           }

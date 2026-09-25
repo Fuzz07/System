@@ -425,11 +425,11 @@
     var notes = document.querySelector('textarea[name="notes"]').value.trim();
 
     if (!title) {
-      alert('Select a proposal before releasing budget.');
+      SSCAlert.warning('Select a proposal before releasing budget.');
       return;
     }
     if (amt <= 0) {
-      alert('Please enter a valid amount to release.');
+      SSCAlert.warning('Please enter a valid amount to release.');
       return;
     }
 

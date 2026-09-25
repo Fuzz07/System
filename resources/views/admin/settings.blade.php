@@ -786,7 +786,7 @@ function startMaintenanceOtpFlow(action) {
             const modal = new bootstrap.Modal(document.getElementById('maintenanceOtpModal'));
             modal.show();
         } else {
-            alert(data.message || 'Failed to send OTP code. Please try again.');
+            SSCAlert.error(data.message || 'Failed to send OTP code. Please try again.', 'OTP request failed');
         }
     })
     .catch(error => {
@@ -794,7 +794,7 @@ function startMaintenanceOtpFlow(action) {
             btn.disabled = false;
             btn.innerHTML = originalHtml;
         }
-        alert('Error connecting to server. Please try again.');
+        SSCAlert.error('Error connecting to server. Please try again.', 'Connection error');
     });
 }
 
@@ -831,7 +831,7 @@ function requestExportOtp() {
             const modal = new bootstrap.Modal(document.getElementById('exportOtpModal'));
             modal.show();
         } else {
-            alert(data.message || 'Failed to send OTP code. Please try again.');
+            SSCAlert.error(data.message || 'Failed to send OTP code. Please try again.', 'OTP request failed');
         }
     })
     .catch(error => {
@@ -839,7 +839,7 @@ function requestExportOtp() {
             btn.disabled = false;
             btn.innerHTML = '<i class="bi bi-shield-lock-fill me-1"></i> Export SQL Backup';
         }
-        alert('Error connecting to server. Please try again.');
+        SSCAlert.error('Error connecting to server. Please try again.', 'Connection error');
     });
 }
 </script>

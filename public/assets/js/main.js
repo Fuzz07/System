@@ -2,6 +2,121 @@
 // SSC System — Main JavaScript
 // ============================================================
 
+// ============================================================
+// Centered application alerts
+// ============================================================
+
+(function () {
+  const alertQueue = [];
+  let activeAlert = null;
+  let previousFocus = null;
+
+  const alertTypes = {
+    info: { title: 'Notice', icon: 'bi-info-lg' },
+    success: { title: 'Success', icon: 'bi-check-lg' },
+    warning: { title: 'Attention', icon: 'bi-exclamation-lg' },
+    error: { title: 'Something went wrong', icon: 'bi-x-lg' }
+  };
+
+  function createAlertDialog() {
+    const overlay = document.createElement('div');
+    overlay.className = 'ssc-alert-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = `
+      <div class="ssc-alert-dialog" role="alertdialog" aria-modal="true" aria-labelledby="ssc-alert-title" aria-describedby="ssc-alert-message" tabindex="-1">
+        <div class="ssc-alert-icon" aria-hidden="true"><i class="bi bi-info-lg"></i></div>
+        <h2 class="ssc-alert-title" id="ssc-alert-title">Notice</h2>
+        <p class="ssc-alert-message" id="ssc-alert-message"></p>
+        <button class="ssc-alert-button" type="button">Okay</button>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    overlay.querySelector('.ssc-alert-button').addEventListener('click', closeAlert);
+    overlay.addEventListener('click', function (event) {
+      if (event.target === overlay) closeAlert();
+    });
+
+    return overlay;
+  }
+
+  function getAlertDialog() {
+    return document.querySelector('.ssc-alert-overlay') || createAlertDialog();
+  }
+
+  function displayNextAlert() {
+    if (activeAlert || alertQueue.length === 0) return;
+
+    activeAlert = alertQueue.shift();
+    const overlay = getAlertDialog();
+    const dialog = overlay.querySelector('.ssc-alert-dialog');
+    const type = alertTypes[activeAlert.type] ? activeAlert.type : 'info';
+    const details = alertTypes[type];
+
+    previousFocus = document.activeElement;
+    dialog.dataset.type = type;
+    overlay.querySelector('.ssc-alert-icon i').className = `bi ${details.icon}`;
+    overlay.querySelector('.ssc-alert-title').textContent = activeAlert.title || details.title;
+    overlay.querySelector('.ssc-alert-message').textContent = activeAlert.message;
+    overlay.querySelector('.ssc-alert-button').textContent = activeAlert.buttonText || 'Okay';
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('ssc-alert-open');
+
+    requestAnimationFrame(function () {
+      overlay.classList.add('show');
+      overlay.querySelector('.ssc-alert-button').focus();
+    });
+  }
+
+  function closeAlert() {
+    if (!activeAlert) return;
+
+    const overlay = getAlertDialog();
+    const completedAlert = activeAlert;
+    activeAlert = null;
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('ssc-alert-open');
+
+    window.setTimeout(function () {
+      if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+      completedAlert.resolve();
+      displayNextAlert();
+    }, 180);
+  }
+
+  function showAlert(message, options) {
+    const settings = options || {};
+    return new Promise(function (resolve) {
+      alertQueue.push({
+        message: String(message ?? ''),
+        title: settings.title,
+        type: settings.type || 'info',
+        buttonText: settings.buttonText,
+        resolve
+      });
+      displayNextAlert();
+    });
+  }
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && activeAlert) closeAlert();
+  });
+
+  window.SSCAlert = {
+    show: showAlert,
+    info: (message, title) => showAlert(message, { type: 'info', title }),
+    success: (message, title) => showAlert(message, { type: 'success', title }),
+    warning: (message, title) => showAlert(message, { type: 'warning', title }),
+    error: (message, title) => showAlert(message, { type: 'error', title })
+  };
+
+  // Existing and future alert() calls automatically use the application dialog.
+  window.alert = function (message) {
+    return showAlert(message, { type: 'warning' });
+  };
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
 
   // ---- Sidebar Toggle (Mobile) ----
@@ -438,4 +553,3 @@ function togglePasswordVisibility(inputId, btn) {
     }
   }, false);
 })();
-
