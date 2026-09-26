@@ -46,12 +46,14 @@
 {{-- Review Modals --}}
 @foreach($proposals->getCollection()->where('status', 'Pending') as $p)
 <div class="modal fade" id="reviewModal{{ $p->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog"><div class="modal-content" style="border-radius:var(--radius);border:none;">
+    <div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--radius);border:none;">
         <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;">Review: {{ $p->project_title }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <form method="POST" action="{{ route('admin.proposals.review', $p) }}">
             @csrf
             <div class="modal-body p-4">
                 <p style="font-size:.85rem;color:#718096;margin-bottom:16px;">{{ $p->description }}</p>
+                <div class="mb-3"><label class="form-label-custom">Estimated Expenses</label>@include('partials.proposal-expense-summary', ['proposal' => $p])</div>
+                <div class="mb-3" style="font-size:.85rem;">Requested Budget: <strong>{{ \App\Helpers\SscHelper::formatCurrency($p->requested_budget) }}</strong></div>
                 <div class="mb-3"><label class="form-label-custom">Approved Budget (₱)</label><input type="number" name="approved_budget" class="form-control-custom" value="{{ $p->requested_budget }}" step="0.01"></div>
                 <div class="mb-3"><label class="form-label-custom">Admin Notes</label><textarea name="admin_notes" class="form-control-custom" rows="3" style="resize:vertical;"></textarea></div>
             </div>

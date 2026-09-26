@@ -74,6 +74,26 @@
     <div class="desc-text">{!! nl2br(e($proposal->description)) !!}</div>
 </div>
 
+{{-- Estimated Expenses --}}
+<div class="desc-section">
+    <div class="desc-section-title">Estimated Expenses</div>
+    @forelse($proposal->budgetItemList() as $item)
+    <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--slate-100);font-size:0.85rem;">
+        <div style="color:var(--slate-700);">
+            {{ $item['description'] }}
+            <div style="font-size:0.72rem;color:var(--slate-400);">{{ $item['qty'] }} × {{ \App\Helpers\SscHelper::formatCurrency($item['unit_cost']) }}</div>
+        </div>
+        <div style="font-weight:700;white-space:nowrap;">{{ \App\Helpers\SscHelper::formatCurrency($item['total']) }}</div>
+    </div>
+    @empty
+    <div class="desc-text" style="font-size:0.85rem;">No itemized expenses were listed for this proposal.</div>
+    @endforelse
+    <div style="display:flex;justify-content:space-between;padding-top:10px;font-size:0.9rem;font-weight:700;">
+        <span>Requested Budget</span>
+        <span>{{ \App\Helpers\SscHelper::formatCurrency($proposal->requested_budget) }}</span>
+    </div>
+</div>
+
 {{-- Print button --}}
 <div style="text-align:center;margin:6px 0 20px;">
     <a href="{{ route('proposals.print', $proposal) }}" target="_blank"

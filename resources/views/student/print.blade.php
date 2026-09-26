@@ -38,39 +38,6 @@
         return array_slice($lines, 0, 8);
     }
 
-    function proposalDocumentBudgetItems($source, $requestedBudget): array {
-        $source = trim($source ?? '');
-        $items = [];
-
-        foreach (preg_split('/\r\n|\r|\n/', $source) as $line) {
-            $line = trim($line);
-            if ($line === '') {
-                continue;
-            }
-
-            if (preg_match('/^(.+?)(?:\s*[-:=]\s*|\s{2,})([0-9][0-9,]*(?:\.[0-9]+)?)$/', $line, $matches)) {
-                $items[] = [
-                    'label' => trim($matches[1]),
-                    'amount' => (float)str_replace(',', '', $matches[2]),
-                ];
-            } else {
-                $items[] = [
-                    'label' => $line,
-                    'amount' => 0.00,
-                ];
-            }
-        }
-
-        if (empty($items)) {
-            $items[] = [
-                'label' => 'Project Expenses',
-                'amount' => (float)$requestedBudget,
-            ];
-        }
-
-        return $items;
-    }
-
     function sscSignatureName(string $rosterName): string {
         $nameParts = explode(',', $rosterName, 2);
         if (count($nameParts) === 2) {
@@ -89,8 +56,8 @@
     }
 
     $objectives = proposalDocumentObjectives($proposal->objectives ?? $proposal->description);
-    $budgetItems = proposalDocumentBudgetItems($proposal->budget_items, $proposal->requested_budget);
-    $itemTotal = array_sum(array_column($budgetItems, 'amount'));
+    $budgetItems = $proposal->budgetItemList();
+    $itemTotal = $proposal->budgetItemTotal();
     $requestedBudget = (float)$proposal->requested_budget;
     $eventDate = trim($proposal->proposal_event_date ?? '') ?: 'To be announced';
     $participants = !empty($proposal->participant_count) ? (int)$proposal->participant_count : null;
@@ -463,12 +430,17 @@
           <td>Expenses</td>
           <td></td>
         </tr>
-        @foreach ($budgetItems as $item)
+        @forelse ($budgetItems as $item)
           <tr>
-            <td>{{ $item['label'] }}</td>
-            <td>{{ $item['amount'] > 0 ? \App\Helpers\SscHelper::formatCurrency($item['amount']) : '' }}</td>
+            <td>{{ $item['description'] }}@if ($item['qty'] > 1) ({{ $item['qty'] }} × {{ \App\Helpers\SscHelper::formatCurrency($item['unit_cost']) }})@endif</td>
+            <td>{{ $item['total'] > 0 ? \App\Helpers\SscHelper::formatCurrency($item['total']) : '' }}</td>
           </tr>
-        @endforeach
+        @empty
+          <tr>
+            <td>Project Expenses</td>
+            <td>{{ \App\Helpers\SscHelper::formatCurrency($requestedBudget) }}</td>
+          </tr>
+        @endforelse
         <tr class="total-row">
           <td>Total</td>
           <td>{!! \App\Helpers\SscHelper::formatCurrency($itemTotal ?: $requestedBudget) !!}</td>
