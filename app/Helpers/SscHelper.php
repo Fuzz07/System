@@ -15,6 +15,19 @@ class SscHelper
         return '₱' . number_format($amount, 2);
     }
 
+    /** Signature line name for an SSC position, e.g. "Treasurer" => "FLORANE D. MARU". */
+    public static function signatoryName(string $position): string
+    {
+        foreach (config('ssc.executive_officers', []) as $officer) {
+            if (strcasecmp($officer['position'], $position) === 0) {
+                $parts = explode(',', $officer['name'], 2);
+                $name = count($parts) === 2 ? trim($parts[1]) . ' ' . trim($parts[0]) : trim($officer['name']);
+                return mb_strtoupper($name);
+            }
+        }
+        return '';
+    }
+
     public static function statusBadge(string $status): string
     {
         return match ($status) {

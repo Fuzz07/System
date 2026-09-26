@@ -64,7 +64,7 @@
 
     $treasurerName = sscSignatureName(sscOfficerNameByPosition($sscExecutiveOfficers, 'Treasurer'));
     $presidentName = sscSignatureName(sscOfficerNameByPosition($sscExecutiveOfficers, 'President'));
-    $adviserName = 'EMILY A. VILLACERAN, LPT, MAEDc';
+    $adviserName = config('ssc.adviser');
 @endphp
 <!DOCTYPE html>
 <html lang="en">

@@ -8,6 +8,9 @@
 <a href="{{ route('treasurer.release') }}" class="nav-link {{ request()->routeIs('treasurer.release') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-cash-coin"></i></span> Release Budget
 </a>
+<a href="{{ route('treasurer.cashbook') }}" class="nav-link {{ request()->routeIs('treasurer.cashbook*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-journal-bookmark"></i></span> Cash Book
+</a>
 <a href="{{ route('treasurer.reports') }}" class="nav-link {{ request()->routeIs('treasurer.reports') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-bar-chart-line"></i></span> Release Reports
 </a>

@@ -62,15 +62,7 @@ class ProposalController extends Controller
 
         $proposal->load('officer');
 
-        $sscExecutiveOfficers = [
-            ['position' => 'President', 'name' => 'Villacarlos, Jireh Joy A.', 'party' => 'ABANTE PARTY', 'icon' => 'bi-award'],
-            ['position' => 'Vice President', 'name' => 'Licardo, Juvy Irish C.', 'party' => 'ABANTE PARTY', 'icon' => 'bi-person-check'],
-            ['position' => 'Secretary', 'name' => 'Carabio, Margarette B.', 'party' => 'ABANTE PARTY', 'icon' => 'bi-journal-text'],
-            ['position' => 'Treasurer', 'name' => 'Maru, Florane D.', 'party' => 'ABANTE PARTY', 'icon' => 'bi-safe2'],
-            ['position' => 'Auditor', 'name' => 'Salvana, Althea Mae D.', 'party' => 'ABANTE PARTY', 'icon' => 'bi-clipboard-check'],
-            ['position' => 'PIO', 'name' => 'Manos, Shanei M.', 'party' => 'ABANTE PARTY', 'icon' => 'bi-megaphone'],
-            ['position' => 'PIO', 'name' => 'Escala, Marlon', 'party' => 'ABANTE PARTY', 'icon' => 'bi-megaphone'],
-        ];
+        $sscExecutiveOfficers = config('ssc.executive_officers', []);
 
         return view('student.print', compact('proposal', 'sscExecutiveOfficers'));
     }

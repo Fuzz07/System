@@ -197,6 +197,15 @@ Route::domain('treasurer.' . $baseDomain)->group(function () {
         Route::post('/release', [App\Http\Controllers\Treasurer\ReleaseController::class, 'store'])->name('release.submit');
         Route::get('/reports', [App\Http\Controllers\Treasurer\ReleaseController::class, 'reports'])->name('reports');
         Route::get('/announcements', [App\Http\Controllers\Treasurer\ReleaseController::class, 'announcements'])->name('announcements');
+
+        Route::get('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'index'])->name('cashbook');
+        Route::post('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'store'])->name('cashbook.store');
+        Route::put('/cash-book/{entry}', [App\Http\Controllers\Treasurer\CashBookController::class, 'update'])->name('cashbook.update');
+        Route::delete('/cash-book/{entry}', [App\Http\Controllers\Treasurer\CashBookController::class, 'destroy'])->name('cashbook.destroy');
+        Route::get('/cash-book/{month}/records-of-expenses', [App\Http\Controllers\Treasurer\CashBookController::class, 'records'])
+            ->where('month', '\d{4}-(0[1-9]|1[0-2])')->name('cashbook.records');
+        Route::get('/cash-book/{month}/financial-report', [App\Http\Controllers\Treasurer\CashBookController::class, 'financialReport'])
+            ->where('month', '\d{4}-(0[1-9]|1[0-2])')->name('cashbook.financial');
     });
 });
 
