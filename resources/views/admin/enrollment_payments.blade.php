@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('sidebar-nav') @include('partials.sidebar-admin') @endsection
+@section('sidebar-nav') @include('partials.sidebar-' . $portal) @endsection
 
 @section('content')
 <div class="container-fluid">
@@ -8,6 +8,7 @@
             <h4 class="mb-0">Semester Enrollment Payments</h4>
             <small class="text-muted">Current term: {{ $currentSy }}</small>
         </div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="bi bi-person-plus"></i> Add Student</button>
     </div>
 
     @php
@@ -24,7 +25,9 @@
                     <h6 class="mb-0">Budget Distribution by Department</h6>
                     <small class="text-muted">Enrollment fees collected for {{ $currentSy }}, credited to each department's own budget.</small>
                 </div>
+                @if($portal === 'admin')
                 <a href="{{ route('admin.budgets') }}" class="btn btn-sm btn-outline-primary">Open Budgets</a>
+                @endif
             </div>
 
             <div class="table-responsive">
@@ -170,23 +173,23 @@
                             </td>
                             <td class="text-end">
                                 @if($payment && $payment->status !== 'paid')
-                                    <form method="POST" action="{{ route('admin.enrollment.payments.mark_paid', $payment) }}" class="d-inline">
+                                    <form method="POST" action="{{ route($portal . '.enrollment.payments.mark_paid', $payment) }}" class="d-inline">
                                         @csrf
                                         <button class="btn btn-sm btn-success">Mark Paid</button>
                                     </form>
                                     @if($payment && $payment->proof_path && $payment->proof_status === 'pending')
-                                        <form method="POST" action="{{ route('admin.enrollment.payments.proof.approve', $payment) }}" class="d-inline">
+                                        <form method="POST" action="{{ route($portal . '.enrollment.payments.proof.approve', $payment) }}" class="d-inline">
                                             @csrf
                                             <button class="btn btn-sm btn-primary">Approve Proof</button>
                                         </form>
-                                        <form method="POST" action="{{ route('admin.enrollment.payments.proof.reject', $payment) }}" class="d-inline">
+                                        <form method="POST" action="{{ route($portal . '.enrollment.payments.proof.reject', $payment) }}" class="d-inline">
                                             @csrf
                                             <button class="btn btn-sm btn-danger">Reject Proof</button>
                                         </form>
                                     @endif
                                 @endif
                                 @if(!$payment)
-                                    <form method="POST" action="{{ route('admin.enrollment.payments.walk_in', $student) }}" class="d-inline">
+                                    <form method="POST" action="{{ route($portal . '.enrollment.payments.walk_in', $student) }}" class="d-inline">
                                         @csrf
                                         <button class="btn btn-sm btn-success">Walk-in Paid</button>
                                     </form>
@@ -201,4 +204,105 @@
         </div>
     </div>
 </div>
+
+{{-- Add Student Modal --}}
+@php
+    $fromAddStudent = old('add_student_form') === '1';
+    $paymentStatus = $fromAddStudent ? old('payment_status', 'unpaid') : 'unpaid';
+@endphp
+<div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="addStudentModalLabel"><i class="bi bi-person-plus"></i> Add Student</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="POST" action="{{ route($portal . '.enrollment.payments.students.store') }}">
+            @csrf
+            <input type="hidden" name="add_student_form" value="1">
+            <div class="modal-body">
+                @if($fromAddStudent && $errors->any())
+                <div class="alert alert-danger py-2 small" role="alert">
+                    <ul class="mb-0 ps-3">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                </div>
+                @endif
+                <p class="text-muted small mb-3">For students who don't have an account yet. The account is created active, and the student can sign in later by using <strong>Forgot Password</strong> with their school email.</p>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input type="text" name="first_name" class="form-control" value="{{ $fromAddStudent ? old('first_name') : '' }}" maxlength="100" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Middle Name</label>
+                        <input type="text" name="middle_name" class="form-control" value="{{ $fromAddStudent ? old('middle_name') : '' }}" maxlength="100">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" name="last_name" class="form-control" value="{{ $fromAddStudent ? old('last_name') : '' }}" maxlength="100" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Student ID <span class="text-danger">*</span></label>
+                        <input type="text" name="student_id" class="form-control" value="{{ $fromAddStudent ? old('student_id') : '' }}" placeholder="2024-0001" pattern="\d{4}-\d{4}" title="Format: YYYY-XXXX" required>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">School Email <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" value="{{ $fromAddStudent ? old('email') : '' }}" placeholder="name@mcclawis.edu.ph" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Department <span class="text-danger">*</span></label>
+                        <select name="department" class="form-select" required>
+                            <option value="">Select department...</option>
+                            @foreach($departmentOptions as $option)
+                            <option value="{{ $option }}" @selected($fromAddStudent && old('department') === $option)>{{ $option }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Year Level <span class="text-danger">*</span></label>
+                        <select name="year_level" class="form-select" required>
+                            <option value="">Select year level...</option>
+                            @foreach($yearLevelOptions as $option)
+                            <option value="{{ $option }}" @selected($fromAddStudent && old('year_level') === $option)>{{ $option }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label d-block">Payment Status for {{ $currentSy }} <span class="text-danger">*</span></label>
+                        <div class="btn-group w-100" role="group" aria-label="Payment status">
+                            <input type="radio" class="btn-check" name="payment_status" id="paymentStatusUnpaid" value="unpaid" @checked($paymentStatus === 'unpaid') data-payment-status>
+                            <label class="btn btn-outline-warning" for="paymentStatusUnpaid">Unpaid</label>
+                            <input type="radio" class="btn-check" name="payment_status" id="paymentStatusPaid" value="paid" @checked($paymentStatus === 'paid') data-payment-status>
+                            <label class="btn btn-outline-success" for="paymentStatusPaid">Paid ({{ \App\Helpers\SscHelper::formatCurrency(config('ssc.enrollment_fee_amount', 50)) }})</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6" id="paymentReferenceField">
+                        <label class="form-label">OR / Reference No.</label>
+                        <input type="text" name="reference" class="form-control" value="{{ $fromAddStudent ? old('reference') : '' }}" maxlength="100" placeholder="Leave blank to generate one">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Student</button>
+            </div>
+        </form>
+    </div></div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    // The OR/Reference No. only applies when the student pays now.
+    const referenceField = document.getElementById('paymentReferenceField');
+    const sync = () => {
+        referenceField.hidden = !document.getElementById('paymentStatusPaid').checked;
+    };
+    document.querySelectorAll('[data-payment-status]').forEach((radio) => radio.addEventListener('change', sync));
+    sync();
+
+    @if($errors->any() && $fromAddStudent)
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('addStudentModal')).show();
+    @endif
+})();
+</script>
+@endpush

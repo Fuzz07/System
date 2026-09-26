@@ -10,9 +10,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\SscHelper;
 use App\Notifications\EnrollmentPaidNotification;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class EnrollmentPaymentController extends Controller
 {
+    public const YEAR_LEVELS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -62,7 +66,11 @@ class EnrollmentPaymentController extends Controller
         $years = User::where('role', 'student')->select('year_level')->distinct()->pluck('year_level');
         $distribution = $this->departmentDistribution($currentSy, $currentTermKeys);
 
-        return view('admin.enrollment_payments', compact('students', 'search', 'dept', 'year', 'status', 'departments', 'years', 'currentSy', 'distribution'));
+        $portal = $this->portal($request);
+        $departmentOptions = Budget::DEPARTMENTS;
+        $yearLevelOptions = self::YEAR_LEVELS;
+
+        return view('admin.enrollment_payments', compact('students', 'search', 'dept', 'year', 'status', 'departments', 'years', 'currentSy', 'distribution', 'portal', 'departmentOptions', 'yearLevelOptions'));
     }
 
     public function markPaid(EnrollmentPayment $payment, Request $request)
@@ -95,18 +103,91 @@ class EnrollmentPaymentController extends Controller
 
     public function markPaidWalkIn(User $student)
     {
+        if (! $this->recordWalkInPayment($student)) {
+            return redirect()->back()->with('info', 'This student is already marked paid for ' . SscHelper::getActiveAcademicTerm() . '.');
+        }
+
+        return redirect()->back()->with('success', 'Walk-in payment recorded and student notified.');
+    }
+
+    /**
+     * Add a student who has no account yet (e.g. a walk-in payer) and record their payment status.
+     */
+    public function storeStudent(Request $request)
+    {
+        $request->merge([
+            'first_name' => trim((string) $request->input('first_name')),
+            'middle_name' => ($middleName = trim((string) $request->input('middle_name'))) !== '' ? $middleName : null,
+            'last_name' => trim((string) $request->input('last_name')),
+            'student_id' => trim((string) $request->input('student_id')),
+            'email' => Str::lower(trim((string) $request->input('email'))),
+            'reference' => ($reference = trim((string) $request->input('reference'))) !== '' ? $reference : null,
+        ]);
+
+        $data = $request->validate([
+            'first_name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
+            'middle_name' => ['nullable', 'string', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
+            'last_name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
+            'student_id' => ['required', 'regex:/^\d{4}-\d{4}$/', 'unique:users,student_id'],
+            'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@mcclawis.edu.ph', 'unique:users,email'],
+            'department' => ['required', Rule::in(Budget::DEPARTMENTS)],
+            'year_level' => ['required', Rule::in(self::YEAR_LEVELS)],
+            'payment_status' => ['required', 'in:paid,unpaid'],
+            'reference' => ['nullable', 'string', 'max:100'],
+        ], [
+            'first_name.regex' => 'First name may contain letters, spaces, periods, apostrophes, and hyphens only.',
+            'middle_name.regex' => 'Middle name may contain letters, spaces, periods, apostrophes, and hyphens only.',
+            'last_name.regex' => 'Last name may contain letters, spaces, periods, apostrophes, and hyphens only.',
+            'student_id.regex' => 'Student ID must use the format YYYY-XXXX (for example, 2024-0001).',
+            'student_id.unique' => 'A student with this Student ID already exists. Search for them in the list instead.',
+            'email.ends_with' => 'Use the student\'s @mcclawis.edu.ph school email.',
+            'email.unique' => 'A student with this email already exists. Search for them in the list instead.',
+        ]);
+
+        // The student sets their own password later through "Forgot Password".
+        $student = User::create([
+            'first_name' => $data['first_name'],
+            'middle_name' => $data['middle_name'],
+            'last_name' => $data['last_name'],
+            'fullname' => trim($data['first_name'] . ' ' . ($data['middle_name'] ?? '') . ' ' . $data['last_name']),
+            'student_id' => $data['student_id'],
+            'email' => $data['email'],
+            'department' => $data['department'],
+            'year_level' => $data['year_level'],
+            'password' => Str::random(40),
+            'role' => 'student',
+            'status' => 'active',
+        ]);
+
+        SscHelper::logActivity(Auth::id(), 'ENROLLMENT_ADD_STUDENT', "Added student {$student->email} from enrollment payments");
+
+        $message = "{$student->fullname} was added as unpaid.";
+        if ($data['payment_status'] === 'paid') {
+            $this->recordWalkInPayment($student, $data['reference']);
+            $message = "{$student->fullname} was added and marked as paid.";
+        }
+
+        return redirect()
+            ->route($this->portal($request) . '.enrollment.payments', ['search' => $student->student_id])
+            ->with('success', $message);
+    }
+
+    /**
+     * Mark the student's current-term fee as paid in person and credit it to the budget.
+     * Returns null when the student has already paid, so the fee is never credited twice.
+     */
+    protected function recordWalkInPayment(User $student, ?string $reference = null): ?EnrollmentPayment
+    {
         $currentSy = SscHelper::getActiveAcademicTerm();
-        $currentTermKeys = SscHelper::getActiveEnrollmentTermKeys();
         $amount = config('ssc.enrollment_fee_amount', 50);
 
         $payment = EnrollmentPayment::where('user_id', $student->id)
-            ->whereIn('semester', $currentTermKeys)
+            ->whereIn('semester', SscHelper::getActiveEnrollmentTermKeys())
             ->latest()
             ->first();
 
         if ($payment && $payment->status === 'paid') {
-            // Guard against crediting the same fee to the department twice.
-            return redirect()->back()->with('info', 'This student is already marked paid for ' . $currentSy . '.');
+            return null;
         }
 
         if (! $payment) {
@@ -117,7 +198,7 @@ class EnrollmentPaymentController extends Controller
                 'method' => 'walk_in',
                 'status' => 'paid',
                 'proof_status' => 'approved',
-                'reference' => 'WALKIN-' . strtoupper(uniqid()),
+                'reference' => $reference ?: 'WALKIN-' . strtoupper(uniqid()),
                 'admin_marked_by' => Auth::id(),
                 'verified_by' => Auth::id(),
                 'paid_at' => now(),
@@ -131,7 +212,7 @@ class EnrollmentPaymentController extends Controller
                 'admin_marked_by' => Auth::id(),
                 'verified_by' => Auth::id(),
                 'paid_at' => now(),
-                'reference' => $payment->reference ?: 'WALKIN-' . strtoupper(uniqid()),
+                'reference' => $reference ?: ($payment->reference ?: 'WALKIN-' . strtoupper(uniqid())),
             ]);
         }
 
@@ -145,7 +226,13 @@ class EnrollmentPaymentController extends Controller
             // optional
         }
 
-        return redirect()->back()->with('success', 'Walk-in payment recorded and student notified.');
+        return $payment;
+    }
+
+    /** Which portal is serving this request: the page is shared by admin and treasurer. */
+    protected function portal(Request $request): string
+    {
+        return $request->routeIs('treasurer.*') ? 'treasurer' : 'admin';
     }
 
     public function approveProof(EnrollmentPayment $payment)

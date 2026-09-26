@@ -12,6 +12,18 @@ use Illuminate\Support\Facades\Auth;
 
 $baseDomain = env('APP_URL_BASE', 'mccsupremestudentcouncil.com');
 
+// Enrollment payment routes, shared by the admin and treasurer portals (names get the portal prefix)
+if (!function_exists('registerEnrollmentPaymentRoutes')) {
+    function registerEnrollmentPaymentRoutes() {
+        Route::get('/enrollment-payments', [Admin\EnrollmentPaymentController::class, 'index'])->name('enrollment.payments');
+        Route::post('/enrollment-payments/students', [Admin\EnrollmentPaymentController::class, 'storeStudent'])->name('enrollment.payments.students.store');
+        Route::post('/enrollment-payments/{payment}/mark-paid', [Admin\EnrollmentPaymentController::class, 'markPaid'])->name('enrollment.payments.mark_paid');
+        Route::post('/enrollment-payments/{student}/walk-in', [Admin\EnrollmentPaymentController::class, 'markPaidWalkIn'])->name('enrollment.payments.walk_in');
+        Route::post('/enrollment-payments/{payment}/approve-proof', [Admin\EnrollmentPaymentController::class, 'approveProof'])->name('enrollment.payments.proof.approve');
+        Route::post('/enrollment-payments/{payment}/reject-proof', [Admin\EnrollmentPaymentController::class, 'rejectProof'])->name('enrollment.payments.proof.reject');
+    }
+}
+
 // Helper to register standard auth routes on subdomains
 if (!function_exists('registerSubdomainAuthRoutes')) {
     function registerSubdomainAuthRoutes(string $portal) {
@@ -74,11 +86,7 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::delete('/officers/{user}', [Admin\OfficerController::class, 'destroy'])->name('officers.destroy');
 
         Route::get('/students', [Admin\StudentController::class, 'index'])->name('students.index');
-        Route::get('/enrollment-payments', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'index'])->name('enrollment.payments');
-        Route::post('/enrollment-payments/{payment}/mark-paid', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'markPaid'])->name('enrollment.payments.mark_paid');
-        Route::post('/enrollment-payments/{student}/walk-in', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'markPaidWalkIn'])->name('enrollment.payments.walk_in');
-        Route::post('/enrollment-payments/{payment}/approve-proof', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'approveProof'])->name('enrollment.payments.proof.approve');
-        Route::post('/enrollment-payments/{payment}/reject-proof', [App\Http\Controllers\Admin\EnrollmentPaymentController::class, 'rejectProof'])->name('enrollment.payments.proof.reject');
+        registerEnrollmentPaymentRoutes();
         Route::patch('/students/{user}/approve', [Admin\StudentController::class, 'approve'])->name('students.approve');
         Route::patch('/students/{user}/toggle', [Admin\StudentController::class, 'toggleStatus'])->name('students.toggle');
         Route::delete('/students/{user}', [Admin\StudentController::class, 'destroy'])->name('students.destroy');
@@ -197,6 +205,8 @@ Route::domain('treasurer.' . $baseDomain)->group(function () {
         Route::post('/release', [App\Http\Controllers\Treasurer\ReleaseController::class, 'store'])->name('release.submit');
         Route::get('/reports', [App\Http\Controllers\Treasurer\ReleaseController::class, 'reports'])->name('reports');
         Route::get('/announcements', [App\Http\Controllers\Treasurer\ReleaseController::class, 'announcements'])->name('announcements');
+
+        registerEnrollmentPaymentRoutes();
 
         Route::get('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'index'])->name('cashbook');
         Route::post('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'store'])->name('cashbook.store');
