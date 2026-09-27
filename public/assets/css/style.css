@@ -1251,6 +1251,11 @@ body.ssc-alert-open {
   gap: 5px;
 }
 
+.post-card-meta .post-card-mine {
+  color: var(--primary);
+  font-weight: 700;
+}
+
 .announcement-chip {
   display: inline-flex;
   align-items: center;

@@ -23,10 +23,12 @@
 <div class="row g-4">
 @forelse($announcements as $a)
 <div class="col-12 col-sm-6 col-xl-4">
-@include('partials.announcement-post-card', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id, 'destroyUrl' => $a->created_by === Auth::id() ? route('officer.announcements.destroy', $a) : null])
-@include('partials.announcement-modal', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id])
+@php $mine = $a->isAuthoredBy(Auth::user()); @endphp
+@include('partials.announcement-post-card', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id, 'mine' => $mine, 'destroyUrl' => $mine ? route('officer.announcements.destroy', $a) : null])
+@include('partials.announcement-modal', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id, 'editModal' => $mine ? 'editAnnModal' . $a->id : null])
 
-{{-- Edit Announcement Modal --}}
+{{-- Edit Announcement Modal (own posts only) --}}
+@if($mine)
 <div class="modal fade" id="editAnnModal{{ $a->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--radius);border:none;">
     <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;"><i class="bi bi-pencil"></i> Edit Announcement</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <form method="POST" action="{{ route('officer.announcements.update', $a) }}" enctype="multipart/form-data">@csrf @method('PUT')
@@ -67,6 +69,7 @@
         <div class="modal-footer border-0 pt-0 px-4 pb-4 gap-2"><button type="button" class="btn btn-light border px-3" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-brand d-inline-flex align-items-center gap-2 px-4"><i class="bi bi-check2"></i> Save Changes</button></div>
     </form>
 </div></div></div>
+@endif
 </div>
 @empty
 <div class="col-12">

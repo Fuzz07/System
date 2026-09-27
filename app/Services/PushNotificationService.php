@@ -57,7 +57,14 @@ class PushNotificationService
     public static function sendNotification($tokens, $title, $body, $data = [])
     {
         try {
-            $tokens = is_array($tokens) ? $tokens : [$tokens];
+            $tokens = array_values(array_filter(
+                is_array($tokens) ? $tokens : [$tokens],
+                fn ($token) => is_string($token) && $token !== ''
+            ));
+
+            if (empty($tokens)) {
+                return false;
+            }
 
             // Get access token
             $accessToken = self::getAccessToken();
@@ -73,11 +80,13 @@ class PushNotificationService
             $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
 
             // Send notifications in batches of 500
+            $delivered = false;
             foreach (array_chunk($tokens, 500) as $tokenBatch) {
-                self::sendBatch($fcmUrl, $tokenBatch, $title, $body, $data, $accessToken);
+                $delivered = self::sendBatch($fcmUrl, $tokenBatch, $title, $body, $data, $accessToken)
+                    || $delivered;
             }
 
-            return true;
+            return $delivered;
         } catch (\Exception $e) {
             Log::error('Error sending push notification', [
                 'error' => $e->getMessage(),
@@ -92,6 +101,8 @@ class PushNotificationService
     private static function sendBatch($url, $tokens, $title, $body, $data, $accessToken)
     {
         try {
+            $delivered = false;
+
             // FCM v1 requires all data values to be strings
             $stringData = array_map('strval', array_merge($data, [
                 'timestamp' => now()->toIso8601String(),
@@ -140,12 +151,14 @@ class PushNotificationService
                     ->timeout(10)
                     ->post($url, $message);
 
-                if (self::isDeadToken($response)) {
+                if ($response->successful()) {
+                    $delivered = true;
+                } elseif (self::isDeadToken($response)) {
                     // The app was uninstalled or its token rotated. Stop
                     // sending to it; the app re-registers a fresh token the
                     // next time the student opens it.
                     DeviceToken::where('fcm_token', $token)->update(['is_active' => false]);
-                } elseif (!$response->successful()) {
+                } else {
                     Log::warning('FCM send failed', [
                         'token'    => substr($token, 0, 20) . '...',
                         'status'   => $response->status(),
@@ -154,7 +167,7 @@ class PushNotificationService
                 }
             }
 
-            return true;
+            return $delivered;
         } catch (\Exception $e) {
             Log::error('Error sending FCM batch', [
                 'error' => $e->getMessage(),
@@ -172,8 +185,20 @@ class PushNotificationService
      */
     private static function isDeadToken($response): bool
     {
-        return collect($response->json('error.details', []))
-            ->contains(fn ($detail) => ($detail['errorCode'] ?? null) === 'UNREGISTERED');
+        $details = collect($response->json('error.details', []));
+
+        if ($details->contains(fn ($detail) => ($detail['errorCode'] ?? null) === 'UNREGISTERED')) {
+            return true;
+        }
+
+        // FCM also uses INVALID_ARGUMENT for a malformed registration token.
+        // Only retire it when the accompanying field violation points at the
+        // token itself; INVALID_ARGUMENT can otherwise describe a bad payload.
+        return $details->contains(function ($detail) {
+            return collect($detail['fieldViolations'] ?? [])->contains(
+                fn ($violation) => ($violation['field'] ?? null) === 'message.token'
+            );
+        });
     }
 
     /**

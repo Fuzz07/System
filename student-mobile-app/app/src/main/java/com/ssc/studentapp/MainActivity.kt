@@ -425,7 +425,11 @@ class MainActivity : AppCompatActivity() {
                 val conn = url.openConnection() as java.net.HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
+                conn.setRequestProperty("Accept", "application/json")
                 conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10) SSCStudentApp/1.0")
+                // A login redirect must not look like a successful token POST.
+                // The next authenticated page load will retry registration.
+                conn.instanceFollowRedirects = false
                 conn.connectTimeout = 8000
                 conn.readTimeout = 8000
                 conn.doOutput = true

@@ -236,8 +236,37 @@ class PushNotificationDeliveryTest extends TestCase
             ],
         ], 404];
 
-        PushNotificationService::sendToUsers([$this->student->id], 'Hello', 'World');
+        $delivered = PushNotificationService::sendToUsers([$this->student->id], 'Hello', 'World');
 
+        $this->assertFalse($delivered);
+        $this->assertFalse(DeviceToken::where('fcm_token', 'student-phone-token')->value('is_active'));
+    }
+
+    public function test_a_malformed_registration_token_is_retired_and_the_send_fails(): void
+    {
+        $this->fcmReply = [[
+            'error' => [
+                'code' => 400,
+                'status' => 'INVALID_ARGUMENT',
+                'details' => [
+                    [
+                        '@type' => 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+                        'errorCode' => 'INVALID_ARGUMENT',
+                    ],
+                    [
+                        '@type' => 'type.googleapis.com/google.rpc.BadRequest',
+                        'fieldViolations' => [[
+                            'field' => 'message.token',
+                            'description' => 'The registration token is not a valid FCM registration token',
+                        ]],
+                    ],
+                ],
+            ],
+        ], 400];
+
+        $delivered = PushNotificationService::sendToUsers([$this->student->id], 'Hello', 'World');
+
+        $this->assertFalse($delivered);
         $this->assertFalse(DeviceToken::where('fcm_token', 'student-phone-token')->value('is_active'));
     }
 

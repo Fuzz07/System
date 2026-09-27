@@ -266,8 +266,13 @@
                                 device_name: 'SSC Mobile App'
                             })
                         }).then(function(res) {
+                            if (!res.ok) {
+                                throw new Error('Device token registration failed with HTTP ' + res.status);
+                            }
                             return res.json();
                         }).then(function(data) {
+                            // Do not suppress retries unless the backend really
+                            // accepted and persisted this installation token.
                             sessionStorage.setItem('sent_fcm_token', fcmToken);
                             console.log('FCM Device Token registered:', data);
                         }).catch(function(err) {

@@ -1,6 +1,7 @@
 {{--
     Full view of one announcement, opened from its post card.
     Pass $commentRoute to show the Lost & Found comment thread and form.
+    Pass $editModal (an element id) to show an Edit button that opens it.
 --}}
 @php $isLost = $a->category === \App\Models\Announcement::CATEGORY_LOST_ITEM; @endphp
 <div class="modal fade" id="{{ $modal }}" tabindex="-1" aria-labelledby="{{ $modal }}Title" aria-hidden="true">
@@ -57,6 +58,12 @@
             </div>
             @endif
         </div>
-        <div class="modal-footer border-0 p-4 bg-light bg-opacity-50"><button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal" style="border-radius:12px;padding:12px;font-weight:600;">Close</button></div>
+        <div class="modal-footer border-0 p-4 bg-light bg-opacity-50 flex-nowrap gap-2">
+            @if(!empty($editModal))
+            {{-- Bootstrap closes this dialog before opening the edit form. --}}
+            <button type="button" class="btn btn-brand d-inline-flex align-items-center justify-content-center gap-2 w-100" data-bs-toggle="modal" data-bs-target="#{{ $editModal }}" style="border-radius:12px;padding:12px;font-weight:600;"><i class="bi bi-pencil"></i> Edit</button>
+            @endif
+            <button type="button" class="btn btn-secondary w-100 m-0" data-bs-dismiss="modal" style="border-radius:12px;padding:12px;font-weight:600;">Close</button>
+        </div>
     </div></div>
 </div>

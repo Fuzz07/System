@@ -5,6 +5,7 @@
 
     Pass $destroyUrl to show edit/delete controls on the photo; the edit button
     opens #editAnnModal{id}, which the page is expected to render.
+    Pass $mine = true to tag the viewer's own posts.
 --}}
 @php $isLost = $a->category === \App\Models\Announcement::CATEGORY_LOST_ITEM; @endphp
 <article class="post-card h-100 {{ $isLost ? 'category-lost' : '' }}">
@@ -39,7 +40,11 @@
         <button type="button" class="post-card-title stretched-link" data-bs-toggle="modal" data-bs-target="#{{ $modal }}">{{ $a->title }}</button>
         <p class="post-card-text">{{ Str::limit($a->content, 180) }}</p>
         <div class="post-card-meta">
+            @if(!empty($mine))
+            <span class="post-card-mine"><i class="bi bi-person-check-fill"></i> Your post</span>
+            @else
             <span><i class="bi bi-person-circle"></i> {{ $a->author->fullname ?? 'SSC Admin' }}</span>
+            @endif
             <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
             @if($isLost && $a->relationLoaded('comments'))
             <span><i class="bi bi-chat-dots"></i> {{ $a->comments->count() }}</span>

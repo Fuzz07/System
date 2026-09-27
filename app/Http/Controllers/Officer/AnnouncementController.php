@@ -58,8 +58,8 @@ class AnnouncementController extends Controller
 
     public function update(Request $request, Announcement $announcement)
     {
-        if ($announcement->created_by !== Auth::id())
-            abort(403);
+        // Officers may only edit the announcements they posted themselves.
+        abort_unless($announcement->isAuthoredBy(Auth::user()), 403, 'You can only edit announcements you posted.');
 
         $request->validate([
             'title' => 'required|string|max:255',
@@ -94,8 +94,7 @@ class AnnouncementController extends Controller
 
     public function destroy(Announcement $announcement)
     {
-        if ($announcement->created_by !== Auth::id())
-            abort(403);
+        abort_unless($announcement->isAuthoredBy(Auth::user()), 403, 'You can only delete announcements you posted.');
         $announcement->delete();
         return redirect()->route('officer.announcements')->with('success', 'Announcement deleted.');
     }
