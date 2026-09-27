@@ -12,12 +12,6 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
-import android.os.Handler
-import android.os.Looper
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
@@ -42,24 +36,9 @@ import java.nio.charset.StandardCharsets
 
 class MainActivity : AppCompatActivity() {
 
-    private val NOTIF_CHANNEL_ID = "ssc_notifications"
-    private val NOTIF_ID = 1001
-    private val POLL_INTERVAL_MS = 30000L
-    private var lastUnreadCount = 0
-    private lateinit var pollHandler: Handler
-    private val pollingRunnable = object : Runnable {
-        override fun run() {
-            val currentUrl = webView.url ?: portalUrl
-            try {
-                val parsedUrl = java.net.URL(currentUrl)
-                val activeBaseUrl = "${parsedUrl.protocol}://${parsedUrl.host}" + if (parsedUrl.port != -1) ":${parsedUrl.port}" else ""
-                fetchUnreadNotifications(activeBaseUrl)
-            } catch (e: Exception) {
-                // Fail-safe fallback if URL parsing fails
-                fetchUnreadNotifications(baseUrl)
-            }
-            pollHandler.postDelayed(this, POLL_INTERVAL_MS)
-        }
+    companion object {
+        /** Intent extra holding the page a tapped push should open. */
+        const val EXTRA_URL = "url"
     }
 
     private lateinit var webView: WebView
@@ -313,14 +292,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Initial Load
+        // Initial Load. Updates reach the phone as FCM pushes (SSCMessagingService),
+        // so there is no in-app polling for them; a tapped push opens its page here.
         if (isNetworkAvailable()) {
-            webView.loadUrl(portalUrl)
-            // Start polling student notifications for native alerts
-            pollHandler = Handler(Looper.getMainLooper())
-            createNotificationChannel()
-            pollHandler.postDelayed(pollingRunnable, 5000)
-            
+            webView.loadUrl(notificationUrl(intent) ?: portalUrl)
+
             // Initialize Firebase Cloud Messaging
             initializeFCM()
         } else {
@@ -328,17 +304,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun createNotificationChannel() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val name = "SSC Notifications"
-            val descriptionText = "Notifications from SSC system"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(NOTIF_CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            val notificationManager: NotificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(channel)
-        }
+    /** A push was tapped while the app was already open: show its page. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        notificationUrl(intent)?.let { webView.loadUrl(it) }
+    }
+
+    /**
+     * The page a tapped push points at, if it is one of ours. Anything else is
+     * ignored so a notification can never steer the WebView to another site.
+     */
+    private fun notificationUrl(intent: Intent?): String? {
+        val url = intent?.getStringExtra(EXTRA_URL)?.takeIf { it.isNotBlank() } ?: return null
+        val host = Uri.parse(url).host ?: return null
+        val appHost = BuildConfig.APP_HOST
+        return url.takeIf { host == appHost || host.endsWith(".$appHost") }
     }
 
     private fun initializeFCM() {
@@ -496,53 +476,6 @@ class MainActivity : AppCompatActivity() {
                 android.util.Log.e("FCM_DEBUG", "Failed sending FCM token to backend", e)
             }
         }.start()
-    }
-
-    private fun fetchUnreadNotifications(activeBaseUrl: String) {
-        Thread {
-            try {
-                val url = java.net.URL("$activeBaseUrl/student/notifications/unread-count")
-                val conn = url.openConnection() as java.net.HttpURLConnection
-                conn.requestMethod = "GET"
-                conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 10) SSCStudentApp/1.0")
-                conn.connectTimeout = 8000
-                conn.readTimeout = 8000
-                // Forward cookies from WebView session so the API call is authenticated
-                val cookie = CookieManager.getInstance().getCookie(url.toString())
-                if (!cookie.isNullOrEmpty()) {
-                    conn.setRequestProperty("Cookie", cookie)
-                }
-                val code = conn.responseCode
-                if (code == 200) {
-                    val stream = conn.inputStream.bufferedReader().use { it.readText() }
-                    val obj = org.json.JSONObject(stream)
-                    val unread = obj.optInt("unread", 0)
-                    if (unread > 0 && unread != lastUnreadCount) {
-                        lastUnreadCount = unread
-                        showNotification("You have $unread new notification(s) from SSC.")
-                    }
-                }
-                conn.disconnect()
-            } catch (e: Exception) {
-                // ignore network errors
-            }
-        }.start()
-    }
-
-    private fun showNotification(message: String) {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val builder = NotificationCompat.Builder(this, NOTIF_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("SSC Notification")
-            .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(NOTIF_ID, builder.build())
     }
 
     override fun onResume() {

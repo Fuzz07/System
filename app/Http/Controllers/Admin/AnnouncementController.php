@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Support\UploadValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -30,7 +31,7 @@ class AnnouncementController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'category' => ['nullable', Rule::in(array_keys(Announcement::CATEGORIES))],
-            'image' => 'nullable|image|max:5120',
+            'image' => UploadValidation::optionalFile(),
         ]);
 
         $imagePath = null;
@@ -61,7 +62,7 @@ class AnnouncementController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'category' => ['nullable', Rule::in(array_keys(Announcement::CATEGORIES))],
-            'image' => 'nullable|image|max:5120',
+            'image' => UploadValidation::optionalFile(),
             'remove_image' => 'nullable|boolean',
         ]);
 

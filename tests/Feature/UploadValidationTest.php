@@ -15,8 +15,6 @@ class UploadValidationTest extends TestCase
             UploadedFile::fake()->create('receipt.jpg', $this->jpegBytes()),
             UploadedFile::fake()->create('receipt.jpeg', $this->jpegBytes()),
             UploadedFile::fake()->create('receipt.png', $this->pngBytes()),
-            UploadedFile::fake()->create('receipt.pdf', $this->pdfBytes()),
-            UploadedFile::fake()->create('receipt.mp4', $this->mp4Bytes()),
         ];
 
         foreach ($files as $file) {
@@ -26,6 +24,25 @@ class UploadValidationTest extends TestCase
             );
 
             $this->assertFalse($validator->fails(), $file->getClientOriginalName().' should be accepted.');
+        }
+    }
+
+    public function test_only_png_jpg_and_jpeg_are_accepted(): void
+    {
+        $files = [
+            UploadedFile::fake()->create('receipt.pdf', $this->pdfBytes()),
+            UploadedFile::fake()->create('receipt.mp4', $this->mp4Bytes()),
+            UploadedFile::fake()->create('photo.gif', base64_decode('R0lGODlhAQABAAAAACw=')),
+            UploadedFile::fake()->create('photo.webp', "RIFF\x1a\x00\x00\x00WEBPVP8L\x0d\x00\x00\x00\x2f\x00\x00\x00\x10\x07\x10\x11\x11\x88\x88\xfe\x07\x00"),
+        ];
+
+        foreach ($files as $file) {
+            $validator = Validator::make(
+                ['upload' => $file],
+                ['upload' => UploadValidation::requiredFile()]
+            );
+
+            $this->assertTrue($validator->fails(), $file->getClientOriginalName().' should be rejected.');
         }
     }
 

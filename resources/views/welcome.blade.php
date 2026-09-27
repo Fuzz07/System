@@ -1250,10 +1250,13 @@
                         <i class="bi bi-mortarboard-fill"></i> Access Student Portal
                     </a>
                     @if(!str_contains(request()->userAgent() ?? '', 'SSCStudentApp'))
-                        <a href="/ssc-student-app.apk?v=1.2" class="btn-outline-hero"
-                            style="border-color: var(--primary-light); color: var(--primary-light);">
-                            <i class="bi bi-android2"></i> Install Android App
-                        </a>
+                        <span style="display:inline-flex; align-items:center; gap:8px;">
+                            <a href="/ssc-student-app.apk?v=1.2" class="btn-outline-hero"
+                                style="border-color: var(--primary-light); color: var(--primary-light);">
+                                <i class="bi bi-android2"></i> Install Android App
+                            </a>
+                            @include('partials.app-install-guide', ['tone' => 'light'])
+                        </span>
                     @endif
                     <a href="#features" class="btn-outline-hero">
                         Explore Features <i class="bi bi-arrow-down"></i>
@@ -1412,10 +1415,11 @@
                     <div class="feature-title">Mobile App</div>
                     <div class="feature-desc">A native Android app that lets students access the full portal on their
                         smartphones — optimized for performance and native experience.</div>
-                    <div style="margin-top: 14px;">
+                    <div style="margin-top: 14px; display:flex; align-items:center; gap:8px;">
                         <a href="/ssc-student-app.apk?v=1.2" style="display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; color:var(--primary); text-decoration:none;">
                             <i class="bi bi-download"></i> Download App (.APK) &rarr;
                         </a>
+                        @include('partials.app-install-guide')
                     </div>
                 </div>
             </div>

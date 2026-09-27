@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -21,7 +22,7 @@ class EnrollmentPaidNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', FcmChannel::class];
     }
 
     public function toDatabase($notifiable)
@@ -42,5 +43,18 @@ class EnrollmentPaidNotification extends Notification
             'amount' => $this->payment->amount,
             'paid_at' => $this->payment->paid_at,
         ]);
+    }
+
+    public function toFcm($notifiable): array
+    {
+        return [
+            'title' => 'Enrollment payment confirmed',
+            'body' => "Your enrollment payment ({$this->payment->reference}) has been marked as paid.",
+            'data' => [
+                'type' => 'enrollment_paid',
+                'id' => $this->payment->id,
+                'url' => route('mobile.student.enrollment'),
+            ],
+        ];
     }
 }

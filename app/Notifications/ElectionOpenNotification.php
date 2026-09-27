@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -21,7 +22,7 @@ class ElectionOpenNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', FcmChannel::class];
     }
 
     public function toDatabase($notifiable)
@@ -42,5 +43,17 @@ class ElectionOpenNotification extends Notification
             'ends_at' => $this->endsAt,
             'url' => route('student.voting'),
         ]);
+    }
+
+    public function toFcm($notifiable): array
+    {
+        return [
+            'title' => 'SSC Elections are OPEN!',
+            'body' => "Cast your votes between {$this->startsAt->format('h:i A')} and {$this->endsAt->format('h:i A')}. 1-minute limit per position!",
+            'data' => [
+                'type' => 'election_open',
+                'url' => route('mobile.student.voting'),
+            ],
+        ];
     }
 }

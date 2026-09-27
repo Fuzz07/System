@@ -3,15 +3,16 @@
 namespace App\Notifications;
 
 use App\Models\Feedback;
+use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
 /**
- * The in-app record of a reply, so it shows in the notification bell alongside
- * enrolment and election updates. The FCM push is sent separately and carries
- * the same reply to the phone's lock screen; this is the inbox copy.
+ * Tells a student the council has answered their feedback: an inbox copy for
+ * the notification bell, and a push that carries the reply itself so it can be
+ * read from the lock screen without opening the app.
  */
 class FeedbackRepliedNotification extends Notification
 {
@@ -26,7 +27,7 @@ class FeedbackRepliedNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', FcmChannel::class];
     }
 
     protected function payload(): array
@@ -46,5 +47,20 @@ class FeedbackRepliedNotification extends Notification
     public function toBroadcast($notifiable)
     {
         return new BroadcastMessage($this->payload());
+    }
+
+    public function toFcm($notifiable): array
+    {
+        return [
+            'title' => 'The SSC replied to your feedback',
+            'body' => Str::limit($this->feedback->reply, 160),
+            'data' => [
+                'type' => 'feedback_reply',
+                'id' => $this->feedback->id,
+                'reply' => $this->feedback->reply,
+                'replied_by' => $this->feedback->replier->fullname ?? 'The SSC',
+                'url' => route('mobile.student.feedback'),
+            ],
+        ];
     }
 }

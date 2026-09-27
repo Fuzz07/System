@@ -1,15 +1,12 @@
 package com.ssc.studentapp
 
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.AudioAttributes
 import android.media.RingtoneManager
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -42,6 +39,9 @@ class SSCMessagingService : FirebaseMessagingService() {
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra("notification_type", data["type"])
             putExtra("notification_id", data["id"])
+            // Same key FCM uses when it builds the tray notification itself
+            // (app closed), so SplashActivity handles both cases alike.
+            putExtra(MainActivity.EXTRA_URL, data[MainActivity.EXTRA_URL])
         }
 
         val pendingIntent: PendingIntent = PendingIntent.getActivity(
@@ -52,7 +52,7 @@ class SSCMessagingService : FirebaseMessagingService() {
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val notificationId  = System.currentTimeMillis().toInt()
 
-        createNotificationChannel()
+        NotificationChannels.ensure(this)
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Fetching the image is a network call, so it can't happen on the main
@@ -61,7 +61,7 @@ class SSCMessagingService : FirebaseMessagingService() {
         thread {
             val bitmap = if (!imageUrl.isNullOrBlank()) fetchBitmap(imageUrl) else null
 
-            val notificationBuilder = NotificationCompat.Builder(this, NOTIF_CHANNEL_ID)
+            val notificationBuilder = NotificationCompat.Builder(this, NotificationChannels.ALERTS)
                 .setContentTitle(title)
                 .setContentText(messageBody)
                 .setAutoCancel(true)
@@ -116,28 +116,6 @@ class SSCMessagingService : FirebaseMessagingService() {
         // Store in SharedPreferences or database for later processing
     }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                NOTIF_CHANNEL_ID,
-                "SSC Notifications",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Announcements and important updates from SSC"
-                enableVibration(true)
-                setSound(
-                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION),
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
-                        .build()
-                )
-            }
-
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
-        }
-    }
-
     private fun sendTokenToBackend(token: String) {
         // This will be called to send the FCM token to the backend
         // We'll implement this in MainActivity using a proper API call
@@ -146,9 +124,5 @@ class SSCMessagingService : FirebaseMessagingService() {
         
         // Try to send immediately if user is logged in
         // Otherwise it will be sent during login
-    }
-
-    companion object {
-        private const val NOTIF_CHANNEL_ID = "ssc_notifications"
     }
 }

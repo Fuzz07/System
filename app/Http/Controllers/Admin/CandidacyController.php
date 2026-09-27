@@ -9,7 +9,6 @@ use App\Models\Candidacy;
 use App\Models\SchoolYear;
 use App\Models\User;
 use App\Notifications\ElectionOpenNotification;
-use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -105,14 +104,17 @@ class CandidacyController extends Controller
             'results_announced' => false,
         ]);
 
-        // Post an official announcement on the board
-        \App\Models\Announcement::create([
+        // Post an official announcement on the board. Posted without model
+        // events so it doesn't push on its own: the ElectionOpenNotification
+        // below is this event's push, and it opens the ballot rather than the
+        // board. Otherwise every student's phone would ring twice.
+        \App\Models\Announcement::withoutEvents(fn () => \App\Models\Announcement::create([
             'title' => 'Supreme Student Council Elections are OPEN!',
             'content' => "Supreme Student Council voting has officially commenced! The election is open for exactly 8 hours starting from {$startsAt->format('h:i A')} and will close at {$endsAt->format('h:i A')} today. Every active student can vote once per position. Note: You have a 1-minute time limit per position once you start voting on it. Make your voice heard!",
             'created_by' => Auth::id()
-        ]);
+        ]));
 
-        // Fetch active students and notify them
+        // Notify active students: the bell copy plus a push to their phones
         $students = User::where('role', 'student')->where('status', 'active')->get();
         foreach ($students as $student) {
             try {
@@ -120,16 +122,6 @@ class CandidacyController extends Controller
             } catch (\Exception $e) {
                 // Ignore notification mailer errors if any
             }
-        }
-
-        // Send Firebase Push Notification
-        $studentIds = $students->pluck('id')->toArray();
-        if (!empty($studentIds)) {
-            PushNotificationService::sendToUsers(
-                $studentIds,
-                'SSC Elections are OPEN!',
-                "Cast your votes between {$startsAt->format('h:i A')} and {$endsAt->format('h:i A')}. 1-minute limit per position!"
-            );
         }
 
         SscHelper::logActivity(

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\SscHelper;
 use App\Notifications\EnrollmentPaidNotification;
+use App\Notifications\EnrollmentProofRejectedNotification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -274,6 +275,12 @@ class EnrollmentPaymentController extends Controller
         ]);
 
         SscHelper::logActivity(Auth::id(), 'ENROLLMENT_PROOF_REJECTED', "Rejected enrollment proof for payment #{$payment->id}");
+
+        try {
+            $payment->user?->notify(new EnrollmentProofRejectedNotification($payment));
+        } catch (\Throwable $e) {
+            // optional
+        }
 
         return redirect()->back()->with('success', 'Payment proof rejected.');
     }

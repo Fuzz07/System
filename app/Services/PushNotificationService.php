@@ -104,7 +104,10 @@ class PushNotificationService
                 ];
                 $androidNotification = [
                     'sound'       => 'default',
-                    'channel_id'  => 'ssc_notifications',  // Must match channel created in SSCMessagingService.kt
+                    // Must match NotificationChannels.ALERTS in the app. Builds
+                    // older than 1.7 don't have it and fall back to the manifest's
+                    // default channel, so they still receive the push.
+                    'channel_id'  => 'ssc_alerts',
                     'visibility'  => 'PUBLIC',              // Show on lock screen
                     'default_sound'    => true,
                     'default_vibrate_timings' => true,
@@ -135,7 +138,12 @@ class PushNotificationService
                     ->timeout(10)
                     ->post($url, $message);
 
-                if (!$response->successful()) {
+                if (self::isDeadToken($response)) {
+                    // The app was uninstalled or its token rotated. Stop
+                    // sending to it; the app re-registers a fresh token the
+                    // next time the student opens it.
+                    DeviceToken::where('fcm_token', $token)->update(['is_active' => false]);
+                } elseif (!$response->successful()) {
                     Log::warning('FCM send failed', [
                         'token'    => substr($token, 0, 20) . '...',
                         'status'   => $response->status(),
@@ -153,6 +161,18 @@ class PushNotificationService
         }
     }
 
+
+    /**
+     * Whether FCM rejected the send because the token no longer belongs to an
+     * installed app. Keyed on FCM's explicit UNREGISTERED code rather than the
+     * bare 404 status, which a misconfigured project ID can also produce and
+     * would otherwise switch off every student's token at once.
+     */
+    private static function isDeadToken($response): bool
+    {
+        return collect($response->json('error.details', []))
+            ->contains(fn ($detail) => ($detail['errorCode'] ?? null) === 'UNREGISTERED');
+    }
 
     /**
      * Get access token for Firebase Service Account.
@@ -312,6 +332,7 @@ class PushNotificationService
                 'content' => $announcement->content,
                 'image_url' => $announcement->image_path ? \App\Helpers\SscHelper::getUploadUrl($announcement->image_path) : '',
                 'author' => $announcement->author->fullname ?? 'SSC',
+                'url' => route('mobile.student.announcements'),
             ];
 
             // Send to all students
@@ -322,64 +343,6 @@ class PushNotificationService
             Log::error('Error sending announcement notification', [
                 'error' => $e->getMessage(),
                 'announcement_id' => $announcement->id ?? null,
-            ]);
-            return false;
-        }
-    }
-
-    /**
-     * Tell a student the council has answered their feedback.
-     *
-     * Goes to that one student only: feedback is a private thread, and the
-     * message body carries the reply itself so it can be read from the lock
-     * screen without opening the app.
-     */
-    public static function sendFeedbackReplyNotification($feedback)
-    {
-        try {
-            if (!$feedback->student_id || blank($feedback->reply)) {
-                return false;
-            }
-
-            $repliedBy = $feedback->replier->fullname ?? 'The SSC';
-
-            $title = 'The SSC replied to your feedback';
-            $body = \Illuminate\Support\Str::limit($feedback->reply, 160);
-
-            $data = [
-                'type' => 'feedback_reply',
-                'id' => $feedback->id,
-                'reply' => $feedback->reply,
-                'replied_by' => $repliedBy,
-                // Where the reply lives, for when the app learns to deep-link.
-                'url' => url('/m/student/feedback'),
-            ];
-
-            return self::sendToUsers([$feedback->student_id], $title, $body, $data);
-        } catch (\Exception $e) {
-            Log::error('Error sending feedback reply notification', [
-                'error' => $e->getMessage(),
-                'feedback_id' => $feedback->id ?? null,
-            ]);
-            return false;
-        }
-    }
-
-    /**
-     * Send notification for enrollment payment status.
-     */
-    public static function sendEnrollmentNotification($userId, $title, $body, $data = [])
-    {
-        try {
-            $data = array_merge($data, [
-                'type' => 'enrollment',
-            ]);
-
-            return self::sendToUsers([$userId], $title, $body, $data);
-        } catch (\Exception $e) {
-            Log::error('Error sending enrollment notification', [
-                'error' => $e->getMessage(),
-                'user_id' => $userId,
             ]);
             return false;
         }

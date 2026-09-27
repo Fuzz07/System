@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Budget;
 use App\Models\CashBookEntry;
 use App\Models\User;
 use App\Services\CashBookReport;
@@ -92,17 +93,35 @@ class TreasurerCashBookTest extends TestCase
         $this->assertSame('June', $july->previousMonthName());
     }
 
-    public function test_a_beginning_balance_dated_inside_the_month_counts_as_that_months_opening_cash(): void
+    public function test_beginning_balance_is_the_ssc_approved_budget(): void
     {
-        CashBookEntry::create(['entry_date' => '2026-07-01', 'type' => 'opening', 'particulars' => 'Cash on hand', 'amount' => 277069.35]);
+        $this->budget(277069.35, '2026-07-01 09:00:00');
+        $this->budget(5000, '2026-07-10 09:00:00', 'Pending');
+        $this->budget(8000, '2026-07-12 09:00:00', 'Rejected');
         CashBookEntry::create(['entry_date' => '2026-07-22', 'type' => 'expense', 'particulars' => 'Office supplies', 'category' => 'Office Supplies/Equipments', 'amount' => 7655]);
 
         $july = CashBookReport::forMonth('2026-07');
+        $this->assertSame(277069.35, $july->sscBudget);
         $this->assertSame(277069.35, $july->beginningBalance);
         $this->assertSame(269414.35, $july->endingBalance());
-        $this->assertCount(1, $july->entries);
 
+        // A budget approved in July isn't part of June's cash.
         $this->assertSame(0.0, CashBookReport::forMonth('2026-06')->beginningBalance);
+    }
+
+    public function test_old_manual_beginning_balance_entries_are_not_counted_or_accepted(): void
+    {
+        $this->budget(1000, '2026-06-01 09:00:00');
+        CashBookEntry::create(['entry_date' => '2026-07-01', 'type' => 'opening', 'particulars' => 'Cash on hand', 'amount' => 99999]);
+
+        $this->assertSame(1000.0, CashBookReport::forMonth('2026-07')->beginningBalance);
+
+        $this->post(route('treasurer.cashbook.store'), [
+            'entry_date' => '2026-07-01',
+            'type' => 'opening',
+            'particulars' => 'Cash on hand',
+            'amount' => '500',
+        ])->assertSessionHasErrors('type');
     }
 
     public function test_cash_book_page_lists_the_months_entries(): void
@@ -190,10 +209,23 @@ class TreasurerCashBookTest extends TestCase
         $this->assertDatabaseCount('cash_book_entries', 0);
     }
 
+    private function budget(float $amount, string $createdAt, string $status = 'Approved'): Budget
+    {
+        return Budget::forceCreate([
+            'title' => 'SSC Fund',
+            'department' => 'All Departments',
+            'allocated_amount' => $amount,
+            'remaining_balance' => $amount,
+            'status' => $status,
+            'created_at' => $createdAt,
+        ]);
+    }
+
     private function seedJuneAndJuly(): void
     {
+        $this->budget(275105.35, '2026-05-31 08:00:00');
+
         $rows = [
-            ['2026-05-31', 'opening', 'Cash on hand', null, null, 275105.35],
             ['2026-06-01', 'collection', 'SSC Collection Membership & Monthly Dues', null, null, 5600],
             ['2026-06-01', 'expense', 'SSC Officers Food- Lunch', '134-143', 'Office Meals/Snacks', 500],
             ['2026-06-01', 'expense', 'Gasoline', '36910', 'Traveling and Transportation', 100],

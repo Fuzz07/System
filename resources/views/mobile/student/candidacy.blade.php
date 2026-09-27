@@ -106,10 +106,10 @@
                             </div>
                             <div style="min-width: 0;">
                                 <div id="candidacyPhotoName" style="font-size: 0.8rem; font-weight: 700; color: var(--slate-700);">Add a photo</div>
-                                <div style="font-size: 0.7rem; color: var(--slate-400); margin-top: 2px; line-height: 1.35;">Voters see this on the ballot. JPG or PNG, up to 5 MB.</div>
+                                <div style="font-size: 0.7rem; color: var(--slate-400); margin-top: 2px; line-height: 1.35;">Voters see this on the ballot. PNG, JPG or JPEG only, up to 5 MB.</div>
                             </div>
                         </label>
-                        <input type="file" name="photo" id="candidacyPhoto" accept="image/*" style="display: none;">
+                        <input type="file" name="photo" id="candidacyPhoto" accept="{{ \App\Support\UploadValidation::ACCEPT }}" style="display: none;">
                     </div>
 
                     <div style="margin-bottom: 20px;">

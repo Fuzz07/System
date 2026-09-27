@@ -31,7 +31,7 @@
         <div class="modal-body p-4">
             <div class="mb-3"><label class="form-label-custom">Report Title <span class="text-danger">*</span></label><input type="text" name="title" class="form-control-custom" required></div>
             <div class="mb-3"><label class="form-label-custom">Linked Project <span class="text-danger">*</span></label><select name="proposal_id" class="form-select-custom" required><option value="">Select your approved project...</option>@foreach($proposals as $p)<option value="{{ $p->id }}">{{ $p->project_title }}</option>@endforeach</select></div>
-            <div class="mb-3"><label class="form-label-custom">Upload File <span class="text-danger">*</span></label><input type="file" name="liq_file" class="form-control-custom" accept=".jpg,.jpeg,.png,.pdf,.mp4" style="padding:8px 14px;" required><div style="font-size:.72rem;color:#a0aec0;margin-top:4px;">JPG, JPEG, PNG, PDF, MP4 — Max 5MB</div></div>
+            <div class="mb-3"><label class="form-label-custom">Upload File <span class="text-danger">*</span></label><input type="file" name="liq_file" class="form-control-custom" accept="{{ \App\Support\UploadValidation::ACCEPT }}" style="padding:8px 14px;" required><div style="font-size:.72rem;color:#a0aec0;margin-top:4px;">PNG, JPG or JPEG only — Max 5MB</div></div>
             <div class="mb-3"><label class="form-label-custom">Notes</label><textarea name="notes" class="form-control-custom" rows="3" style="resize:vertical;"></textarea></div>
         </div>
         <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn-primary-custom"><i class="bi bi-cloud-upload"></i> Upload</button></div>

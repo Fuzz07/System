@@ -262,9 +262,9 @@
 
             <div class="col-12">
               <label class="form-label-custom">Receipt / Proof of Release</label>
-              <input type="file" name="receipt" class="form-control" accept=".jpg,.jpeg,.png,.pdf,.mp4"
+              <input type="file" name="receipt" class="form-control" accept="{{ \App\Support\UploadValidation::ACCEPT }}"
                 style="border-radius:10px; border:1.5px solid #e2e8f0; font-size:.85rem; padding:8px;">
-              <div style="font-size:.72rem; color:#94a3b8; margin-top:4px;">Optional. JPG, JPEG, PNG, PDF, or MP4 up to 5MB.</div>
+              <div style="font-size:.72rem; color:#94a3b8; margin-top:4px;">Optional. PNG, JPG or JPEG only, up to 5MB.</div>
             </div>
 
             <div class="col-12">

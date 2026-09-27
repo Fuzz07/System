@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class CashBookEntry extends Model
 {
-    /** Cash carried over from before the treasurer started using the cash book. */
+    /**
+     * Legacy manual beginning balance. No longer offered or counted: the beginning
+     * cash balance now comes from the SSC's approved budget (see CashBookReport).
+     */
     public const TYPE_OPENING = 'opening';
     /** Money received, e.g. membership and monthly dues (Cash DR / Fees CR). */
     public const TYPE_COLLECTION = 'collection';
@@ -14,7 +17,6 @@ class CashBookEntry extends Model
     public const TYPE_EXPENSE = 'expense';
 
     public const TYPES = [
-        self::TYPE_OPENING    => 'Beginning Balance',
         self::TYPE_COLLECTION => 'Collection',
         self::TYPE_EXPENSE    => 'Expense',
     ];

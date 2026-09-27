@@ -173,10 +173,11 @@
                                 <img id="appDownloadQr" src="" alt="Loading QR Code..." width="150" height="150" style="display: block;">
                             </div>
                             
-                            <div class="mb-3">
-                                <a href="{{ asset('downloads/ssc-student-app.apk') }}?v=1.2" download class="btn w-100 py-3 fw-bold text-white shadow" style="background: linear-gradient(135deg, #e34f26 0%, #d13f19 100%); border: none; border-radius: 14px; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s;">
+                            <div class="mb-3 d-flex align-items-center gap-2">
+                                <a href="{{ asset('downloads/ssc-student-app.apk') }}?v=1.2" download class="btn flex-grow-1 py-3 fw-bold text-white shadow" style="background: linear-gradient(135deg, #e34f26 0%, #d13f19 100%); border: none; border-radius: 14px; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s;">
                                     <i class="bi bi-android2 me-2"></i> Download APK Direct
                                 </a>
+                                @include('partials.app-install-guide')
                             </div>
                             
                             <p class="text-muted mb-0 small">

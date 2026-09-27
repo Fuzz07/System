@@ -7,6 +7,7 @@ use App\Models\EnrollmentPayment;
 use App\Helpers\SscHelper;
 use App\Services\EnrollmentPaymentSettlementService;
 use App\Services\PayMongoService;
+use App\Support\UploadValidation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -114,11 +115,12 @@ class StudentApiController extends Controller
 
         $validator = Validator::make($request->all(), [
             'payment_method' => 'nullable|in:gcash,instapay',
-            'proof'          => 'required|file|mimes:jpg,jpeg,png,pdf,mp4|max:5120',
+            'proof'          => UploadValidation::requiredFile(),
         ], [
             'proof.required' => 'Please attach a proof of payment before submitting.',
             'proof.file'     => 'The proof of payment must be a valid file.',
-            'proof.mimes'    => 'The proof of payment must be an image (jpg, jpeg, png), PDF, or MP4 video.',
+            'proof.mimes'    => 'The proof of payment must be a PNG, JPG or JPEG image.',
+            'proof.extensions' => 'The proof of payment must be a PNG, JPG or JPEG image.',
             'proof.max'      => 'The proof of payment must not exceed 5MB.',
         ]);
 

@@ -50,7 +50,7 @@
     <form method="POST" action="{{ route('officer.proposals.complete', $p) }}" enctype="multipart/form-data">@csrf
         <div class="modal-body p-4">
             <div class="text-center mb-4"><div class="stat-icon success mx-auto mb-3"><i class="bi bi-clipboard-check"></i></div><h6 class="fw-bold">{{ $p->project_title }}</h6><p class="text-muted small">Upload receipts for liquidation.</p></div>
-            <div class="mb-3"><label class="form-label-custom">Upload Official Receipt</label><input type="file" name="receipt" class="form-control-custom" accept=".jpg,.jpeg,.png,.pdf,.mp4" required><div style="font-size:.72rem;color:#a0aec0;margin-top:4px;">JPG, JPEG, PNG, PDF, MP4 — Max 5MB</div></div>
+            <div class="mb-3"><label class="form-label-custom">Upload Official Receipt</label><input type="file" name="receipt" class="form-control-custom" accept="{{ \App\Support\UploadValidation::ACCEPT }}" required><div style="font-size:.72rem;color:#a0aec0;margin-top:4px;">PNG, JPG or JPEG only — Max 5MB</div></div>
         </div>
         <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn-teal"><i class="bi bi-cloud-upload"></i> Complete & Liquidate</button></div>
     </form>

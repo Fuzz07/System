@@ -42,7 +42,7 @@
 <div class="row g-3 mb-4">
     <div class="col-md-6 col-xl-3"><div class="stat-card">
         <div class="stat-icon" style="background:rgba(13,43,92,.1);color:#0d2b5c;"><i class="bi bi-box-arrow-in-right"></i></div>
-        <div class="stat-info"><div class="label">Beginning Balance</div><div class="value" style="font-size:1.3rem;">{{ $fmt($report->beginningBalance) }}</div><div class="sub" style="font-size:.65rem;color:#64748b;">Carried from {{ $report->previousMonthName() }}</div></div>
+        <div class="stat-info"><div class="label">Beginning Balance</div><div class="value" style="font-size:1.3rem;">{{ $fmt($report->beginningBalance) }}</div><div class="sub" style="font-size:.65rem;color:#64748b;">SSC budget {{ $fmt($report->sscBudget) }}, carried from {{ $report->previousMonthName() }}</div></div>
     </div></div>
     <div class="col-md-6 col-xl-3"><div class="stat-card">
         <div class="stat-icon" style="background:rgba(5,150,105,.1);color:#059669;"><i class="bi bi-arrow-down-circle"></i></div>
@@ -73,7 +73,11 @@
                     <td style="white-space:nowrap;font-size:.82rem;">{{ $entry->entry_date->format('M j') }}</td>
                     <td>
                         <div style="font-weight:600;color:var(--navy-900);">{{ $entry->particulars }}</div>
+                        @if($entry->type === \App\Models\CashBookEntry::TYPE_OPENING)
+                        <div style="font-size:.72rem;color:#b45309;">Old beginning balance &mdash; not counted, the SSC budget is used instead. You can delete it.</div>
+                        @else
                         <div style="font-size:.72rem;color:#718096;">{{ \App\Models\CashBookEntry::TYPES[$entry->type] ?? $entry->type }}</div>
+                        @endif
                     </td>
                     <td style="font-size:.82rem;">{{ $entry->reference_no ?: '—' }}</td>
                     <td style="font-size:.82rem;">{{ $entry->category ?: '—' }}</td>
@@ -147,13 +151,12 @@
 @push('scripts')
 <script>
 (function () {
-    // Only expenses have a category; the beginning-balance hint only applies to that type.
+    // Only expenses have a category.
     function syncFields(fields) {
         const type = fields.querySelector('[data-cashbook-type]').value;
         const category = fields.querySelector('[data-cashbook-category]');
         category.hidden = type !== 'expense';
         category.querySelector('select').required = type === 'expense';
-        fields.querySelector('[data-cashbook-opening-hint]').hidden = type !== 'opening';
     }
 
     document.querySelectorAll('[data-cashbook-fields]').forEach((fields) => {

@@ -93,11 +93,11 @@
                             <div class="mb-2 photo-field">
                                 <label class="form-label-custom">Photo <span class="text-muted fw-normal">(optional)</span></label>
                                 <label class="upload-dropzone">
-                                    <input type="file" name="image" accept="image/*" hidden onchange="sscPreviewImage(this)">
+                                    <input type="file" name="image" accept="{{ \App\Support\UploadValidation::ACCEPT }}" hidden onchange="sscPreviewImage(this)">
                                     <div class="upload-placeholder" style="{{ $a->image_path ? 'display:none;' : '' }}">
                                         <i class="bi bi-cloud-arrow-up"></i>
                                         <div class="upload-text">Click to upload a photo</div>
-                                        <div class="upload-hint">JPG, PNG or WEBP — up to 5MB</div>
+                                        <div class="upload-hint">PNG, JPG or JPEG only — up to 5MB</div>
                                     </div>
                                     <img class="upload-preview" src="{{ $a->image_path ? \App\Helpers\SscHelper::getUploadUrl($a->image_path) : '' }}" style="{{ $a->image_path ? 'display:inline-block;' : 'display:none;' }}">
                                 </label>
@@ -169,11 +169,11 @@
                     <div class="mb-2">
                         <label class="form-label-custom">Photo <span class="text-muted fw-normal">(optional)</span></label>
                         <label class="upload-dropzone">
-                            <input type="file" name="image" accept="image/*" hidden onchange="sscPreviewImage(this)">
+                            <input type="file" name="image" accept="{{ \App\Support\UploadValidation::ACCEPT }}" hidden onchange="sscPreviewImage(this)">
                             <div class="upload-placeholder">
                                 <i class="bi bi-cloud-arrow-up"></i>
                                 <div class="upload-text">Click to upload a photo</div>
-                                <div class="upload-hint">JPG, PNG or WEBP — up to 5MB</div>
+                                <div class="upload-hint">PNG, JPG or JPEG only — up to 5MB</div>
                             </div>
                             <img class="upload-preview" src="" style="display:none;">
                         </label>

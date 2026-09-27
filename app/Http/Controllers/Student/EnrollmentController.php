@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EnrollmentPayment;
 use App\Services\EnrollmentPaymentSettlementService;
 use App\Services\PayMongoService;
+use App\Support\UploadValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -45,11 +46,12 @@ class EnrollmentController extends Controller
 
         $request->validate([
             'payment_method' => 'nullable|in:gcash,instapay',
-            'proof' => 'required|file|extensions:jpg,jpeg,png,pdf,mp4|max:5120',
+            'proof' => UploadValidation::requiredFile(),
         ], [
             'proof.required' => 'Please attach a proof of payment before submitting.',
             'proof.file' => 'The proof of payment must be a valid file.',
-            'proof.extensions' => 'The proof of payment must be an image (jpg, jpeg, png), PDF, or MP4 video.',
+            'proof.mimes' => 'The proof of payment must be a PNG, JPG or JPEG image.',
+            'proof.extensions' => 'The proof of payment must be a PNG, JPG or JPEG image.',
             'proof.max' => 'The proof of payment must not exceed 5MB.',
         ]);
 

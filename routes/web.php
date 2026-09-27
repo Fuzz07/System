@@ -344,7 +344,7 @@ Route::group([], function () use ($baseDomain) {
             $request->validate([
                 'position' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::in($allowedPositions)],
                 'platform' => 'required|string|min:20|max:3000',
-                'photo'    => 'nullable|image|max:5120',
+                'photo'    => \App\Support\UploadValidation::optionalFile(),
             ]);
 
             $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();
@@ -521,7 +521,7 @@ Route::group([], function () use ($baseDomain) {
             $request->validate([
                 'position' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::in($allowedPositions)],
                 'platform' => 'required|string|min:20|max:3000',
-                'photo'    => 'nullable|image|max:5120',
+                'photo'    => \App\Support\UploadValidation::optionalFile(),
             ]);
 
             $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();

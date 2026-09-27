@@ -179,8 +179,8 @@
 
                     <div class="mb-4">
                         <label for="payment_proof" class="form-label fw-bold">Payment receipt <span class="text-danger">*</span></label>
-                        <input id="payment_proof" type="file" name="proof" accept="image/jpeg,image/png,application/pdf,video/mp4" class="form-control form-control-lg" required>
-                        <div class="form-text">JPG, PNG, PDF, or MP4 ? Maximum 5 MB</div>
+                        <input id="payment_proof" type="file" name="proof" accept="{{ \App\Support\UploadValidation::ACCEPT }}" class="form-control form-control-lg" required>
+                        <div class="form-text">PNG, JPG or JPEG only · Maximum 5 MB</div>
                     </div>
 
                     <button type="submit" class="btn btn-dark px-4 py-3 rounded-3 fw-bold"><i class="bi bi-cloud-arrow-up-fill me-2"></i>Submit receipt for review</button>

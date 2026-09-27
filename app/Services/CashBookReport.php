@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Budget;
 use App\Models\CashBookEntry;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -13,7 +14,9 @@ class CashBookReport
 {
     public Carbon $start;
     public Carbon $end;
-    /** Cash on hand at the start of the month, including beginning-balance entries dated within it. */
+    /** The SSC's approved budget on record by the end of the month (the dashboards' "Total Budget"). */
+    public float $sscBudget;
+    /** Cash on hand at the start of the month: the SSC budget plus collections less expenses before the month. */
     public float $beginningBalance;
     /** Collections and expenses dated within the month, oldest first. */
     public Collection $entries;
@@ -35,13 +38,15 @@ class CashBookReport
         $monthStart = $report->start->toDateString();
         $nextMonthStart = $report->start->copy()->addMonth()->toDateString();
 
-        $opening = (float) CashBookEntry::where('type', CashBookEntry::TYPE_OPENING)
-            ->where('entry_date', '<', $nextMonthStart)->sum('amount');
+        // A budget approved during the month counts toward that month's beginning cash, the same way
+        // the old manual beginning-balance entries did; budgets added later don't rewrite past months.
+        $report->sscBudget = round((float) Budget::where('status', 'Approved')
+            ->where('created_at', '<', $nextMonthStart)->sum('allocated_amount'), 2);
         $collectedBefore = (float) CashBookEntry::where('type', CashBookEntry::TYPE_COLLECTION)
             ->where('entry_date', '<', $monthStart)->sum('amount');
         $spentBefore = (float) CashBookEntry::where('type', CashBookEntry::TYPE_EXPENSE)
             ->where('entry_date', '<', $monthStart)->sum('amount');
-        $report->beginningBalance = round($opening + $collectedBefore - $spentBefore, 2);
+        $report->beginningBalance = round($report->sscBudget + $collectedBefore - $spentBefore, 2);
 
         $report->entries = CashBookEntry::whereIn('type', [CashBookEntry::TYPE_COLLECTION, CashBookEntry::TYPE_EXPENSE])
             ->where('entry_date', '>=', $monthStart)

@@ -297,6 +297,7 @@ Usage:
         <button class="pwa-banner-btn" id="pwaInstallBtn" onclick="handlePwaInstall()">
             <i class="bi bi-download"></i> Install
         </button>
+        @include('partials.app-install-guide', ['tone' => 'light'])
         <button class="pwa-banner-dismiss" onclick="dismissPwaBanner()" title="Dismiss">
             <i class="bi bi-x"></i>
         </button>

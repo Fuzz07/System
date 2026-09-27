@@ -48,8 +48,8 @@ android {
         applicationId = "com.ssc.studentapp"
         minSdk = 24
         targetSdk = 33
-        versionCode = 7
-        versionName = "1.6"
+        versionCode = 8
+        versionName = "1.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "PORTAL_URL", "\"https://mccsupremestudentcouncil.com/login/student\"")

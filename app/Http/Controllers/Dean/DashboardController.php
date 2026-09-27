@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Services\ElectionResultsService;
 use App\Models\Candidacy;
 use App\Models\SchoolYear;
+use App\Notifications\CandidacyReviewedNotification;
 use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Http\Request;
@@ -44,6 +45,7 @@ class DashboardController extends Controller
         $this->authorizeDeanAccess($candidacy);
 
         $candidacy->update(['status' => 'approved']);
+        $this->notifyCandidate($candidacy);
 
         SscHelper::logActivity(
             Auth::id(),
@@ -59,6 +61,7 @@ class DashboardController extends Controller
         $this->authorizeDeanAccess($candidacy);
 
         $candidacy->update(['status' => 'rejected']);
+        $this->notifyCandidate($candidacy);
 
         SscHelper::logActivity(
             Auth::id(),
@@ -67,6 +70,20 @@ class DashboardController extends Controller
         );
 
         return redirect()->route('dean.dashboard')->with('warning', "Candidacy for {$candidacy->user->fullname} has been declined.");
+    }
+
+    /** Let the student know, but only when the decision actually changed. */
+    protected function notifyCandidate(Candidacy $candidacy): void
+    {
+        if (! $candidacy->wasChanged('status')) {
+            return;
+        }
+
+        try {
+            $candidacy->user?->notify(new CandidacyReviewedNotification($candidacy));
+        } catch (\Throwable $e) {
+            // Fail silently; the decision itself is already saved.
+        }
     }
 
     protected function authorizeDeanAccess(Candidacy $candidacy)

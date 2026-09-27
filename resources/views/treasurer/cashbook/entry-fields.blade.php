@@ -33,7 +33,4 @@
             @endforeach
         </select>
     </div>
-    <div class="col-12" style="font-size:.75rem;color:#64748b;" data-cashbook-opening-hint>
-        Use <strong>Beginning Balance</strong> once, for the cash on hand when you start using the cash book. Later months carry their balance forward automatically.
-    </div>
 </div>
