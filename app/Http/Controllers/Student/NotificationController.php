@@ -37,7 +37,7 @@ class NotificationController extends Controller
                 'id'      => $n->id,
                 'title'   => null,
                 'message' => $n->data['message'] ?? 'You have a new update from the SSC.',
-                'url'     => $n->data['url'] ?? null,
+                'url'     => $this->onThisSite($n->data['url'] ?? null),
                 'unread'  => is_null($n->read_at),
                 'at'      => $n->created_at,
             ]);
@@ -76,6 +76,23 @@ class NotificationController extends Controller
             ]);
 
         return response()->json($feed);
+    }
+
+    /**
+     * Notifications saved before SscHelper::studentRoute() existed carry a link
+     * on whichever staff portal sent them (admin., dean., treasurer.), which
+     * sends the student to that portal's login. Keep the page, but serve it
+     * from the site the student is on.
+     */
+    private function onThisSite(?string $url): ?string
+    {
+        if (blank($url)) {
+            return null;
+        }
+
+        $query = parse_url($url, PHP_URL_QUERY);
+
+        return url(parse_url($url, PHP_URL_PATH) ?: '/') . ($query ? "?{$query}" : '');
     }
 
     /**

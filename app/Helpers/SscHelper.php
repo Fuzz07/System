@@ -105,6 +105,23 @@ class SscHelper
     }
 
     /**
+     * Absolute URL of a student page, for links sent to students (push
+     * notifications and the notification bell).
+     *
+     * Student routes aren't bound to a domain, so route() builds them on
+     * whatever host the current request came in on. Most student updates are
+     * triggered on a staff portal (admin., dean., treasurer.), and a link on
+     * that subdomain lands the student, who has no session there, on the
+     * staff login. This builds the same link on the student site instead.
+     */
+    public static function studentRoute(string $name, array $parameters = []): string
+    {
+        $root = preg_replace('#^(https?://)(?:admin|officer|dean|treasurer)\.#i', '$1', url('/'));
+
+        return rtrim($root, '/') . route($name, $parameters, false);
+    }
+
+    /**
      * Checks if coordinates fall within the geographical boundary box of the Philippines.
      */
     public static function isWithinPhilippines(float $latitude, float $longitude): bool

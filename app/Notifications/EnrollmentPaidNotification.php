@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Helpers\SscHelper;
 use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
@@ -53,7 +54,7 @@ class EnrollmentPaidNotification extends Notification
             'data' => [
                 'type' => 'enrollment_paid',
                 'id' => $this->payment->id,
-                'url' => route('mobile.student.enrollment'),
+                'url' => SscHelper::studentRoute('mobile.student.enrollment'),
             ],
         ];
     }

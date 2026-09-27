@@ -26,6 +26,7 @@ class PushNotificationDeliveryTest extends TestCase
 
     private const FCM_URL = 'https://fcm.googleapis.com/v1/projects/test-project/messages:send';
 
+
     private User $admin;
     private User $student;
 
@@ -82,7 +83,7 @@ class PushNotificationDeliveryTest extends TestCase
 
         $push = $this->onlyPush();
         $this->assertSame('Candidacy approved', $push['notification']['title']);
-        $this->assertSame(route('mobile.student.candidacy'), $push['data']['url']);
+        $this->assertStudentLink('/m/student/candidacy', $push['data']['url']);
         $this->assertCount(1, $this->student->fresh()->notifications);
     }
 
@@ -114,7 +115,7 @@ class PushNotificationDeliveryTest extends TestCase
 
         $push = $this->onlyPush();
         $this->assertSame('Enrollment payment confirmed', $push['notification']['title']);
-        $this->assertSame(route('mobile.student.enrollment'), $push['data']['url']);
+        $this->assertStudentLink('/m/student/enrollment', $push['data']['url']);
     }
 
     public function test_rejected_payment_proof_is_pushed_with_the_reason(): void
@@ -146,7 +147,7 @@ class PushNotificationDeliveryTest extends TestCase
         $push = $this->onlyPush();
         $this->assertSame('The SSC replied to your feedback', $push['notification']['title']);
         $this->assertSame('Five benches arrive next week.', $push['notification']['body']);
-        $this->assertSame(route('mobile.student.feedback'), $push['data']['url']);
+        $this->assertStudentLink('/m/student/feedback', $push['data']['url']);
     }
 
     public function test_opening_the_election_rings_each_phone_once_and_opens_the_ballot(): void
@@ -157,7 +158,7 @@ class PushNotificationDeliveryTest extends TestCase
 
         $push = $this->onlyPush();
         $this->assertSame('SSC Elections are OPEN!', $push['notification']['title']);
-        $this->assertSame(route('mobile.student.voting'), $push['data']['url']);
+        $this->assertStudentLink('/m/student/voting', $push['data']['url']);
         // The board post still goes up; it just doesn't send a second push.
         $this->assertDatabaseHas('announcements', ['title' => 'Supreme Student Council Elections are OPEN!']);
     }
@@ -172,7 +173,57 @@ class PushNotificationDeliveryTest extends TestCase
 
         $push = $this->onlyPush();
         $this->assertSame('Intramurals schedule', $push['notification']['title']);
-        $this->assertSame(route('mobile.student.announcements'), $push['data']['url']);
+        $this->assertSame('/m/student/announcements', parse_url($push['data']['url'], PHP_URL_PATH));
+    }
+
+    public function test_opening_candidacy_filing_from_the_admin_portal_links_to_the_student_site(): void
+    {
+        SchoolYear::create(['label' => '2026-2027', 'is_active' => true, 'candidacy_open' => false]);
+
+        $this->actingAs($this->admin)
+            ->post(route('admin.settings.candidacy.toggle'))
+            ->assertRedirect();
+
+        $push = $this->onlyPush();
+        $this->assertSame('Filing for SSC Officer Candidacy is OPEN!', $push['notification']['title']);
+        // Not admin.mccsupremestudentcouncil.com, where the student has no
+        // session and would be sent to the admin login.
+        $this->assertStudentLink('/m/student/announcements', $push['data']['url']);
+    }
+
+    public function test_bell_links_created_on_a_staff_portal_point_to_the_student_site(): void
+    {
+        SchoolYear::create(['label' => '2026-2027', 'is_active' => true, 'candidacy_open' => true]);
+        $dean = $this->user('dean', 'dean');
+        $candidacy = Candidacy::create([
+            'user_id' => $this->student->id,
+            'department' => 'BSIS',
+            'position' => 'SSC President',
+            'platform' => 'Transparency in every peso the council spends.',
+            'status' => 'pending',
+            'school_year' => '2026-2027',
+        ]);
+
+        $this->actingAs($dean)->post(route('dean.candidacy.vote', $candidacy))->assertRedirect();
+
+        $this->assertStudentLink('/student/candidacy', $this->student->fresh()->notifications->first()->data['url']);
+    }
+
+    public function test_bell_repairs_links_saved_on_a_staff_portal_before_the_fix(): void
+    {
+        $this->student->notifications()->create([
+            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'type' => \App\Notifications\ElectionOpenNotification::class,
+            'data' => [
+                'message' => 'SSC Elections are now OPEN!',
+                'url' => 'https://admin.mccsupremestudentcouncil.com/student/voting',
+            ],
+        ]);
+
+        $this->actingAs($this->student)
+            ->getJson('http://mccsupremestudentcouncil.com/student/notifications')
+            ->assertOk()
+            ->assertJsonPath('0.url', 'http://mccsupremestudentcouncil.com/student/voting');
     }
 
     public function test_a_token_from_an_uninstalled_app_stops_receiving_pushes(): void
@@ -201,6 +252,17 @@ class PushNotificationDeliveryTest extends TestCase
 
         config(['services.firebase.service_account_key_path' => '/etc/secrets/firebase.json']);
         $this->assertSame('/etc/secrets/firebase.json', $keyPath->invoke(null));
+    }
+
+    /**
+     * Student links must point at the student site, even when the action that
+     * sent them happened on a staff portal subdomain (admin., dean., treasurer.),
+     * where the student has no session and would land on that portal's login.
+     */
+    private function assertStudentLink(string $path, string $url): void
+    {
+        $this->assertSame('mccsupremestudentcouncil.com', parse_url($url, PHP_URL_HOST), "Link points at the wrong site: {$url}");
+        $this->assertSame($path, parse_url($url, PHP_URL_PATH));
     }
 
     /** The single FCM message sent, asserting there was exactly one. */

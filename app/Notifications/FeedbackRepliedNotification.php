@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Feedback;
+use App\Helpers\SscHelper;
 use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -35,7 +36,7 @@ class FeedbackRepliedNotification extends Notification
         return [
             'message'     => 'The SSC replied to your feedback: ' . Str::limit($this->feedback->reply, 120),
             'feedback_id' => $this->feedback->id,
-            'url'         => route('student.feedback'),
+            'url'         => SscHelper::studentRoute('student.feedback'),
         ];
     }
 
@@ -59,7 +60,7 @@ class FeedbackRepliedNotification extends Notification
                 'id' => $this->feedback->id,
                 'reply' => $this->feedback->reply,
                 'replied_by' => $this->feedback->replier->fullname ?? 'The SSC',
-                'url' => route('mobile.student.feedback'),
+                'url' => SscHelper::studentRoute('mobile.student.feedback'),
             ],
         ];
     }

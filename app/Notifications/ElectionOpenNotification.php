@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Helpers\SscHelper;
 use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
@@ -31,7 +32,7 @@ class ElectionOpenNotification extends Notification
             'message' => 'SSC Elections are now OPEN! Cast your votes within the next 8 hours.',
             'starts_at' => $this->startsAt,
             'ends_at' => $this->endsAt,
-            'url' => route('student.voting'),
+            'url' => SscHelper::studentRoute('student.voting'),
         ];
     }
 
@@ -41,7 +42,7 @@ class ElectionOpenNotification extends Notification
             'message' => 'SSC Elections are now OPEN! Cast your votes within the next 8 hours.',
             'starts_at' => $this->startsAt,
             'ends_at' => $this->endsAt,
-            'url' => route('student.voting'),
+            'url' => SscHelper::studentRoute('student.voting'),
         ]);
     }
 
@@ -52,7 +53,7 @@ class ElectionOpenNotification extends Notification
             'body' => "Cast your votes between {$this->startsAt->format('h:i A')} and {$this->endsAt->format('h:i A')}. 1-minute limit per position!",
             'data' => [
                 'type' => 'election_open',
-                'url' => route('mobile.student.voting'),
+                'url' => SscHelper::studentRoute('mobile.student.voting'),
             ],
         ];
     }

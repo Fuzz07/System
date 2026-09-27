@@ -358,7 +358,7 @@ class PushNotificationService
                 'content' => $announcement->content,
                 'image_url' => $announcement->image_path ? \App\Helpers\SscHelper::getUploadUrl($announcement->image_path) : '',
                 'author' => $announcement->author->fullname ?? 'SSC',
-                'url' => route('mobile.student.announcements'),
+                'url' => \App\Helpers\SscHelper::studentRoute('mobile.student.announcements'),
             ];
 
             // Send to all students

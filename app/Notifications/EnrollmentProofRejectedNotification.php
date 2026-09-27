@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\EnrollmentPayment;
+use App\Helpers\SscHelper;
 use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -39,7 +40,7 @@ class EnrollmentProofRejectedNotification extends Notification
         return [
             'message' => $this->message(),
             'payment_id' => $this->payment->id,
-            'url' => route('student.enrollment.index'),
+            'url' => SscHelper::studentRoute('student.enrollment.index'),
         ];
     }
 
@@ -61,7 +62,7 @@ class EnrollmentProofRejectedNotification extends Notification
             'data' => [
                 'type' => 'enrollment_proof_rejected',
                 'id' => $this->payment->id,
-                'url' => route('mobile.student.enrollment'),
+                'url' => SscHelper::studentRoute('mobile.student.enrollment'),
             ],
         ];
     }

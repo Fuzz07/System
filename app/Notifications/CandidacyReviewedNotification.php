@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Candidacy;
+use App\Helpers\SscHelper;
 use App\Notifications\Channels\FcmChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -40,7 +41,7 @@ class CandidacyReviewedNotification extends Notification
             'message' => $this->message(),
             'candidacy_id' => $this->candidacy->id,
             'status' => $this->candidacy->status,
-            'url' => route('student.candidacy'),
+            'url' => SscHelper::studentRoute('student.candidacy'),
         ];
     }
 
@@ -63,7 +64,7 @@ class CandidacyReviewedNotification extends Notification
                 'type' => 'candidacy_reviewed',
                 'id' => $this->candidacy->id,
                 'status' => $this->candidacy->status,
-                'url' => route('mobile.student.candidacy'),
+                'url' => SscHelper::studentRoute('mobile.student.candidacy'),
             ],
         ];
     }
