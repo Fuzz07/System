@@ -1109,23 +1109,146 @@ body.ssc-alert-open {
 }
 
 /* ========== ANNOUNCEMENTS ========== */
-.announcement-card {
+/* Post card: photo on top, caption below — mirrors the landing-page gallery.
+   The title button carries .stretched-link, so the whole card opens the post;
+   the edit/delete controls sit above that overlay. */
+.post-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   background: #fff;
-  border-radius: var(--radius);
   border: 1px solid var(--slate-200);
-  padding: 24px;
-  margin-bottom: 16px;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
   transition: var(--transition);
-  border-left: 6px solid var(--primary);
 }
 
-.announcement-card:hover {
+.post-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+.post-card-media {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--slate-100);
+}
+
+.post-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.post-card:hover .post-card-media img {
+  transform: scale(1.04);
+}
+
+.post-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+}
+
+.post-card.category-lost .post-card-placeholder {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+}
+
+/* The translucent chip tints disappear on a photo, so the badge is opaque. */
+.post-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.post-card .post-card-badge.category-general {
+  background: #e0f2fe;
+}
+
+.post-card .post-card-badge.category-lost {
+  background: #fef3c7;
+}
+
+.post-card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+}
+
+.post-card-actions .btn {
   box-shadow: var(--shadow-md);
-  transform: translateX(6px);
 }
 
-.announcement-card.category-lost {
-  border-left-color: var(--warning);
+.post-card-caption {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px 16px;
+}
+
+.post-card-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--slate-900);
+}
+
+.post-card-title:focus-visible {
+  outline: none;
+}
+
+.post-card-title:focus-visible::after {
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 3px rgba(227, 79, 38, 0.45);
+}
+
+.post-card-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 6px 0 12px;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--slate-600);
+}
+
+.post-card-meta {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--slate-400);
+}
+
+.post-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .announcement-chip {
@@ -1141,11 +1264,6 @@ body.ssc-alert-open {
   white-space: nowrap;
 }
 
-.announcement-chip.role {
-  background: var(--slate-100);
-  color: var(--slate-600);
-}
-
 .announcement-chip.category-general {
   background: rgba(14, 165, 233, 0.1);
   color: #0369a1;
@@ -1154,56 +1272,6 @@ body.ssc-alert-open {
 .announcement-chip.category-lost {
   background: rgba(245, 158, 11, 0.14);
   color: #92400e;
-}
-
-.announcement-title {
-  font-weight: 800;
-  font-size: 1.08rem;
-  color: var(--slate-900);
-  letter-spacing: -0.01em;
-  line-height: 1.4;
-  margin: 10px 0 12px;
-}
-
-.announcement-image {
-  width: 100%;
-  max-height: 280px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  margin-bottom: 14px;
-  border: 1px solid var(--slate-100);
-  display: block;
-}
-
-.announcement-body {
-  font-size: 0.9rem;
-  color: var(--slate-600);
-  line-height: 1.7;
-  white-space: pre-line;
-  margin-bottom: 16px;
-}
-
-.announcement-meta {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  font-size: 0.78rem;
-  color: var(--slate-400);
-  padding-top: 14px;
-  border-top: 1px solid var(--slate-100);
-}
-
-.announcement-meta span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.announcement-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
 }
 
 .btn-icon-sm {

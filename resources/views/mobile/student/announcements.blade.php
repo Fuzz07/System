@@ -21,39 +21,29 @@
     </div>
 
     @forelse($announcements as $a)
-        {{-- Announcement Card --}}
-        <div class="ann-card ripple" onclick="openAnn({{ $a->id }})" style="margin: 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.02); overflow: hidden; background: #fff;">
-            @if($a->image_path)
-            <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" loading="lazy" decoding="async" style="width: 100%; height: 160px; object-fit: cover; display: block;">
-            @endif
-            <div style="padding: 20px;">
-                <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px;">
-                    <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(var(--primary-rgb), 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 1.25rem; flex-shrink: 0;">
-                        <i class="bi bi-info-circle-fill"></i>
-                    </div>
-                    <div>
-                        <span style="display:inline-block; font-size: 0.65rem; text-transform:uppercase; font-weight:700; padding:2px 8px; border-radius:8px; margin-bottom:4px; {{ $a->category === 'lost_item' ? 'background:#fef3c7; color:#92400e;' : 'background:#e0f2fe; color:#075985;' }}">{{ $a->category_label }}</span>
-                        <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b; line-height: 1.3;">{{ $a->title }}</div>
-                        <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">
-                            {{ $a->created_at?->format('M d, Y') }} &bull; {{ $a->created_at?->diffForHumans() }}
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="font-size: 0.9rem; color: #475569; line-height: 1.6; margin-bottom: 16px;">
-                    {{ Str::limit($a->content, 120) }}
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #f1f5f9;">
-                    <div style="font-size: 0.8rem; color: #64748b; font-weight: 500; display:flex; align-items:center; gap:10px;">
-                        <span><i class="bi bi-person-circle"></i> {{ $a->author->fullname ?? 'SSC Admin' }}</span>
-                        @if($a->category === 'lost_item')
-                        <span><i class="bi bi-chat-dots"></i> {{ $a->comments->count() }}</span>
-                        @endif
-                    </div>
-                    <div style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">
-                        Read More <i class="bi bi-arrow-right"></i>
-                    </div>
+        {{-- Announcement Card: photo on top, caption below --}}
+        <div class="ann-card ripple {{ $a->category === 'lost_item' ? 'category-lost' : '' }}" role="button" tabindex="0"
+            onclick="openAnn({{ $a->id }})"
+            onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openAnn({{ $a->id }}); }">
+            <div class="ann-card-media">
+                @if($a->image_path)
+                <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" loading="lazy" decoding="async">
+                @else
+                <div class="ann-card-placeholder"><i class="bi {{ $a->category === 'lost_item' ? 'bi-search' : 'bi-megaphone-fill' }}"></i></div>
+                @endif
+                <span class="ann-card-badge">
+                    <i class="bi {{ $a->category === 'lost_item' ? 'bi-search' : 'bi-megaphone' }}"></i> {{ $a->category_label }}
+                </span>
+            </div>
+            <div class="ann-card-caption">
+                <div class="ann-card-title">{{ $a->title }}</div>
+                <div class="ann-card-text">{{ Str::limit($a->content, 160) }}</div>
+                <div class="ann-card-meta">
+                    <span><i class="bi bi-person-circle"></i> {{ $a->author->fullname ?? 'SSC Admin' }}</span>
+                    <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
+                    @if($a->category === 'lost_item')
+                    <span><i class="bi bi-chat-dots"></i> {{ $a->comments->count() }}</span>
+                    @endif
                 </div>
             </div>
         </div>

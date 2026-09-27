@@ -530,14 +530,15 @@ body {
   color: var(--slate-400);
 }
 
-/* ── Announcement Card ── */
+/* ── Announcement Card ──
+   Post style: photo on top, caption below (same look as the web gallery). */
 .ann-card {
+  margin: 16px;
   background: #fff;
   border-radius: var(--radius);
-  padding: 18px;
-  border: 1px solid var(--slate-100);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 12px;
+  border: 1px solid var(--slate-200);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
   cursor: pointer;
   transition: var(--transition);
 }
@@ -546,50 +547,82 @@ body {
   transform: scale(0.98);
 }
 
-.ann-timeline {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
+.ann-card:focus-visible {
+  outline: 3px solid rgba(var(--primary-rgb), 0.45);
+  outline-offset: 2px;
 }
 
-.ann-dot {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: rgba(var(--primary-rgb), 0.1);
-  color: var(--primary);
-  font-size: 1.1rem;
+.ann-card-media {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--slate-100);
+}
+
+.ann-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ann-card-placeholder {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  font-size: 2.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
 }
 
-.ann-body {
-  flex: 1;
-  min-width: 0;
+.ann-card.category-lost .ann-card-placeholder {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
 }
 
-.ann-date {
-  font-size: 0.7rem;
-  color: var(--slate-400);
-  font-weight: 600;
+.ann-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.65rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+  background: #e0f2fe;
+  color: #075985;
+  box-shadow: var(--shadow-sm);
 }
 
-.ann-title {
-  font-size: 0.95rem;
+.ann-card.category-lost .ann-card-badge {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.ann-card-caption {
+  padding: 14px 16px 16px;
+}
+
+.ann-card-title {
+  font-size: 1rem;
   font-weight: 700;
   color: var(--slate-900);
-  line-height: 1.3;
-  margin-bottom: 6px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.ann-excerpt {
-  font-size: 0.82rem;
-  color: var(--slate-500);
+.ann-card-text {
+  margin: 6px 0 12px;
+  font-size: 0.88rem;
+  color: var(--slate-600);
   line-height: 1.55;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -597,13 +630,19 @@ body {
   overflow: hidden;
 }
 
-.ann-footer {
+.ann-card-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--slate-100);
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--slate-400);
+}
+
+.ann-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 /* ── Officers ── */

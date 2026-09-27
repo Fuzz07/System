@@ -22,31 +22,9 @@
 
 <div class="row g-4">
 @forelse($announcements as $a)
-<div class="col-12 col-md-6">
-<div class="announcement-card d-flex justify-content-between align-items-start gap-3 h-100 {{ $a->category === 'lost_item' ? 'category-lost' : '' }}">
-    <div style="flex:1; min-width:0;">
-        <span class="announcement-chip {{ $a->category === 'lost_item' ? 'category-lost' : 'category-general' }}">
-            <i class="bi {{ $a->category === 'lost_item' ? 'bi-search' : 'bi-megaphone' }}"></i> {{ $a->category_label }}
-        </span>
-        <div class="announcement-title" style="font-size:0.98rem; margin:8px 0 10px;">{{ $a->title }}</div>
-        @if($a->image_path)
-        <img src="{{ \App\Helpers\SscHelper::getUploadUrl($a->image_path) }}" alt="" class="announcement-image" style="max-height:220px;">
-        @endif
-        <div class="announcement-body" style="margin-bottom:12px;">{!! nl2br(e($a->content)) !!}</div>
-        <div class="announcement-meta" style="border-top:none; padding-top:0;">
-            <span><i class="bi bi-person"></i> {{ $a->author->fullname ?? 'SSC' }}</span>
-            <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
-        </div>
-    </div>
-    @if($a->created_by === Auth::id())
-    <div class="d-flex flex-column gap-2 flex-shrink-0">
-        <button type="button" class="btn btn-sm btn-outline-secondary btn-icon" data-bs-toggle="modal" data-bs-target="#editAnnModal{{ $a->id }}" title="Edit announcement" aria-label="Edit announcement"><i class="bi bi-pencil"></i></button>
-        <form method="POST" action="{{ route('officer.announcements.destroy', $a) }}" onsubmit="return confirm('Delete this announcement?')">@csrf @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-outline-danger btn-icon" title="Delete announcement" aria-label="Delete announcement"><i class="bi bi-trash"></i></button>
-        </form>
-    </div>
-    @endif
-</div>
+<div class="col-12 col-sm-6 col-xl-4">
+@include('partials.announcement-post-card', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id, 'destroyUrl' => $a->created_by === Auth::id() ? route('officer.announcements.destroy', $a) : null])
+@include('partials.announcement-modal', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id])
 
 {{-- Edit Announcement Modal --}}
 <div class="modal fade" id="editAnnModal{{ $a->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--radius);border:none;">

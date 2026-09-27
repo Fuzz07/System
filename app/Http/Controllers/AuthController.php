@@ -350,7 +350,7 @@ class AuthController extends Controller
         $sessionEmail = session('register_email');
 
         if (!$sessionVerified || $sessionEmail !== $validated['email']) {
-            return back()->withErrors(['email' => 'Please verify your Microsoft 365 school account email address before creating your password.'])->withInput();
+            return back()->withErrors(['email' => 'Please verify your Microsoft 365 school account with the emailed code before filling up the registration form.'])->withInput();
         }
 
         if (!CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
@@ -524,6 +524,9 @@ class AuthController extends Controller
             return false;
         }
 
+        // A new code starts a new verification: an earlier "verified" flag must
+        // not carry over to whatever address this code was sent to.
+        session()->forget('register_email_verified');
         session([
             'register_otp' => $otp,
             'register_email' => $email,
@@ -688,7 +691,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Email verified successfully! Proceeding to password creation.'
+            'message' => 'Microsoft 365 account verified! You can now fill up the registration form.'
         ]);
     }
 

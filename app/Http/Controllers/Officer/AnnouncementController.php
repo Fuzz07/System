@@ -16,7 +16,7 @@ class AnnouncementController extends Controller
     {
         $category = $request->input('category');
 
-        $query = Announcement::with('author')->orderByDesc('created_at');
+        $query = Announcement::with(['author', 'proposal'])->orderByDesc('created_at');
         if ($category) {
             $query->where('category', $category);
         }

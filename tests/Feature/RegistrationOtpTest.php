@@ -77,6 +77,62 @@ class RegistrationOtpTest extends TestCase
         $this->assertNull(session('register_otp'));
     }
 
+    public function test_sending_a_code_to_another_email_clears_the_earlier_verification(): void
+    {
+        $this->startVerification();
+        $this->postJson('/register/verify-otp', ['email' => $this->email, 'otp' => session('register_otp')])
+            ->assertJson(['success' => true]);
+
+        $this->postJson('/register/check-email', ['email' => 'other.student@mcclawis.edu.ph'])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertNull(session('register_email_verified'));
+        $this->assertSame('other.student@mcclawis.edu.ph', session('register_email'));
+    }
+
+    public function test_registration_page_asks_for_the_code_before_the_form(): void
+    {
+        $this->get('/register')
+            ->assertOk()
+            ->assertSeeInOrder(['Email verification', 'Student details', 'Account security'])
+            ->assertSeeInOrder(['id="step-email"', 'id="step-otp"', 'id="step-details" class="d-none"', 'id="step-2" class="d-none"'], false)
+            ->assertSee('const resumeEmail = null;', false);
+    }
+
+    public function test_failed_submit_reopens_the_form_for_an_already_verified_email(): void
+    {
+        $this->startVerification();
+        $this->postJson('/register/verify-otp', ['email' => $this->email, 'otp' => session('register_otp')])
+            ->assertJson(['success' => true]);
+
+        // A taken student ID sends the student back with their input.
+        \App\Models\User::create([
+            'fullname' => 'Existing Student',
+            'email' => 'existing@mcclawis.edu.ph',
+            'student_id' => '2024-0001',
+            'password' => 'Password123',
+            'role' => 'student',
+            'status' => 'active',
+        ]);
+
+        $this->from('/register')->post('/register', [
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
+            'dob' => now()->subYears(20)->toDateString(),
+            'year_level' => '2nd Year',
+            'department' => 'BSIT',
+            'student_id' => '2024-0001',
+            'email' => $this->email,
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
+        ])->assertRedirect('/register')->assertSessionHasErrors('student_id');
+
+        $this->get('/register')
+            ->assertOk()
+            ->assertSee('const resumeEmail = "' . $this->email . '";', false);
+    }
+
     public function test_expired_code_is_rejected_but_email_is_kept_for_resend(): void
     {
         $this->startVerification();

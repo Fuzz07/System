@@ -346,6 +346,31 @@
             font-size: 1.9rem;
             box-shadow: inset 0 0 0 1px rgba(99, 102, 241, .1), 0 14px 30px rgba(79, 70, 229, .1);
         }
+        .verified-account {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 12px 14px;
+            border: 1px solid #99f6e4;
+            border-radius: var(--radius-sm);
+            background: #ecfdf5;
+            color: #0f766e;
+        }
+        .verified-account > i { font-size: 1.35rem; }
+        .verified-account-copy { flex: 1; min-width: 0; }
+        .verified-account-copy strong { display: block; font-size: .8rem; }
+        .verified-account-copy span { display: block; overflow: hidden; color: #134e4a; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
+        .verified-account-change {
+            flex-shrink: 0;
+            padding: 6px 11px;
+            border: 0;
+            border-radius: 8px;
+            background: rgba(15, 118, 110, .1);
+            color: #0f766e;
+            font-size: .74rem;
+            font-weight: 800;
+        }
+        .verified-account-change:hover { background: rgba(15, 118, 110, .18); }
         .registration-signin { margin-top: 21px; text-align: center; color: #64748b; font-size: .8rem; }
         .registration-signin a { color: #4338ca; font-weight: 800; text-decoration: none; }
         .registration-signin a:hover { text-decoration: underline; }
@@ -416,8 +441,8 @@
             </header>
 
             <ol class="registration-steps" aria-label="Registration progress">
-                <li class="registration-step is-active" data-stage="1"><span class="registration-step-number">1</span><span class="registration-step-label">Student details</span></li>
-                <li class="registration-step" data-stage="2"><span class="registration-step-number">2</span><span class="registration-step-label">Email verification</span></li>
+                <li class="registration-step is-active" data-stage="1"><span class="registration-step-number">1</span><span class="registration-step-label">Email verification</span></li>
+                <li class="registration-step" data-stage="2"><span class="registration-step-number">2</span><span class="registration-step-label">Student details</span></li>
                 <li class="registration-step" data-stage="3"><span class="registration-step-number">3</span><span class="registration-step-label">Account security</span></li>
             </ol>
 
@@ -431,14 +456,103 @@
         </div>
         @endif
 
+        @php
+            // After a failed submit the page comes back with old input. If that
+            // email was already verified in this session, reopen the form instead
+            // of asking for another code.
+            $resumeEmail = session('register_email_verified') && old('email')
+                && \Illuminate\Support\Str::lower(trim(old('email'))) === session('register_email')
+                ? session('register_email')
+                : null;
+        @endphp
+
         <form method="POST" action="{{ route('register.submit') }}" id="registerForm" novalidate>
             @csrf
             <div style="display:none !important;" aria-hidden="true">
                 <input type="text" name="website_url" tabindex="-1" autocomplete="off">
             </div>
 
-            <!-- STEP 1: Basic Information & MS Account Verification -->
-            <div id="step-1">
+            <!-- STEP 1: Verify the Microsoft 365 school account -->
+            <div id="step-email">
+                <div class="step-graphic"><i class="bi bi-microsoft"></i></div>
+                <div class="text-center mb-4">
+                    <h2 class="h5 fw-bold mb-1">Verify your school account</h2>
+                    <p class="text-muted small mb-0">We'll email a 6-digit code to your Microsoft 365 school account. Once it's verified, you can fill up the registration form.</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label-custom" for="email">Microsoft 365 School Account</label>
+                    <input type="email" id="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph" value="{{ $resumeEmail ?? old('email') }}" autocomplete="email" maxlength="255" required>
+                    <div class="field-hint">Use your assigned @mcclawis.edu.ph email address.</div>
+                </div>
+
+                <div id="email-error" class="alert registration-error d-none mb-3" role="alert" aria-live="assertive"></div>
+
+                <button type="button" id="btn-send-code" class="btn-primary-custom w-100 justify-content-center" style="padding:14px;">
+                    <span id="send-btn-text"><i class="bi bi-send"></i> Send Verification Code</span>
+                    <div id="send-btn-spinner" class="spinner-border spinner-border-sm text-white d-none" role="status" style="margin-left:8px;"></div>
+                </button>
+            </div>
+
+            <!-- STEP 1b: OTP Verification -->
+            <div id="step-otp" class="d-none">
+                <div class="step-graphic"><i class="bi bi-envelope-check"></i></div>
+                <div class="text-center mb-3">
+                    <h2 class="h5 fw-bold mb-1">Check your school inbox</h2>
+                    <p class="text-muted small mb-0">Enter the code we sent to <strong id="otp-email-display"></strong></p>
+                </div>
+                <div id="otp-message" class="alert alert-info mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;line-height:1.5;"></div>
+
+                <div class="mb-2 text-center">
+                    <label for="otp_code" class="form-label-custom d-block mb-2 text-start">6-Digit Verification Code</label>
+                    <input type="text" id="otp_code" class="form-control-custom text-center fw-bold otp-input"
+                           style="font-size:24px; letter-spacing:8px; max-width:240px; margin:0 auto;"
+                           placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+                           spellcheck="false" aria-describedby="otp-status">
+                </div>
+
+                <div class="otp-meta mb-3" id="otp-status">
+                    <span><i class="bi bi-clock-history"></i> Code expires in <span id="otp-countdown" class="otp-timer">03:00</span></span>
+                    <span id="otp-attempts"></span>
+                </div>
+
+                <div id="otp-error" class="alert alert-danger d-none mb-3" role="alert" style="border-radius:var(--radius-sm);font-size:.85rem;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> <span id="otp-error-text"></span>
+                </div>
+
+                <div id="otp-resent" class="alert alert-success d-none mb-3" role="status" style="border-radius:var(--radius-sm);font-size:.85rem;">
+                    <i class="bi bi-envelope-check-fill"></i> <span id="otp-resent-text"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="button" id="btn-change-email" class="btn-secondary-custom" style="padding:14px; width:130px; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600; border-radius:var(--radius-sm); border:1.5px solid #cbd5e1; background:#fff; color:#475569;">
+                        <i class="bi bi-arrow-left-circle"></i> Change Email
+                    </button>
+                    <button type="button" id="btn-verify-otp" class="btn-primary-custom flex-grow-1 justify-content-center" style="padding:14px; display:flex; align-items:center; gap:8px;" disabled>
+                        <span id="verify-btn-text">Verify Code</span>
+                        <div id="verify-btn-spinner" class="spinner-border spinner-border-sm text-white d-none" role="status"></div>
+                    </button>
+                </div>
+
+                <div class="text-center mt-3 otp-resend-row">
+                    <span>Didn't receive the code?</span>
+                    <button type="button" id="btn-resend-otp" class="btn-resend" disabled>
+                        <span id="resend-btn-text">Resend code</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Registration form (only reachable once the account is verified) -->
+            <div id="step-details" class="d-none">
+                <div class="verified-account mb-4">
+                    <i class="bi bi-patch-check-fill"></i>
+                    <div class="verified-account-copy">
+                        <strong>Microsoft 365 account verified</strong>
+                        <span id="verified-email-display"></span>
+                    </div>
+                    <button type="button" id="btn-restart-verification" class="verified-account-change">Change</button>
+                </div>
+
                 <div class="form-section-heading"><span><i class="bi bi-person-vcard"></i></span> Personal information</div>
                 <div class="row g-2 mb-3">
                     <div class="col-md-4">
@@ -473,9 +587,9 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-section-heading mt-4"><span><i class="bi bi-microsoft"></i></span> School account details</div>
+                <div class="form-section-heading mt-4"><span><i class="bi bi-mortarboard"></i></span> School details</div>
                 <div class="row g-2 mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label-custom" for="department">Course / Department</label>
                         <select id="department" name="department" class="form-select-custom" required>
                             <option value="">Select Course</option>
@@ -484,78 +598,24 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <label class="form-label-custom" for="student_id">Student ID</label>
                         <input type="text" id="student_id" name="student_id" class="form-control-custom" pattern="\d{4}-\d{4}" maxlength="9" title="Format: YYYY-XXXX" placeholder="YYYY-XXXX" value="{{ old('student_id') }}" autocomplete="off" required>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label-custom" for="email">Microsoft 365 School Account</label>
-                        <input type="email" id="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph" value="{{ old('email') }}" autocomplete="email" maxlength="255" required>
-                        <div class="field-hint">Use your assigned @mcclawis.edu.ph email address.</div>
-                    </div>
                 </div>
 
-                <div id="step-1-error" class="alert registration-error d-none mb-3" role="alert" aria-live="assertive"></div>
+                <div id="details-error" class="alert registration-error d-none mb-3" role="alert" aria-live="assertive"></div>
 
-                <button type="button" id="btn-next-step" class="btn-primary-custom w-100 justify-content-center" style="padding:14px;">
-                    <span id="next-btn-text"><i class="bi bi-arrow-right-circle"></i> Verify &amp; Continue</span>
-                    <div id="next-btn-spinner" class="spinner-border spinner-border-sm text-white d-none" role="status" style="margin-left:8px;"></div>
+                <button type="button" id="btn-details-next" class="btn-primary-custom w-100 justify-content-center" style="padding:14px;">
+                    <i class="bi bi-arrow-right-circle"></i> Continue
                 </button>
             </div>
 
-            <!-- STEP 1.5: OTP Verification -->
-            <div id="step-otp" class="d-none">
-                <div class="step-graphic"><i class="bi bi-envelope-check"></i></div>
-                <div class="text-center mb-3">
-                    <h2 class="h5 fw-bold mb-1">Check your school inbox</h2>
-                    <p class="text-muted small mb-0">Enter the code we sent to <strong id="otp-email-display"></strong></p>
-                </div>
-                <div id="otp-message" class="alert alert-info mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;line-height:1.5;"></div>
-
-                <div class="mb-2 text-center">
-                    <label for="otp_code" class="form-label-custom d-block mb-2 text-start">6-Digit Verification Code</label>
-                    <input type="text" id="otp_code" class="form-control-custom text-center fw-bold otp-input"
-                           style="font-size:24px; letter-spacing:8px; max-width:240px; margin:0 auto;"
-                           placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-                           spellcheck="false" aria-describedby="otp-status">
-                </div>
-
-                <div class="otp-meta mb-3" id="otp-status">
-                    <span><i class="bi bi-clock-history"></i> Code expires in <span id="otp-countdown" class="otp-timer">03:00</span></span>
-                    <span id="otp-attempts"></span>
-                </div>
-
-                <div id="otp-error" class="alert alert-danger d-none mb-3" role="alert" style="border-radius:var(--radius-sm);font-size:.85rem;">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <span id="otp-error-text"></span>
-                </div>
-
-                <div id="otp-resent" class="alert alert-success d-none mb-3" role="status" style="border-radius:var(--radius-sm);font-size:.85rem;">
-                    <i class="bi bi-envelope-check-fill"></i> <span id="otp-resent-text"></span>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="button" id="btn-back-to-step1" class="btn-secondary-custom" style="padding:14px; width:110px; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600; border-radius:var(--radius-sm); border:1.5px solid #cbd5e1; background:#fff; color:#475569;">
-                        <i class="bi bi-arrow-left-circle"></i> Edit Info
-                    </button>
-                    <button type="button" id="btn-verify-otp" class="btn-primary-custom flex-grow-1 justify-content-center" style="padding:14px; display:flex; align-items:center; gap:8px;" disabled>
-                        <span id="verify-btn-text">Verify Code</span>
-                        <div id="verify-btn-spinner" class="spinner-border spinner-border-sm text-white d-none" role="status"></div>
-                    </button>
-                </div>
-
-                <div class="text-center mt-3 otp-resend-row">
-                    <span>Didn't receive the code?</span>
-                    <button type="button" id="btn-resend-otp" class="btn-resend" disabled>
-                        <span id="resend-btn-text">Resend code</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- STEP 2: Password Creation & CAPTCHA Verification -->
+            <!-- STEP 3: Password Creation & CAPTCHA Verification -->
             <div id="step-2" class="d-none">
                 <div class="step-graphic"><i class="bi bi-shield-lock"></i></div>
                 <div class="alert alert-success mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;">
-                    <i class="bi bi-check-circle-fill"></i> MS Account verified successfully! Please secure your account by creating a password.
+                    <i class="bi bi-check-circle-fill"></i> Almost done! Secure your account by creating a password.
                 </div>
 
                 <div class="row g-2 mb-3">
@@ -622,18 +682,23 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const btnNextStep = document.getElementById('btn-next-step');
+        const btnSendCode = document.getElementById('btn-send-code');
+        const btnChangeEmail = document.getElementById('btn-change-email');
+        const btnRestartVerification = document.getElementById('btn-restart-verification');
+        const btnDetailsNext = document.getElementById('btn-details-next');
         const btnBackStep = document.getElementById('btn-back-step');
-        const btnBackToStep1 = document.getElementById('btn-back-to-step1');
         const btnVerifyOtp = document.getElementById('btn-verify-otp');
         const btnResendOtp = document.getElementById('btn-resend-otp');
         const btnComplete = document.getElementById('btn-complete-registration');
 
-        const step1 = document.getElementById('step-1');
+        const stepEmail = document.getElementById('step-email');
         const stepOtp = document.getElementById('step-otp');
+        const stepDetails = document.getElementById('step-details');
         const step2 = document.getElementById('step-2');
 
-        const step1Error = document.getElementById('step-1-error');
+        const emailError = document.getElementById('email-error');
+        const detailsError = document.getElementById('details-error');
+        const verifiedEmailDisplay = document.getElementById('verified-email-display');
         const otpError = document.getElementById('otp-error');
         const otpErrorText = document.getElementById('otp-error-text');
         const otpResent = document.getElementById('otp-resent');
@@ -644,8 +709,8 @@
         const otpAttempts = document.getElementById('otp-attempts');
         const progressSteps = document.querySelectorAll('.registration-step');
 
-        const nextBtnText = document.getElementById('next-btn-text');
-        const nextBtnSpinner = document.getElementById('next-btn-spinner');
+        const sendBtnText = document.getElementById('send-btn-text');
+        const sendBtnSpinner = document.getElementById('send-btn-spinner');
         const verifyBtnText = document.getElementById('verify-btn-text');
         const verifyBtnSpinner = document.getElementById('verify-btn-spinner');
         const resendBtnText = document.getElementById('resend-btn-text');
@@ -668,7 +733,7 @@
         let cooldownTimerId = null;
         let otpLocked = false;
 
-        if (!btnNextStep) return;
+        if (!btnSendCode) return;
 
         const endpoints = {
             checkEmail: @json(route('register.check-email')),
@@ -677,18 +742,27 @@
             login: @json(route('login.student')),
             forgotPassword: @json(route('password.request'))
         };
+        const resumeEmail = @json($resumeEmail);
         const csrfToken = () => registerForm.querySelector('input[name="_token"]').value;
         const emailInput = document.getElementById('email');
         const currentEmail = () => emailInput.value.trim().toLowerCase();
-        const stepOneFields = step1.querySelectorAll('input, select');
+        const detailsFields = stepDetails.querySelectorAll('input, select');
 
-        function clearStepOneError() {
-            step1Error.classList.add('d-none');
-            step1Error.textContent = '';
+        // Every panel maps onto one of the three progress markers.
+        const panels = { email: [stepEmail, 1], otp: [stepOtp, 1], details: [stepDetails, 2], password: [step2, 3] };
+
+        function showPanel(name) {
+            Object.entries(panels).forEach(([key, [panel]]) => panel.classList.toggle('d-none', key !== name));
+            setRegistrationStage(panels[name][1]);
         }
 
-        function showStepOneError(message, field = null, code = null) {
-            step1Error.replaceChildren();
+        function clearStepError(container) {
+            container.classList.add('d-none');
+            container.textContent = '';
+        }
+
+        function showStepError(container, message, field = null, code = null) {
+            container.replaceChildren();
 
             const icon = document.createElement('i');
             icon.className = code === 'microsoft_service_unavailable'
@@ -715,8 +789,8 @@
                 copy.append(actions);
             }
 
-            step1Error.append(icon, copy);
-            step1Error.classList.remove('d-none');
+            container.append(icon, copy);
+            container.classList.remove('d-none');
             if (field) {
                 field.classList.add('is-invalid-field');
                 field.focus();
@@ -749,12 +823,12 @@
             return { response, data };
         }
 
-        function clearStepOneFieldState(field) {
+        function clearFieldState(field) {
             field.setCustomValidity('');
             field.classList.remove('is-invalid-field');
         }
 
-        function stepOneValidationError(field) {
+        function fieldValidationError(field) {
             const value = field.value.trim();
             const label = field.closest('div')?.querySelector('label')?.textContent?.replace(/\s*\(optional\)\s*/, '').trim() || 'This field';
 
@@ -788,31 +862,58 @@
             return null;
         }
 
-        function validateStepOne() {
-            clearStepOneError();
-            for (const field of stepOneFields) {
-                if (field.name === 'website_url' || field.readOnly) continue;
-                clearStepOneFieldState(field);
-                const message = stepOneValidationError(field);
+        function validateFields(fields, errorContainer) {
+            clearStepError(errorContainer);
+            for (const field of fields) {
+                if (field.readOnly) continue;
+                clearFieldState(field);
+                const message = fieldValidationError(field);
                 if (message) {
                     field.setCustomValidity(message);
-                    showStepOneError(message, field);
+                    showStepError(errorContainer, message, field);
                     return false;
                 }
             }
             return true;
         }
 
-        stepOneFields.forEach((field) => {
+        detailsFields.forEach((field) => {
             field.addEventListener(field.tagName === 'SELECT' ? 'change' : 'input', () => {
-                clearStepOneFieldState(field);
-                clearStepOneError();
+                clearFieldState(field);
+                clearStepError(detailsError);
             });
+            // Enter moves the form forward instead of attempting a submit.
+            if (field.tagName === 'INPUT') {
+                field.addEventListener('keydown', (e) => {
+                    if (e.key !== 'Enter') return;
+                    e.preventDefault();
+                    btnDetailsNext.click();
+                });
+            }
+        });
+
+        emailInput.addEventListener('input', () => {
+            clearFieldState(emailInput);
+            clearStepError(emailError);
+        });
+
+        emailInput.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            if (!emailInput.readOnly) btnSendCode.click();
         });
 
         emailInput.addEventListener('blur', () => {
             emailInput.value = currentEmail();
         });
+
+        // The email is locked once verified — the server only accepts the
+        // address that received the code.
+        function markEmailVerified(email) {
+            emailInput.value = email;
+            emailInput.readOnly = true;
+            verifiedEmailDisplay.textContent = email;
+        }
 
         // ───────────────────────────────────────────────────────────────────
         //  OTP STEP HELPERS
@@ -956,17 +1057,17 @@
         });
 
         // ───────────────────────────────────────────────────────────────────
-        //  STEP 1 → OTP STEP: validate details and send the first code
+        //  STEP 1: check the Microsoft 365 account and send the first code
         // ───────────────────────────────────────────────────────────────────
-        btnNextStep.addEventListener('click', async (e) => {
+        btnSendCode.addEventListener('click', async (e) => {
             if (e) e.preventDefault();
-            if (!validateStepOne()) return;
             emailInput.value = currentEmail();
+            if (!validateFields([emailInput], emailError)) return;
 
-            btnNextStep.disabled = true;
-            nextBtnText.textContent = "Verifying MS Account...";
-            nextBtnSpinner.classList.remove('d-none');
-            clearStepOneError();
+            btnSendCode.disabled = true;
+            sendBtnText.textContent = "Verifying MS Account...";
+            sendBtnSpinner.classList.remove('d-none');
+            clearStepError(emailError);
 
             try {
                 const { data } = await requestJson(endpoints.checkEmail, {
@@ -982,9 +1083,7 @@
                 if (data.success) {
                     otpMessage.innerHTML = '<i class="bi bi-envelope-check-fill text-primary"></i> ' + (data.message || 'Verification code sent.');
                     otpEmailDisplay.textContent = currentEmail();
-                    step1.classList.add('d-none');
-                    stepOtp.classList.remove('d-none');
-                    setRegistrationStage(2);
+                    showPanel('otp');
 
                     otpCodeInput.value = '';
                     otpCodeInput.disabled = false;
@@ -997,20 +1096,20 @@
                     startResendCooldown(data.resend_available_in);
                     otpCodeInput.focus();
                 } else {
-                    showStepOneError(data.message || 'We could not verify this email address. Please try again.', emailInput, data.code);
+                    showStepError(emailError, data.message || 'We could not verify this email address. Please try again.', emailInput, data.code);
                 }
             } catch (err) {
                 console.error(err);
-                showStepOneError(err.message || 'We could not verify your Microsoft 365 account right now. Check your connection and try again.', emailInput, 'microsoft_service_unavailable');
+                showStepError(emailError, err.message || 'We could not verify your Microsoft 365 account right now. Check your connection and try again.', emailInput, 'microsoft_service_unavailable');
             } finally {
-                btnNextStep.disabled = false;
-                nextBtnText.innerHTML = '<i class="bi bi-arrow-right-circle"></i> Verify &amp; Continue';
-                nextBtnSpinner.classList.add('d-none');
+                btnSendCode.disabled = false;
+                sendBtnText.innerHTML = '<i class="bi bi-send"></i> Send Verification Code';
+                sendBtnSpinner.classList.add('d-none');
             }
         });
 
         // ───────────────────────────────────────────────────────────────────
-        //  OTP STEP → STEP 2: verify the code
+        //  OTP → REGISTRATION FORM: verify the code
         // ───────────────────────────────────────────────────────────────────
         btnVerifyOtp.addEventListener('click', async (e) => {
             if (e) e.preventDefault();
@@ -1049,11 +1148,9 @@
                 if (data.success) {
                     stopExpiryCountdown();
                     stopResendCooldown();
-                    stepOtp.classList.add('d-none');
-                    step2.classList.remove('d-none');
-                    setRegistrationStage(3);
-                    setStepTwoActive(true);
-                    passwordInput.focus();
+                    markEmailVerified(currentEmail());
+                    showPanel('details');
+                    document.getElementById('first_name').focus();
                     return;
                 }
 
@@ -1136,21 +1233,37 @@
             }
         });
 
-        // Back to Step 1 from OTP
-        btnBackToStep1.addEventListener('click', () => {
+        // OTP → email: fix a typo or use another account.
+        btnChangeEmail.addEventListener('click', () => {
             stopExpiryCountdown();
             stopResendCooldown();
-            stepOtp.classList.add('d-none');
-            step1.classList.remove('d-none');
-            setRegistrationStage(1);
+            showPanel('email');
+            emailInput.focus();
         });
 
-        // Back to Step 1 from Step 2
+        // Registration form → email: start over with a different account. A new
+        // code has to be verified before the form opens again.
+        btnRestartVerification.addEventListener('click', () => {
+            emailInput.readOnly = false;
+            verifiedEmailDisplay.textContent = '';
+            showPanel('email');
+            emailInput.focus();
+            emailInput.select();
+        });
+
+        // Registration form → password step
+        btnDetailsNext.addEventListener('click', (e) => {
+            if (e) e.preventDefault();
+            if (!validateFields(detailsFields, detailsError)) return;
+            showPanel('password');
+            setStepTwoActive(true);
+            passwordInput.focus();
+        });
+
+        // Password step → registration form
         btnBackStep.addEventListener('click', () => {
             setStepTwoActive(false);
-            step2.classList.add('d-none');
-            step1.classList.remove('d-none');
-            setRegistrationStage(1);
+            showPanel('details');
         });
 
         // ───────────────────────────────────────────────────────────────────
@@ -1327,6 +1440,13 @@
 
             hidePasswordError();
         });
+
+        // Back from a failed submit with an email this session already verified:
+        // reopen the registration form rather than asking for another code.
+        if (resumeEmail) {
+            markEmailVerified(resumeEmail);
+            showPanel('details');
+        }
 
         // Date of Birth - Auto Age Calculator
         const dobInput = document.getElementById('dob_input');
