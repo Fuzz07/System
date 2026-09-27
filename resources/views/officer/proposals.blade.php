@@ -30,7 +30,7 @@
                 @elseif($p->project_status === 'Completed')
                 <span class="text-success small fw-bold px-2 py-1"><i class="bi bi-patch-check"></i> Liquidated</span>
                 @endif
-                <span class="badge bg-secondary" style="font-size:.72rem;"><i class="bi bi-chat-text"></i> {{ $p->comments_count }}</span>
+                <button class="btn btn-sm {{ $p->comments_count ? 'btn-outline-info' : 'btn-outline-secondary' }}" data-bs-toggle="modal" data-bs-target="#feedbackModal{{ $p->id }}" title="View student feedback and suggestions"><i class="bi bi-chat-text"></i> Feedback ({{ $p->comments_count }})</button>
                 @if($p->status === 'Pending')
                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ $p->id }}"><i class="bi bi-pencil-square"></i> Edit</button>
                 @endif
@@ -42,6 +42,40 @@
     @endforelse
     </tbody>
 </table></div></div>
+
+{{-- Feedback Modals: what students said about each proposal. Students post
+     anonymously, so their names stay hidden here too. --}}
+@foreach($proposals as $p)
+<div class="modal fade" id="feedbackModal{{ $p->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content" style="border-radius:var(--radius);border:none;">
+    <div class="modal-header modal-header-custom"><h5 class="modal-title"><i class="bi bi-chat-dots"></i> Feedback &amp; Suggestions ({{ $p->comments_count }})</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body p-4">
+        <div class="fw-bold mb-3" style="color:var(--navy-900);">{{ $p->project_title }}</div>
+        <div class="d-flex flex-column gap-3">
+            @forelse($p->comments as $c)
+            @php $isStudent = ! $c->user || $c->user->role === 'student'; @endphp
+            <div class="d-flex gap-3">
+                <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0 {{ $isStudent ? 'bg-light text-muted' : 'bg-primary bg-opacity-10 text-primary' }}" style="width:40px;height:40px;font-weight:700;">
+                    @if($isStudent)<i class="bi bi-person-circle"></i>@else {{ strtoupper(substr($c->user->fullname, 0, 1)) }}@endif
+                </div>
+                <div class="flex-fill">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div>
+                            @if($isStudent)<span class="fw-bold text-dark small"><i class="bi bi-person-fill-lock"></i> Anonymous Student</span>
+                            @else <span class="fw-bold text-dark small">{{ $c->user->fullname }}</span> <span class="badge bg-primary bg-opacity-10 text-primary small ms-1" style="font-size:0.6rem;">{{ ucfirst($c->user->role) }}</span>@endif
+                        </div>
+                        <span class="text-muted small" style="font-size:0.7rem;">{{ $c->created_at?->diffForHumans() }}</span>
+                    </div>
+                    <div class="p-3 bg-light rounded-4 small text-dark" style="line-height:1.6;">{!! nl2br(e($c->comment)) !!}</div>
+                </div>
+            </div>
+            @empty
+            <div class="text-center py-4 text-muted small"><i class="bi bi-chat" style="font-size:1.6rem;opacity:.3;"></i><div class="mt-2">No feedback or suggestions on this proposal yet.</div></div>
+            @endforelse
+        </div>
+    </div>
+    <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button></div>
+</div></div></div>
+@endforeach
 
 {{-- Complete Modals --}}
 @foreach($proposals->where('status', 'Approved')->where('project_status', 'Ongoing') as $p)

@@ -14,7 +14,10 @@ class ProposalController extends Controller
 {
     public function index()
     {
-        $proposals = Proposal::with('approver')
+        $proposals = Proposal::with([
+                'approver',
+                'comments' => fn ($query) => $query->with('user')->orderByDesc('created_at'),
+            ])
             ->withCount('comments')
             ->where('officer_id', Auth::id())
             ->orderByDesc('created_at')
