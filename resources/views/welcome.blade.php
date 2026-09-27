@@ -1251,7 +1251,7 @@
                     </a>
                     @if(!str_contains(request()->userAgent() ?? '', 'SSCStudentApp'))
                         <span style="display:inline-flex; align-items:center; gap:8px;">
-                            <a href="/ssc-student-app.apk?v=1.2" class="btn-outline-hero"
+                            <a href="/ssc-student-app.apk?v=1.7" class="btn-outline-hero"
                                 style="border-color: var(--primary-light); color: var(--primary-light);">
                                 <i class="bi bi-android2"></i> Install Android App
                             </a>
@@ -1416,7 +1416,7 @@
                     <div class="feature-desc">A native Android app that lets students access the full portal on their
                         smartphones — optimized for performance and native experience.</div>
                     <div style="margin-top: 14px; display:flex; align-items:center; gap:8px;">
-                        <a href="/ssc-student-app.apk?v=1.2" style="display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; color:var(--primary); text-decoration:none;">
+                        <a href="/ssc-student-app.apk?v=1.7" style="display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:700; color:var(--primary); text-decoration:none;">
                             <i class="bi bi-download"></i> Download App (.APK) &rarr;
                         </a>
                         @include('partials.app-install-guide')

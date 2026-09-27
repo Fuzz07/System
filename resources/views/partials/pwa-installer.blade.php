@@ -352,7 +352,7 @@ Usage:
         const isPwaMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const isPwaStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
         const PWA_DISMISSED_KEY = 'ssc_install_dismissed';
-        const PWA_APK_URL = "{{ asset('downloads/ssc-student-app.apk') }}?v=1.2";
+        const PWA_APK_URL = "{{ asset('downloads/ssc-student-app.apk') }}?v=1.7";
 
         let deferredPwaPrompt = null;
 

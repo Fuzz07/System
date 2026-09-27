@@ -37,7 +37,10 @@ return [
 
     'firebase' => [
         'project_id' => env('FIREBASE_PROJECT_ID'),
+        // Relative paths are taken from the project root, not the working directory.
         'service_account_key_path' => env('FIREBASE_SERVICE_ACCOUNT_KEY_PATH', 'storage/firebase-key.json'),
+        // Fallback for hosts where the key can't be uploaded as a file.
+        'service_account_key_b64' => env('FIREBASE_SERVICE_ACCOUNT_KEY_B64'),
     ],
 
     'openai' => [

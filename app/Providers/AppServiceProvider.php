@@ -58,7 +58,7 @@ class AppServiceProvider extends ServiceProvider
     private function setupFirebaseKey(): void
     {
         try {
-            $keyB64 = env('FIREBASE_SERVICE_ACCOUNT_KEY_B64');
+            $keyB64 = config('services.firebase.service_account_key_b64');
             if (!$keyB64) {
                 return; // No base64 key provided, will use file path
             }

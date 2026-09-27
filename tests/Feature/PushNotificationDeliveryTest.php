@@ -190,6 +190,19 @@ class PushNotificationDeliveryTest extends TestCase
         $this->assertFalse(DeviceToken::where('fcm_token', 'student-phone-token')->value('is_active'));
     }
 
+    public function test_a_relative_key_path_is_found_from_web_requests_too(): void
+    {
+        // Web requests run with public/ as the working directory, so a relative
+        // path must be taken from the project root or the key is never found.
+        $keyPath = new \ReflectionMethod(PushNotificationService::class, 'serviceAccountKeyPath');
+
+        config(['services.firebase.service_account_key_path' => 'storage/firebase-key.json']);
+        $this->assertSame(base_path('storage/firebase-key.json'), $keyPath->invoke(null));
+
+        config(['services.firebase.service_account_key_path' => '/etc/secrets/firebase.json']);
+        $this->assertSame('/etc/secrets/firebase.json', $keyPath->invoke(null));
+    }
+
     /** The single FCM message sent, asserting there was exactly one. */
     private function onlyPush(): array
     {

@@ -213,7 +213,7 @@ Usage (tone "dark" for light backgrounds is the default; use "light" on dark bac
                 <p class="app-guide-note"><strong>Using an iPhone?</strong> The app is Android only. Open the portal in Safari, tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</p>
 
                 <div class="app-guide-actions">
-                    <a class="app-guide-download" href="{{ asset('downloads/ssc-student-app.apk') }}?v=1.2" download>
+                    <a class="app-guide-download" href="{{ asset('downloads/ssc-student-app.apk') }}?v=1.7" download>
                         <i class="bi bi-download"></i> Download APK
                     </a>
                     <button type="button" class="app-guide-done" data-app-guide-close>Got it</button>

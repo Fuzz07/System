@@ -11,6 +11,7 @@ class PushNotificationService
 {
     private static $accessToken = null;
     private static $tokenExpire = null;
+    private static $keyProjectId = null;
 
     /**
      * Send a push notification to specific users via FCM.
@@ -58,17 +59,18 @@ class PushNotificationService
         try {
             $tokens = is_array($tokens) ? $tokens : [$tokens];
 
-            // Get FCM v1 API URL
-            $projectId = config('services.firebase.project_id');
-            $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
-            
             // Get access token
             $accessToken = self::getAccessToken();
-            
+
             if (!$accessToken) {
                 Log::error('Failed to get Firebase access token');
                 return false;
             }
+
+            // Get FCM v1 API URL. The service account key names its own
+            // project, so FIREBASE_PROJECT_ID is only needed to override it.
+            $projectId = config('services.firebase.project_id') ?: self::$keyProjectId;
+            $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
 
             // Send notifications in batches of 500
             foreach (array_chunk($tokens, 500) as $tokenBatch) {
@@ -185,12 +187,12 @@ class PushNotificationService
         }
 
         try {
-            $keyPath = config('services.firebase.service_account_key_path');
-            
+            $keyPath = self::serviceAccountKeyPath();
+
             // Try to get service account from file first
-            if (!file_exists($keyPath)) {
+            if (!$keyPath || !file_exists($keyPath)) {
                 // Fallback: Try to decode from base64 environment variable
-                $keyBase64 = env('FIREBASE_SERVICE_ACCOUNT_KEY_B64');
+                $keyBase64 = config('services.firebase.service_account_key_b64');
                 if ($keyBase64) {
                     $keyContent = self::decodeServiceAccountBase64($keyBase64);
                     if ($keyContent) {
@@ -223,10 +225,34 @@ class PushNotificationService
     }
 
     /**
+     * Absolute path of the service account key file.
+     *
+     * A relative setting (the default, "storage/firebase-key.json") is taken
+     * from the project root. PHP would otherwise resolve it against the working
+     * directory, which for every web request is public/ — so the key was never
+     * found there and no push was ever sent from the website, only from artisan.
+     */
+    private static function serviceAccountKeyPath(): ?string
+    {
+        $path = config('services.firebase.service_account_key_path');
+
+        if (blank($path)) {
+            return null;
+        }
+
+        $isAbsolute = str_starts_with($path, '/') || str_starts_with($path, '\\')
+            || preg_match('/^[A-Za-z]:[\\\\\/]/', $path);
+
+        return $isAbsolute ? $path : base_path($path);
+    }
+
+    /**
      * Get access token from service account array.
      */
     private static function getAccessTokenFromArray($serviceAccount)
     {
+        self::$keyProjectId = $serviceAccount['project_id'] ?? null;
+
         try {
             // Create JWT token
             $jwt = self::createJWT($serviceAccount);
@@ -354,24 +380,18 @@ class PushNotificationService
     public static function testConnection()
     {
         try {
-            $projectId = config('services.firebase.project_id');
-            $keyPath = config('services.firebase.service_account_key_path');
-
-            if (!$keyPath || !file_exists($keyPath)) {
-                return [
-                    'success' => false,
-                    'message' => 'Firebase service account key not found',
-                ];
-            }
-
+            // getAccessToken() looks for the key file and the base64 fallback,
+            // and logs which one is missing when neither is usable.
             $accessToken = self::getAccessToken();
-            
+
             if (!$accessToken) {
                 return [
                     'success' => false,
-                    'message' => 'Failed to get Firebase access token',
+                    'message' => 'Failed to get Firebase access token (see the log for the reason)',
                 ];
             }
+
+            $projectId = config('services.firebase.project_id') ?: self::$keyProjectId;
 
             $fcmUrl = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
 
