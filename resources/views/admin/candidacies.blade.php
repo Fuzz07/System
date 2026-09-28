@@ -30,7 +30,7 @@
                             <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill mb-1">Nomination Phase</span>
                             <span class="small text-white text-opacity-75">Filing is {{ $activeSy->candidacy_open ? 'OPEN' : 'CLOSED' }}</span>
                         </div>
-                        <form method="POST" action="{{ route('admin.election.open') }}" onsubmit="return confirm('Are you sure you want to open the election? This starts an 8-hour voting period and notifies all eligible students!')">
+                        <form method="POST" action="{{ route('admin.election.open') }}" data-confirm="Are you sure you want to open the election? This starts an 8-hour voting period and notifies all eligible students!">
                             @csrf
                             <button type="submit" class="btn btn-light fw-bold text-primary px-4 py-2" style="border-radius:10px; background: #ffffff; color: #4f46e5 !important; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                                 <i class="bi bi-play-circle-fill me-1"></i> Open Voting (Start 8-Hours)
@@ -46,7 +46,7 @@
                             <div class="small text-white text-opacity-70 text-uppercase fw-semibold" style="font-size:0.7rem; letter-spacing:1px;">Time Remaining</div>
                             <div class="h4 fw-bold text-warning mb-0" id="voting-countdown" style="font-variant-numeric: tabular-nums;">--:--:--</div>
                         </div>
-                        <form method="POST" action="{{ route('admin.election.close') }}" onsubmit="return confirm('Are you sure you want to manually close the voting period immediately?')">
+                        <form method="POST" action="{{ route('admin.election.close') }}" data-confirm="Are you sure you want to manually close the voting period immediately?">
                             @csrf
                             <button type="submit" class="btn btn-danger fw-bold text-white px-3 py-2" style="border-radius:10px; border:none; box-shadow:0 4px 12px rgba(220,38,38,0.3);">
                                 <i class="bi bi-stop-fill"></i> Close Voting
@@ -67,7 +67,7 @@
                             <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill mb-1">Awaiting Announcement</span>
                             <span class="small text-white text-opacity-75">8 hours voting period ended</span>
                         </div>
-                        <form method="POST" action="{{ route('admin.election.announce') }}" onsubmit="return confirm('Are you sure you want to announce election results? This will auto-promote winners as active SSC Officers, update user credentials, and post the winners board announcement!')">
+                        <form method="POST" action="{{ route('admin.election.announce') }}" data-confirm="Are you sure you want to announce election results? This will auto-promote winners as active SSC Officers, update user credentials, and post the winners board announcement!">
                             @csrf
                             <button type="submit" class="btn btn-warning fw-bold text-dark px-4 py-2" style="border-radius:10px; box-shadow:0 4px 12px rgba(245,158,11,0.3);">
                                 <i class="bi bi-trophy-fill me-1"></i> Announce Results & Promote Winners
@@ -254,7 +254,7 @@
                             {{ $c->school_year }}
                         </td>
                         <td class="text-end">
-                            <form method="POST" action="{{ route('admin.candidacy.destroy', $c) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this candidacy application?')">
+                            <form method="POST" action="{{ route('admin.candidacy.destroy', $c) }}" class="d-inline" data-confirm="Are you sure you want to delete this candidacy application?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-outline-danger btn-sm" style="border-radius:8px; font-size:0.75rem; padding:6px 12px;">

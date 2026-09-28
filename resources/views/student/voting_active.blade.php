@@ -74,7 +74,7 @@
 {{-- Quick Skip Option --}}
 @if($candidates->count() > 0)
 <div class="text-center mt-5">
-    <form method="POST" action="{{ route('student.voting.skip') }}" onsubmit="return confirm('Skip this position without voting?')">
+    <form method="POST" action="{{ route('student.voting.skip') }}" data-confirm="Skip this position without voting?">
         @csrf
         <input type="hidden" name="position" value="{{ $currentPosition }}">
         <button type="submit" class="btn btn-link text-decoration-none text-muted small">

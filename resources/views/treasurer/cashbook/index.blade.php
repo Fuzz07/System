@@ -86,7 +86,7 @@
                     </td>
                     <td style="text-align:center;white-space:nowrap;">
                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editEntry{{ $entry->id }}" title="Edit" aria-label="Edit entry"><i class="bi bi-pencil-square"></i></button>
-                        <form method="POST" action="{{ route('treasurer.cashbook.destroy', $entry) }}" class="d-inline" onsubmit="return confirm('Delete this cash book entry?');">
+                        <form method="POST" action="{{ route('treasurer.cashbook.destroy', $entry) }}" class="d-inline" data-confirm="Delete this cash book entry?">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete" aria-label="Delete entry"><i class="bi bi-trash"></i></button>
                         </form>

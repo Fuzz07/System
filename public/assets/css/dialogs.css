@@ -1,0 +1,113 @@
+/* Centered dialogs used for JavaScript alerts and confirmations. */
+body.ssc-dialog-open {
+  overflow: hidden;
+}
+
+.ssc-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.56);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 160ms ease, visibility 160ms ease;
+}
+
+.ssc-dialog-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.ssc-dialog {
+  width: min(100%, 450px);
+  padding: 22px 20px 16px;
+  color: #f8fafc;
+  background: #202020;
+  border: 1px solid #060606;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(255, 255, 255, 0.12) inset;
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.ssc-dialog-overlay.show .ssc-dialog {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ssc-dialog-title {
+  margin: 0 0 13px;
+  color: #ffffff;
+  font: 700 0.93rem/1.35 'Plus Jakarta Sans', 'Inter', Arial, sans-serif;
+}
+
+.ssc-dialog-message {
+  margin: 0 0 18px;
+  color: #ffffff;
+  font: 500 0.86rem/1.5 'Plus Jakarta Sans', 'Inter', Arial, sans-serif;
+  white-space: pre-line;
+}
+
+.ssc-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.ssc-dialog-button {
+  min-width: 76px;
+  padding: 8px 18px;
+  color: #edf0ff;
+  background: #1b1b1b;
+  border: 1px solid #b8c7ff;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  font: 600 0.82rem/1.25 'Plus Jakarta Sans', 'Inter', Arial, sans-serif;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.ssc-dialog-button:hover {
+  background: #313131;
+  transform: translateY(-1px);
+}
+
+.ssc-dialog-confirm {
+  color: #0b1020;
+  background: #c6d2ff;
+  border: 3px double #dce4ff;
+  padding-block: 6px;
+}
+
+.ssc-dialog-confirm:hover {
+  background: #dbe3ff;
+}
+
+.ssc-dialog-button:focus-visible {
+  outline: 3px solid #90a8ff;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .ssc-dialog-overlay {
+    padding: 16px;
+  }
+
+  .ssc-dialog {
+    padding: 20px 16px 14px;
+    border-radius: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ssc-dialog-overlay,
+  .ssc-dialog,
+  .ssc-dialog-button {
+    transition: none;
+  }
+}

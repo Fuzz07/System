@@ -34,10 +34,10 @@
                 </button>
             </form>
 
-            <form method="POST" action="{{ route('student.voting.skip') }}" class="mt-3">
+            <form method="POST" action="{{ route('student.voting.skip') }}" class="mt-3" data-confirm="Skip this position without casting a vote?">
                 @csrf
                 <input type="hidden" name="position" value="{{ $currentPosition }}">
-                <button type="submit" class="btn btn-link btn-sm text-decoration-none text-muted" onsubmit="return confirm('Skip this position without casting a vote?')">
+                <button type="submit" class="btn btn-link btn-sm text-decoration-none text-muted">
                     Skip this position
                 </button>
             </form>

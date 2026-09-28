@@ -41,6 +41,7 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="{{ asset('assets/css/mobile-student.css') }}?v={{ @filemtime(public_path('assets/css/mobile-student.css')) ?: 1 }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/dialogs.css') }}?v={{ @filemtime(public_path('assets/css/dialogs.css')) ?: 1 }}" rel="stylesheet">
     @stack('head')
 </head>
 

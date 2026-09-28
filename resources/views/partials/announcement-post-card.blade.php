@@ -25,7 +25,7 @@
             <button type="button" class="btn btn-sm btn-light btn-icon" data-bs-toggle="modal" data-bs-target="#editAnnModal{{ $a->id }}" title="Edit announcement" aria-label="Edit announcement">
                 <i class="bi bi-pencil"></i>
             </button>
-            <form method="POST" action="{{ $destroyUrl }}" onsubmit="return confirm('Delete this announcement permanently?')">
+            <form method="POST" action="{{ $destroyUrl }}" data-confirm="Delete this announcement permanently?">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-sm btn-light btn-icon text-danger" title="Delete announcement" aria-label="Delete announcement">

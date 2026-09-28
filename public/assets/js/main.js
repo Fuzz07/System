@@ -3,117 +3,123 @@
 // ============================================================
 
 // ============================================================
-// Centered application alerts
+// Centered application dialogs
 // ============================================================
 
 (function () {
-  const alertQueue = [];
-  let activeAlert = null;
+  const dialogQueue = [];
+  let activeDialog = null;
   let previousFocus = null;
 
   const alertTypes = {
-    info: { title: 'Notice', icon: 'bi-info-lg' },
-    success: { title: 'Success', icon: 'bi-check-lg' },
-    warning: { title: 'Attention', icon: 'bi-exclamation-lg' },
-    error: { title: 'Something went wrong', icon: 'bi-x-lg' }
+    info: 'Notice',
+    success: 'Success',
+    warning: 'Attention',
+    error: 'Something went wrong'
   };
 
-  function createAlertDialog() {
+  function createDialog() {
     const overlay = document.createElement('div');
-    overlay.className = 'ssc-alert-overlay';
+    overlay.className = 'ssc-dialog-overlay';
     overlay.setAttribute('aria-hidden', 'true');
     overlay.innerHTML = `
-      <div class="ssc-alert-dialog" role="alertdialog" aria-modal="true" aria-labelledby="ssc-alert-title" aria-describedby="ssc-alert-message" tabindex="-1">
-        <div class="ssc-alert-icon" aria-hidden="true"><i class="bi bi-info-lg"></i></div>
-        <h2 class="ssc-alert-title" id="ssc-alert-title">Notice</h2>
-        <p class="ssc-alert-message" id="ssc-alert-message"></p>
-        <button class="ssc-alert-button" type="button">Okay</button>
-      </div>`;
+      <section class="ssc-dialog" role="dialog" aria-modal="true" aria-labelledby="ssc-dialog-title" aria-describedby="ssc-dialog-message" tabindex="-1">
+        <h2 class="ssc-dialog-title" id="ssc-dialog-title">SSC System says</h2>
+        <p class="ssc-dialog-message" id="ssc-dialog-message"></p>
+        <div class="ssc-dialog-actions">
+          <button class="ssc-dialog-button ssc-dialog-cancel" type="button">Cancel</button>
+          <button class="ssc-dialog-button ssc-dialog-confirm" type="button">OK</button>
+        </div>
+      </section>`;
 
     document.body.appendChild(overlay);
-
-    overlay.querySelector('.ssc-alert-button').addEventListener('click', closeAlert);
-    overlay.addEventListener('click', function (event) {
-      if (event.target === overlay) closeAlert();
-    });
-
+    overlay.querySelector('.ssc-dialog-confirm').addEventListener('click', () => closeDialog(true));
+    overlay.querySelector('.ssc-dialog-cancel').addEventListener('click', () => closeDialog(false));
     return overlay;
   }
 
-  function getAlertDialog() {
-    return document.querySelector('.ssc-alert-overlay') || createAlertDialog();
+  function getDialog() {
+    return document.querySelector('.ssc-dialog-overlay') || createDialog();
   }
 
-  function displayNextAlert() {
-    if (activeAlert || alertQueue.length === 0) return;
+  function displayNextDialog() {
+    if (activeDialog || dialogQueue.length === 0) return;
 
-    activeAlert = alertQueue.shift();
-    const overlay = getAlertDialog();
-    const dialog = overlay.querySelector('.ssc-alert-dialog');
-    const type = alertTypes[activeAlert.type] ? activeAlert.type : 'info';
-    const details = alertTypes[type];
+    activeDialog = dialogQueue.shift();
+    const overlay = getDialog();
+    const dialog = overlay.querySelector('.ssc-dialog');
+    const isConfirm = activeDialog.kind === 'confirm';
 
     previousFocus = document.activeElement;
-    dialog.dataset.type = type;
-    overlay.querySelector('.ssc-alert-icon i').className = `bi ${details.icon}`;
-    overlay.querySelector('.ssc-alert-title').textContent = activeAlert.title || details.title;
-    overlay.querySelector('.ssc-alert-message').textContent = activeAlert.message;
-    overlay.querySelector('.ssc-alert-button').textContent = activeAlert.buttonText || 'Okay';
+    dialog.dataset.type = activeDialog.type || 'info';
+    overlay.querySelector('.ssc-dialog-title').textContent = activeDialog.title || (isConfirm ? 'SSC System says' : alertTypes[activeDialog.type] || 'Notice');
+    overlay.querySelector('.ssc-dialog-message').textContent = activeDialog.message;
+    overlay.querySelector('.ssc-dialog-confirm').textContent = activeDialog.confirmText || 'OK';
+    overlay.querySelector('.ssc-dialog-cancel').textContent = activeDialog.cancelText || 'Cancel';
+    overlay.querySelector('.ssc-dialog-cancel').hidden = !isConfirm;
     overlay.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('ssc-alert-open');
+    document.body.classList.add('ssc-dialog-open');
 
     requestAnimationFrame(function () {
       overlay.classList.add('show');
-      overlay.querySelector('.ssc-alert-button').focus();
+      overlay.querySelector(isConfirm ? '.ssc-dialog-confirm' : '.ssc-dialog-confirm').focus();
     });
   }
 
-  function closeAlert() {
-    if (!activeAlert) return;
+  function closeDialog(accepted) {
+    if (!activeDialog) return;
 
-    const overlay = getAlertDialog();
-    const completedAlert = activeAlert;
-    activeAlert = null;
+    const overlay = getDialog();
+    const completedDialog = activeDialog;
+    activeDialog = null;
     overlay.classList.remove('show');
     overlay.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('ssc-alert-open');
+    document.body.classList.remove('ssc-dialog-open');
 
     window.setTimeout(function () {
       if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
-      completedAlert.resolve();
-      displayNextAlert();
-    }, 180);
+      completedDialog.resolve(completedDialog.kind === 'confirm' ? accepted : undefined);
+      displayNextDialog();
+    }, 160);
   }
 
-  function showAlert(message, options) {
+  function showDialog(message, options) {
     const settings = options || {};
     return new Promise(function (resolve) {
-      alertQueue.push({
+      dialogQueue.push({
         message: String(message ?? ''),
         title: settings.title,
         type: settings.type || 'info',
-        buttonText: settings.buttonText,
+        kind: settings.kind || 'alert',
+        confirmText: settings.confirmText,
+        cancelText: settings.cancelText,
         resolve
       });
-      displayNextAlert();
+      displayNextDialog();
     });
   }
 
   document.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape' && activeAlert) closeAlert();
+    if (event.key !== 'Escape' || !activeDialog) return;
+    closeDialog(activeDialog.kind === 'confirm' ? false : true);
   });
 
   window.SSCAlert = {
-    show: showAlert,
-    info: (message, title) => showAlert(message, { type: 'info', title }),
-    success: (message, title) => showAlert(message, { type: 'success', title }),
-    warning: (message, title) => showAlert(message, { type: 'warning', title }),
-    error: (message, title) => showAlert(message, { type: 'error', title })
+    show: showDialog,
+    info: (message, title) => showDialog(message, { type: 'info', title }),
+    success: (message, title) => showDialog(message, { type: 'success', title }),
+    warning: (message, title) => showDialog(message, { type: 'warning', title }),
+    error: (message, title) => showDialog(message, { type: 'error', title })
   };
 
-  // Existing and future alert() calls automatically use the application dialog.
+  window.SSCConfirm = function (message, options) {
+    return showDialog(message, { ...(options || {}), kind: 'confirm' });
+  };
+
+  // Browser alerts are replaced with the site dialog. Confirmation prompts are
+  // asynchronous, so protected forms use the data-confirm handler below.
   window.alert = function (message) {
-    return showAlert(message, { type: 'warning' });
+    return showDialog(message, { type: 'warning' });
   };
 })();
 
@@ -191,14 +197,28 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ---- Confirm delete ----
-  document.querySelectorAll('[data-confirm]').forEach(el => {
-    el.addEventListener('click', function (e) {
-      if (!confirm(this.getAttribute('data-confirm') || 'Are you sure?')) {
-        e.preventDefault();
-      }
-    });
-  });
+  // ---- Centered confirmation dialogs ----
+  document.addEventListener('submit', async function (event) {
+    const form = event.target.closest('form[data-confirm]');
+    if (!form) return;
+
+    if (form.dataset.sscConfirmed === 'true') {
+      delete form.dataset.sscConfirmed;
+      return;
+    }
+
+    event.preventDefault();
+    if (form.dataset.sscConfirmPending === 'true') return;
+    form.dataset.sscConfirmPending = 'true';
+
+    const approved = await window.SSCConfirm(form.dataset.confirm || 'Are you sure?');
+    delete form.dataset.sscConfirmPending;
+
+    if (approved) {
+      form.dataset.sscConfirmed = 'true';
+      form.requestSubmit(event.submitter);
+    }
+  }, true);
 
   // ---- Number counter animation ----
   document.querySelectorAll('[data-count]').forEach(el => {

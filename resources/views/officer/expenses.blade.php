@@ -21,7 +21,7 @@
         <td style="font-size:.78rem;white-space:nowrap;">{{ $ex->created_at?->format('M d, Y') }}</td>
         <td style="text-align:center;">
             @if($ex->status === 'Pending')
-            <form method="POST" action="{{ route('officer.expenses.destroy', $ex) }}" onsubmit="return confirm('Are you sure you want to cancel and delete this pending expense?');" style="display:inline-block;">
+            <form method="POST" action="{{ route('officer.expenses.destroy', $ex) }}" data-confirm="Are you sure you want to cancel and delete this pending expense?" style="display:inline-block;">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-outline-danger btn-sm" style="font-size:.72rem; padding: 2px 8px;"><i class="bi bi-trash"></i> Cancel</button>

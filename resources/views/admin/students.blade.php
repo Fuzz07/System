@@ -77,7 +77,7 @@
                                 </form>
                                 @endif
 
-                                <form action="{{ route('admin.students.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this account?');">
+                                <form action="{{ route('admin.students.destroy', $user) }}" method="POST" class="d-inline" data-confirm="Delete this account?">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn btn-sm btn-danger">Delete</button>

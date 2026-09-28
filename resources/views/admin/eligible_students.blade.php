@@ -175,7 +175,7 @@
                             </td>
                             <td>
                                 <form method="POST" action="{{ route('admin.eligible_students.destroy', $e) }}" class="d-inline"
-                                    onsubmit="return confirm('Remove {{ $e->email }} from the eligible list?')">
+                                    data-confirm="Remove {{ $e->email }} from the eligible list?">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger" style="font-size:.72rem;border-radius:6px;" {{ $isRegistered ? 'title=This student is already registered' : '' }}>

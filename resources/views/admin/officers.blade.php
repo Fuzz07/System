@@ -39,7 +39,7 @@
                 <form method="POST" action="{{ route('admin.officers.toggle', $u) }}" class="d-inline">@csrf @method('PATCH')
                     <button class="btn-sm-action btn {{ $u->status === 'active' ? 'btn-warning' : 'btn-success' }}" style="font-size:.72rem;"><i class="bi {{ $u->status === 'active' ? 'bi-pause-circle' : 'bi-play-circle' }}"></i></button>
                 </form>
-                <form method="POST" action="{{ route('admin.officers.destroy', $u) }}" class="d-inline" onsubmit="return confirm('Delete this user permanently?')">@csrf @method('DELETE')
+                <form method="POST" action="{{ route('admin.officers.destroy', $u) }}" class="d-inline" data-confirm="Delete this user permanently?">@csrf @method('DELETE')
                     <button class="btn-sm-action btn btn-outline-danger" style="font-size:.72rem;"><i class="bi bi-trash"></i></button>
                 </form>
             </div>

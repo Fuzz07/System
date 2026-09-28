@@ -400,7 +400,7 @@
                                 <button class="btn btn-outline-danger btn-sm px-2 py-1" style="font-size:.72rem;" title="Reject Budget"><i class="bi bi-x"></i></button>
                             </form>
                             @endif
-                            <form method="POST" action="{{ route('admin.budgets.destroy', $b) }}" class="d-inline" onsubmit="return confirm('Delete this budget?')">@csrf @method('DELETE')
+                            <form method="POST" action="{{ route('admin.budgets.destroy', $b) }}" class="d-inline" data-confirm="Delete this budget?">@csrf @method('DELETE')
                                 <button class="btn btn-outline-danger btn-sm px-2 py-1" style="font-size:.72rem;" title="Delete Budget"><i class="bi bi-trash"></i></button>
                             </form>
                         </div>

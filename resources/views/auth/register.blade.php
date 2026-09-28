@@ -15,6 +15,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="{{ asset('assets/css/style.css') }}?v={{ @filemtime(public_path('assets/css/style.css')) ?: 1 }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/dialogs.css') }}?v={{ @filemtime(public_path('assets/css/dialogs.css')) ?: 1 }}" rel="stylesheet">
     <style>
         /* ── OTP verification step ─────────────────────────────────────────── */
         .otp-meta {

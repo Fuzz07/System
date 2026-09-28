@@ -346,7 +346,7 @@
                                             </button>
                                         </form>
                                         @if(!$sy->is_active)
-                                            <form method="POST" action="{{ route('admin.settings.sy.delete', $sy) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete school year {{ $sy->label }}?')">
+                                            <form method="POST" action="{{ route('admin.settings.sy.delete', $sy) }}" class="d-inline" data-confirm="Are you sure you want to delete school year {{ $sy->label }}?">
                                                 @csrf @method('DELETE')
                                                 <button class="btn btn-outline-danger btn-sm" style="font-size: 0.72rem;"><i class="bi bi-trash"></i></button>
                                             </form>
@@ -449,7 +449,7 @@
                     </div>
                 </div>
                 @if(count($activeSessions) > 1)
-                    <form method="POST" action="{{ route('admin.settings.logout_others') }}" onsubmit="return confirm('Are you sure you want to terminate all other active device sessions? Any other browser currently logged in will be instantly signed out.')">
+                    <form method="POST" action="{{ route('admin.settings.logout_others') }}" data-confirm="Are you sure you want to terminate all other active device sessions? Any other browser currently logged in will be instantly signed out.">
                         @csrf
                         <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size: 0.75rem; font-weight: 600; border-radius: 6px;">
                             <i class="bi bi-box-arrow-right me-1"></i> Log Out All Other Devices
@@ -485,7 +485,7 @@
                                     </div>
                                     <div>
                                         @if(!$session->is_current)
-                                            <form method="POST" action="{{ route('admin.settings.logout_device', $session->id) }}" onsubmit="return confirm('Are you sure you want to log out this device?')">
+                                            <form method="POST" action="{{ route('admin.settings.logout_device', $session->id) }}" data-confirm="Are you sure you want to log out this device?">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-outline-danger btn-sm" style="font-size: 0.72rem; font-weight: 600; padding: 3px 8px;">
@@ -524,7 +524,7 @@
                             <span class="text-muted" style="font-size: 0.76rem;">
                                 Device locked. Unknown devices require approval/OTP.
                             </span>
-                            <form method="POST" action="{{ route('admin.settings.reset_device') }}" onsubmit="return confirm('Are you sure you want to reset your registered primary device token?')">
+                            <form method="POST" action="{{ route('admin.settings.reset_device') }}" data-confirm="Are you sure you want to reset your registered primary device token?">
                                 @csrf
                                 <button type="submit" class="btn btn-sm btn-outline-secondary" style="font-weight: 600; font-size: 0.74rem;">
                                     <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Token
