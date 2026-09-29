@@ -6,7 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Proposal extends Model
 {
+    /** The most a single proposal may request or be approved for, in pesos. */
+    public const MAX_BUDGET = 100000;
+
     public $timestamps = false;
+
+    /** "₱100,000.00", for limit messages. */
+    public static function maxBudgetLabel(): string
+    {
+        return '₱' . number_format(self::MAX_BUDGET, 2);
+    }
+
     protected $fillable = [
         'officer_id', 'project_title', 'requested_budget', 'approved_budget',
         'description', 'status', 'approved_by', 'admin_notes',

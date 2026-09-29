@@ -86,6 +86,73 @@ class ProposalExpenseItemsTest extends TestCase
         $this->assertSame(0, Proposal::count());
     }
 
+    public function test_requested_budget_is_capped_at_100000(): void
+    {
+        $proposal = fn (string $budget) => [
+            'project_title' => 'Sports Fest',
+            'description' => 'Annual sports fest.',
+            'requested_budget' => $budget,
+        ];
+
+        $this->post(route('officer.proposals.store'), $proposal('100000.01'))
+            ->assertSessionHasErrors(['requested_budget' => 'A proposal may request at most ₱100,000.00.']);
+        $this->assertSame(0, Proposal::count());
+
+        $this->post(route('officer.proposals.store'), $proposal('100000'))->assertSessionHasNoErrors();
+        $this->assertEquals(100000.00, (float) Proposal::firstOrFail()->requested_budget);
+    }
+
+    public function test_expense_items_may_not_total_more_than_100000(): void
+    {
+        $this->post(route('officer.proposals.store'), [
+            'project_title' => 'Sound System',
+            'description' => 'Speakers for events.',
+            'budget_items' => [
+                ['description' => 'Speakers', 'qty' => '2', 'unit_cost' => '45000'],
+                ['description' => 'Mixer', 'qty' => '1', 'unit_cost' => '10000.50'],
+            ],
+        ])->assertSessionHasErrors(['budget_items' => 'The estimated expenses total ₱100,000.50, which is over the ₱100,000.00 limit per proposal.']);
+
+        $this->assertSame(0, Proposal::count());
+    }
+
+    public function test_admin_cannot_approve_more_than_100000(): void
+    {
+        $admin = User::create(['fullname' => 'Admin', 'email' => 'admin@example.com', 'password' => 'password', 'role' => 'admin', 'status' => 'active']);
+        // Filed before the limit existed.
+        $legacy = Proposal::create([
+            'officer_id' => $this->officer->id,
+            'project_title' => 'Old Big Project',
+            'requested_budget' => 150000,
+            'description' => 'Filed before the cap.',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.proposals.review', $legacy), ['action' => 'approve', 'approved_budget' => '150000'])
+            ->assertSessionHasErrors(['approved_budget' => 'The approved budget may be at most ₱100,000.00.']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.proposals.review', $legacy), ['action' => 'approve', 'approved_budget' => ''])
+            ->assertSessionHasErrors('approved_budget');
+        $this->assertSame('Pending', $legacy->fresh()->status);
+
+        $this->actingAs($admin)
+            ->post(route('admin.proposals.review', $legacy), ['action' => 'approve', 'approved_budget' => '90000'])
+            ->assertSessionHasNoErrors();
+
+        $legacy->refresh();
+        $this->assertSame('Approved', $legacy->status);
+        $this->assertEquals(90000.00, (float) $legacy->approved_budget);
+    }
+
+    public function test_forms_show_the_budget_limit(): void
+    {
+        $this->withViewErrors([])->get(route('officer.proposals'))
+            ->assertOk()
+            ->assertSee('max="100000"', false)
+            ->assertSee('Maximum ₱100,000.00 per proposal.');
+    }
+
     public function test_pending_proposal_expense_items_can_be_edited(): void
     {
         $proposal = Proposal::create([

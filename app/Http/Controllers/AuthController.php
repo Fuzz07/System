@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\SscHelper;
 use App\Models\User;
+use App\Services\StudentRoster;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -313,7 +314,16 @@ class AuthController extends Controller
             'dob' => ['required', 'date', 'after_or_equal:' . User::earliestBirthdate(), 'before_or_equal:' . User::latestBirthdate()],
             'year_level' => ['required', 'in:1st Year,2nd Year,3rd Year,4th Year'],
             'department' => ['required', 'in:BEED,BSED,BSBA,BSHM,BSIT'],
-            'student_id' => ['required', 'regex:/^\d{4}-\d{4}$/', 'unique:users,student_id'],
+            'student_id' => ['required', 'regex:/^\d{4}-\d{4}$/', function ($attribute, $value, $fail) {
+                // An ID the admin added from the roster (no email yet) is not
+                // taken: registering with it claims that record below.
+                $taken = User::where('student_id', $value)
+                    ->where(fn ($q) => $q->whereNotNull('email')->orWhereNotNull('archived_at'))
+                    ->exists();
+                if ($taken) {
+                    $fail('This Student ID is already associated with a registered account. Please contact the SSC administrator if you need help.');
+                }
+            }],
             'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email', 'ends_with:@gmail.com'],
             'password' => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
         ], [
@@ -324,7 +334,6 @@ class AuthController extends Controller
             'dob.before_or_equal' => 'You must be at least ' . User::MIN_AGE . ' years old to register.',
             'dob.after_or_equal' => 'Please enter a valid date of birth.',
             'student_id.regex' => 'Student ID must use the format YYYY-XXXX (for example, 2024-0001).',
-            'student_id.unique' => 'This Student ID is already associated with a registered account. Please contact the SSC administrator if you need help.',
             'email.email' => 'Enter a valid Gmail address.',
             'email.ends_with' => 'Please use your @gmail.com account.',
             'email.unique' => 'This Gmail account is already registered. Please sign in or use Forgot Password to regain access.',
@@ -345,7 +354,18 @@ class AuthController extends Controller
 
         $fullname = trim($validated['first_name'] . ' ' . ($validated['middle_name'] ?? '') . ' ' . $validated['last_name']);
 
-        $user = User::create([
+        // The admin may already have added this student from the school
+        // roster. Registering claims that record, so anything tied to it (a
+        // recorded enrollment payment, say) carries over. The last name must
+        // match the roster so nobody can take over another student's ID.
+        $rosterRecord = StudentRoster::claimableRecord($validated['student_id']);
+        if ($rosterRecord && !StudentRoster::namesMatch($rosterRecord->last_name, $validated['last_name'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'student_id' => 'This ID number is on the student list under a different last name. Check your ID number and last name, or contact the SSC administrator.',
+            ]);
+        }
+
+        $details = [
             'first_name' => $validated['first_name'],
             'middle_name' => $validated['middle_name'],
             'last_name' => $validated['last_name'],
@@ -359,9 +379,16 @@ class AuthController extends Controller
             'password' => $validated['password'],
             'role' => 'student',
             'status' => 'active',
-        ]);
+        ];
 
-        SscHelper::logActivity($user->id, 'REGISTER', "Student registered: {$user->email}");
+        if ($rosterRecord) {
+            $rosterRecord->update($details);
+            $user = $rosterRecord;
+            SscHelper::logActivity($user->id, 'REGISTER', "Student registered and claimed roster record {$user->student_id}: {$user->email}");
+        } else {
+            $user = User::create($details);
+            SscHelper::logActivity($user->id, 'REGISTER', "Student registered: {$user->email}");
+        }
 
 
         session()->forget([

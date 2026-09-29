@@ -4,9 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Budget;
 use App\Models\User;
+use App\Services\StudentPromotionService;
+use App\Services\StudentRoster;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class StudentController extends Controller
 {
@@ -66,6 +71,96 @@ class StudentController extends Controller
             'users', 'search', 'statusFilter', 'department', 'yearLevel', 'batch', 'showArchived',
             'totalStudents', 'activeStudents', 'pendingStudents', 'archivedStudents', 'departments', 'years', 'batches'
         ));
+    }
+
+    /**
+     * Adds one student from the school roster. Without an email they cannot
+     * sign in yet; the student claims the record by registering with the same
+     * ID number.
+     */
+    public function store(Request $request)
+    {
+        $request->merge([
+            'first_name' => trim((string) $request->input('first_name')),
+            'middle_name' => ($middleName = trim((string) $request->input('middle_name'))) !== '' ? $middleName : null,
+            'last_name' => trim((string) $request->input('last_name')),
+            'student_id' => trim((string) $request->input('student_id')),
+            'email' => ($email = Str::lower(trim((string) $request->input('email')))) !== '' ? $email : null,
+        ]);
+
+        $data = $request->validate([
+            'year_level' => ['required', Rule::in(StudentPromotionService::YEAR_LEVELS)],
+            'department' => ['required', Rule::in(Budget::DEPARTMENTS)],
+            'first_name' => ['required', 'string', 'min:2', 'max:100', 'regex:' . StudentRoster::NAME_PATTERN],
+            'middle_name' => ['nullable', 'string', 'max:100', 'regex:' . StudentRoster::NAME_PATTERN],
+            'last_name' => ['required', 'string', 'min:2', 'max:100', 'regex:' . StudentRoster::NAME_PATTERN],
+            'student_id' => ['required', 'regex:' . StudentRoster::ID_PATTERN, 'unique:users,student_id'],
+            'email' => ['nullable', 'email:rfc', 'max:255', 'ends_with:@gmail.com', 'unique:users,email'],
+        ], [
+            'year_level.required' => 'Choose the student\'s school year.',
+            'first_name.regex' => 'First name may contain letters, spaces, periods, apostrophes, and hyphens only.',
+            'middle_name.regex' => 'Middle name may contain letters, spaces, periods, apostrophes, and hyphens only.',
+            'last_name.regex' => 'Last name may contain letters, spaces, periods, apostrophes, and hyphens only.',
+            'student_id.regex' => 'ID number must use the format YYYY-XXXX (for example, 2024-0001).',
+            'student_id.unique' => 'A student with this ID number already exists.',
+            'email.ends_with' => 'Use the student\'s @gmail.com email.',
+            'email.unique' => 'A student with this email already exists.',
+        ]);
+
+        $student = StudentRoster::add($data);
+        SscHelper::logActivity(Auth::id(), 'STUDENT_ADD', "Added student {$student->fullname} ({$student->student_id})");
+
+        $next = $student->email
+            ? 'They can sign in after setting a password with Forgot Password.'
+            : "They can activate the account by registering with ID number {$student->student_id}.";
+
+        return redirect()->route('admin.students.index')->with('success', "{$student->fullname} was added. {$next}");
+    }
+
+    public function import(Request $request, StudentRoster $roster)
+    {
+        $request->validate([
+            'csv_file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+        ], [
+            'csv_file.required' => 'Please choose a CSV file to import.',
+            'csv_file.mimes' => 'The file must be a CSV (.csv or .txt).',
+            'csv_file.max' => 'The CSV file may not be larger than 2 MB.',
+        ]);
+
+        try {
+            $result = $roster->import($request->file('csv_file')->getRealPath());
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('admin.students.index')->with('danger', 'The CSV file could not be read. Nothing was imported.');
+        }
+
+        SscHelper::logActivity(Auth::id(), 'STUDENT_IMPORT', "CSV import: {$result['added']} added, {$result['existing']} already on file, {$result['invalid']} invalid");
+
+        $message = "{$result['added']} student(s) imported.";
+        if ($result['existing']) {
+            $message .= " {$result['existing']} were already on file and skipped.";
+        }
+        if ($result['invalid']) {
+            $message .= " {$result['invalid']} row(s) had problems and were not imported.";
+        }
+
+        return redirect()->route('admin.students.index')
+            ->with($result['added'] || ! $result['invalid'] ? 'success' : 'danger', $message)
+            ->with('import_errors', $result['errors']);
+    }
+
+    /** A CSV with the required columns in order and one example row. */
+    public function template()
+    {
+        $rows = [StudentRoster::COLUMNS, ['1st Year', 'BSIT', 'Juan', 'Santos', 'Dela Cruz', '2026-0001']];
+
+        return response()->streamDownload(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            foreach ($rows as $row) {
+                fputcsv($out, $row);
+            }
+            fclose($out);
+        }, 'student_import_template.csv', ['Content-Type' => 'text/csv']);
     }
 
     /**

@@ -54,7 +54,7 @@
                 <p style="font-size:.85rem;color:#718096;margin-bottom:16px;">{{ $p->description }}</p>
                 <div class="mb-3"><label class="form-label-custom">Estimated Expenses</label>@include('partials.proposal-expense-summary', ['proposal' => $p])</div>
                 <div class="mb-3" style="font-size:.85rem;">Requested Budget: <strong>{{ \App\Helpers\SscHelper::formatCurrency($p->requested_budget) }}</strong></div>
-                <div class="mb-3"><label class="form-label-custom">Approved Budget (₱)</label><input type="number" name="approved_budget" class="form-control-custom" value="{{ $p->requested_budget }}" step="0.01"></div>
+                <div class="mb-3"><label class="form-label-custom">Approved Budget (₱)</label><input type="number" name="approved_budget" class="form-control-custom" value="{{ min((float) $p->requested_budget, \App\Models\Proposal::MAX_BUDGET) }}" min="0" max="{{ \App\Models\Proposal::MAX_BUDGET }}" step="0.01"><div class="form-text">Maximum {{ \App\Models\Proposal::maxBudgetLabel() }} per proposal.</div></div>
                 <div class="mb-3"><label class="form-label-custom">Admin Notes</label><textarea name="admin_notes" class="form-control-custom" rows="3" style="resize:vertical;"></textarea></div>
             </div>
             <div class="modal-footer border-0 pt-0">

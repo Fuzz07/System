@@ -87,6 +87,9 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::delete('/officers/{user}', [Admin\OfficerController::class, 'destroy'])->name('officers.destroy');
 
         Route::get('/students', [Admin\StudentController::class, 'index'])->name('students.index');
+        Route::post('/students', [Admin\StudentController::class, 'store'])->name('students.store');
+        Route::post('/students/import', [Admin\StudentController::class, 'import'])->name('students.import');
+        Route::get('/students/import/template', [Admin\StudentController::class, 'template'])->name('students.template');
         registerEnrollmentPaymentRoutes();
         Route::patch('/students/{user}/approve', [Admin\StudentController::class, 'approve'])->name('students.approve');
         Route::patch('/students/{user}/toggle', [Admin\StudentController::class, 'toggleStatus'])->name('students.toggle');

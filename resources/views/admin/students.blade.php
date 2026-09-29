@@ -3,12 +3,31 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
             <h4 class="mb-0">Student Accounts</h4>
             <small class="text-muted">Total: {{ $totalStudents }} • Active: {{ $activeStudents }} • Pending: {{ $pendingStudents }} • Archived: {{ $archivedStudents }}</small>
         </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-brand d-inline-flex align-items-center gap-2 px-3 py-2" data-bs-toggle="modal" data-bs-target="#importStudentsModal">
+                <i class="bi bi-upload"></i> Import CSV
+            </button>
+            <button type="button" class="btn btn-brand d-inline-flex align-items-center gap-2 px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                <i class="bi bi-person-plus"></i> Add Student
+            </button>
+        </div>
     </div>
+
+    @if(session('import_errors'))
+    <div class="alert alert-warning small mb-3">
+        <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle me-1"></i> These rows were not imported. Fix them in the file and import it again; rows already added will be skipped.</div>
+        <ul class="mb-0 ps-3">
+            @foreach(session('import_errors') as $importError)
+            <li>{{ $importError }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
 
     <ul class="nav nav-pills nav-brand d-inline-flex gap-1 bg-white border rounded-3 p-1 mb-3 shadow-sm">
         <li class="nav-item">
@@ -86,7 +105,13 @@
                         @forelse($users as $user)
                         <tr>
                             <td>{{ $user->fullname }}</td>
-                            <td>{{ $user->email }}</td>
+                            <td>
+                                @if($user->email)
+                                {{ $user->email }}
+                                @else
+                                <span class="text-muted fst-italic" title="Added by the admin. The student activates the account by registering with this ID number.">Not registered yet</span>
+                                @endif
+                            </td>
                             <td>{{ $user->student_id }}</td>
                             <td>{{ $user->department }}</td>
                             @if($showArchived)
@@ -142,4 +167,131 @@
         </div>
     </div>
 </div>
+
+{{-- Add Student Modal: same fields, same order as the CSV import. --}}
+<div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius:var(--radius);border:none;box-shadow:0 10px 25px rgba(0,0,0,.12);">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title" id="addStudentTitle" style="font-weight:700;"><i class="bi bi-person-plus"></i> Add Student</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter:invert(1);"></button>
+            </div>
+            <form method="POST" action="{{ route('admin.students.store') }}">
+                @csrf
+                <input type="hidden" name="_form" value="add_student">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="add_year_level" class="form-label-custom">School Year <span class="text-danger">*</span></label>
+                            <select id="add_year_level" name="year_level" class="form-select-custom" required>
+                                <option value="">— Select —</option>
+                                @foreach(\App\Services\StudentPromotionService::YEAR_LEVELS as $level)
+                                <option value="{{ $level }}" @selected(old('year_level') === $level)>{{ $level }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add_department" class="form-label-custom">Department <span class="text-danger">*</span></label>
+                            <select id="add_department" name="department" class="form-select-custom" required>
+                                <option value="">— Select —</option>
+                                @foreach(\App\Models\Budget::DEPARTMENTS as $dept)
+                                <option value="{{ $dept }}" @selected(old('department') === $dept)>{{ $dept }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="add_first_name" class="form-label-custom">First Name <span class="text-danger">*</span></label>
+                            <input id="add_first_name" name="first_name" class="form-control-custom" value="{{ old('first_name') }}" minlength="2" maxlength="100" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="add_middle_name" class="form-label-custom">Middle Name <span class="text-muted fw-normal">(optional)</span></label>
+                            <input id="add_middle_name" name="middle_name" class="form-control-custom" value="{{ old('middle_name') }}" maxlength="100">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="add_last_name" class="form-label-custom">Last Name <span class="text-danger">*</span></label>
+                            <input id="add_last_name" name="last_name" class="form-control-custom" value="{{ old('last_name') }}" minlength="2" maxlength="100" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add_student_id" class="form-label-custom">ID Number <span class="text-danger">*</span></label>
+                            <input id="add_student_id" name="student_id" class="form-control-custom" value="{{ old('student_id') }}" pattern="\d{4}-\d{4}" maxlength="9" placeholder="YYYY-XXXX" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="add_email" class="form-label-custom">Gmail <span class="text-muted fw-normal">(optional)</span></label>
+                            <input id="add_email" type="email" name="email" class="form-control-custom" value="{{ old('email') }}" maxlength="255" placeholder="student@gmail.com">
+                        </div>
+                    </div>
+                    <div class="small text-muted mt-3">
+                        <i class="bi bi-info-circle me-1"></i> Without a Gmail, the student activates this account by registering with the same ID number and last name.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-primary-custom"><i class="bi bi-check2"></i> Add Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Import CSV Modal --}}
+<div class="modal fade" id="importStudentsModal" tabindex="-1" aria-labelledby="importStudentsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius:var(--radius);border:none;box-shadow:0 10px 25px rgba(0,0,0,.12);">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title" id="importStudentsTitle" style="font-weight:700;"><i class="bi bi-upload"></i> Import Students from CSV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter:invert(1);"></button>
+            </div>
+            <form method="POST" action="{{ route('admin.students.import') }}" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="_form" value="import_students">
+                <div class="modal-body p-4">
+                    <div class="fw-bold small mb-2">The columns must be in this order:</div>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-bordered align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr><th>Column</th><th>Heading</th><th>Required</th><th>Accepted values</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>A</td><td>School Year</td><td>Yes</td><td>1st Year, 2nd Year, 3rd Year, 4th Year (also 1, 2nd, "First Year")</td></tr>
+                                <tr><td>B</td><td>Department</td><td>Yes</td><td>{{ implode(', ', \App\Models\Budget::DEPARTMENTS) }}</td></tr>
+                                <tr><td>C</td><td>First Name</td><td>Yes</td><td>Letters, spaces, . ' -</td></tr>
+                                <tr><td>D</td><td>Middle Name</td><td>No</td><td>Leave the cell blank if none</td></tr>
+                                <tr><td>E</td><td>Last Name</td><td>Yes</td><td>Letters, spaces, . ' -</td></tr>
+                                <tr><td>F</td><td>ID Number</td><td>Yes</td><td>YYYY-XXXX, e.g. 2026-0001</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="small text-muted ps-3 mb-3">
+                        <li>The heading row is optional and is detected automatically.</li>
+                        <li>Students whose ID number is already on file are skipped, so the same file can be imported again safely.</li>
+                        <li>Rows with problems are listed after the import; the rest are still added.</li>
+                        <li>Imported students activate their account by registering with their ID number.</li>
+                    </ul>
+                    <a href="{{ route('admin.students.template') }}" class="btn btn-sm btn-outline-secondary mb-3"><i class="bi bi-download"></i> Download CSV template</a>
+                    <div>
+                        <label for="csv_file" class="form-label-custom">CSV file <span class="text-danger">*</span></label>
+                        <input type="file" id="csv_file" name="csv_file" accept=".csv,.txt" class="form-control-custom" required>
+                        <div class="form-text">In Excel: File → Save As → "CSV UTF-8 (Comma delimited)". Up to 2 MB.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-primary-custom"><i class="bi bi-upload"></i> Import Now</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+@if($errors->any() && in_array(old('_form'), ['add_student', 'import_students'], true))
+<script>
+    // Reopen the form that failed validation so the admin can fix it in place.
+    document.addEventListener('DOMContentLoaded', function () {
+        var modal = document.getElementById(@json(old('_form') === 'add_student' ? 'addStudentModal' : 'importStudentsModal'));
+        if (modal && window.bootstrap) bootstrap.Modal.getOrCreateInstance(modal).show();
+    });
+</script>
+@endif
+@endpush

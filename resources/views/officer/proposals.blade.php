@@ -255,6 +255,15 @@
                 box.querySelector('[data-expense-budget-hint]').hidden = !hasRows;
                 budget.readOnly = hasRows;
                 if (hasRows) budget.value = total.toFixed(2);
+
+                // A read-only field skips the browser's max check, so flag the
+                // expense rows themselves when their total passes the limit.
+                const max = parseFloat(budget.dataset.expenseMax) || Infinity;
+                const over = hasRows && total > max;
+                box.querySelector('[data-expense-over-limit]').hidden = !over;
+                box.querySelectorAll('[data-expense-cost]').forEach((input) => {
+                    input.setCustomValidity(over ? 'The estimated expenses are over the ' + peso(max) + ' limit per proposal.' : '');
+                });
             }
 
             document.addEventListener('click', (e) => {

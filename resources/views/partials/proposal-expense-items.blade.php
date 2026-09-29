@@ -17,6 +17,7 @@
                 </tbody>
                 <tfoot data-expense-footer>
                     <tr><th colspan="3" class="text-end">Total Estimated Expenses</th><th class="text-end text-nowrap" data-expense-grand-total>₱0.00</th><th></th></tr>
+                    <tr data-expense-over-limit hidden><td colspan="5" class="text-end text-danger small fw-semibold">Over the {{ \App\Models\Proposal::maxBudgetLabel() }} limit per proposal. Reduce the quantities or unit costs.</td></tr>
                 </tfoot>
             </table>
         </div>
@@ -28,7 +29,8 @@
 
     <div class="mb-3">
         <label class="form-label-custom">Requested Budget (₱) <span class="text-danger">*</span></label>
-        <input type="number" name="requested_budget" class="form-control-custom" value="{{ $requestedBudget }}" placeholder="0.00" min="1" step="0.01" required data-expense-budget>
+        <input type="number" name="requested_budget" class="form-control-custom" value="{{ $requestedBudget }}" placeholder="0.00" min="1" max="{{ \App\Models\Proposal::MAX_BUDGET }}" step="0.01" required data-expense-budget data-expense-max="{{ \App\Models\Proposal::MAX_BUDGET }}">
+        <div style="font-size:.72rem;color:#a0aec0;margin-top:4px;">Maximum {{ \App\Models\Proposal::maxBudgetLabel() }} per proposal.</div>
         <div style="font-size:.72rem;color:#a0aec0;margin-top:4px;" data-expense-budget-hint hidden>Calculated automatically from the estimated expenses.</div>
     </div>
 </div>

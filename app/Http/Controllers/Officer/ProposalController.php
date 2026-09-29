@@ -59,13 +59,14 @@ class ProposalController extends Controller
 
         $request->validate([
             'project_title'              => 'required|string|max:255',
-            'requested_budget'           => 'required_without:budget_items|nullable|numeric|min:1',
+            'requested_budget'           => 'required_without:budget_items|nullable|numeric|min:1|max:' . Proposal::MAX_BUDGET,
             'description'                => 'required|string',
             'budget_items'               => 'array|max:50',
             'budget_items.*.description' => 'required|string|max:255',
             'budget_items.*.qty'         => 'required|integer|min:1|max:100000',
             'budget_items.*.unit_cost'   => 'required|numeric|min:0|max:10000000',
         ], [
+            'requested_budget.max'                 => 'A proposal may request at most ' . Proposal::maxBudgetLabel() . '.',
             'budget_items.*.description.required' => 'Each expense item needs a description.',
             'budget_items.*.qty.required'          => 'Each expense item needs a quantity.',
             'budget_items.*.unit_cost.required'    => 'Each expense item needs a unit cost.',
@@ -89,6 +90,12 @@ class ProposalController extends Controller
         if ($total < 1) {
             throw ValidationException::withMessages([
                 'budget_items' => 'The estimated expenses must total at least ₱1.00.',
+            ]);
+        }
+
+        if ($total > Proposal::MAX_BUDGET) {
+            throw ValidationException::withMessages([
+                'budget_items' => 'The estimated expenses total ₱' . number_format($total, 2) . ', which is over the ' . Proposal::maxBudgetLabel() . ' limit per proposal.',
             ]);
         }
 

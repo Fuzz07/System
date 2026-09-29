@@ -36,11 +36,21 @@ class ProposalController extends Controller
 
         $request->validate([
             'action'          => 'required|in:approve,reject',
-            'approved_budget' => 'nullable|numeric|min:0',
+            'approved_budget' => 'nullable|numeric|min:0|max:' . Proposal::MAX_BUDGET,
             'admin_notes'     => 'nullable|string',
+        ], [
+            'approved_budget.max' => 'The approved budget may be at most ' . Proposal::maxBudgetLabel() . '.',
         ]);
 
         $action = $request->action;
+
+        // A proposal filed before the limit may request more than it; approving
+        // it as-is would slip past the cap, so ask for an amount within it.
+        if ($action === 'approve' && !$request->filled('approved_budget') && (float) $proposal->requested_budget > Proposal::MAX_BUDGET) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'approved_budget' => 'This proposal requests ₱' . number_format((float) $proposal->requested_budget, 2) . ', over the ' . Proposal::maxBudgetLabel() . ' limit. Enter an approved budget of at most ' . Proposal::maxBudgetLabel() . '.',
+            ]);
+        }
         $proposal->status = $action === 'approve' ? 'Approved' : 'Rejected';
         $proposal->approved_by = Auth::id();
         $proposal->admin_notes = $request->admin_notes;
