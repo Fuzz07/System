@@ -288,6 +288,8 @@ Route::group([], function () use ($baseDomain) {
     // ─── Student Routes ───
     Route::prefix('student')->name('student.')->middleware(['auth', 'role:student'])->group(function () {
         Route::get('/', [Student\DashboardController::class, 'index'])->name('overview');
+        Route::get('/account', [Student\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/account', [Student\ProfileController::class, 'update'])->name('profile.update');
         Route::post('/chatbot/chat', [Student\ChatbotController::class, 'chat'])->name('chatbot.chat');
         
         Route::post('/api/device-token', [\App\Http\Controllers\DeviceTokenController::class, 'store'])->name('api.device_token');
@@ -408,6 +410,9 @@ Route::group([], function () use ($baseDomain) {
 
     // ─── Mobile Student Routes (PWA) ───
     Route::prefix('m/student')->name('mobile.student.')->middleware(['auth', 'role:student'])->group(function () {
+        Route::get('/account', [Student\ProfileController::class, 'mobileEdit'])->name('profile.edit');
+        Route::put('/account', [Student\ProfileController::class, 'update'])->name('profile.update');
+
         Route::get('/proposals', function () {
             $proposals = \App\Models\Proposal::with('officer')
                 ->withCount('comments')

@@ -208,11 +208,34 @@
         });
 
         document.querySelectorAll('.paymongo-form').forEach(function (form) {
-            form.addEventListener('submit', function () {
-                const button = form.querySelector('button');
+            const button = form.querySelector('button');
+            if (!button) return;
+            const originalHtml = button.innerHTML;
+            const originallyDisabled = button.disabled;
+
+            function resetCheckoutButton() {
+                if (originallyDisabled) return;
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+                delete form.dataset.submitting;
+            }
+
+            form.addEventListener('submit', function (event) {
+                if (form.dataset.submitting === 'true') {
+                    event.preventDefault();
+                    return;
+                }
+
+                form.dataset.submitting = 'true';
                 button.disabled = true;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Opening secure checkout?';
+
+                // If navigation is blocked or times out, let the student retry.
+                window.setTimeout(resetCheckoutButton, 15000);
             });
+
+            // Back-forward cache can otherwise restore a permanently disabled button.
+            window.addEventListener('pageshow', resetCheckoutButton);
         });
     });
 </script>

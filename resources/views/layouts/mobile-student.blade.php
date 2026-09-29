@@ -170,6 +170,10 @@
                 <i class="bi bi-chat-dots"></i> Send Feedback
                 <i class="bi bi-chevron-right sheet-chevron"></i>
             </a>
+            <a href="{{ route('mobile.student.profile.edit') }}" class="sheet-item">
+                <i class="bi bi-person-gear"></i> Edit Account Details
+                <i class="bi bi-chevron-right sheet-chevron"></i>
+            </a>
             <form method="POST" action="{{ url('/logout') }}">
                 @csrf
                 <button type="submit" class="sheet-item danger logout-btn">

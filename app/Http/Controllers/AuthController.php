@@ -975,7 +975,10 @@ class AuthController extends Controller
         }
 
         $state = Str::random(40);
-        session(['google_oauth_state' => $state]);
+        session([
+            'google_oauth_state' => $state,
+            'google_oauth_redirect_uri' => $redirectUri,
+        ]);
 
         $query = http_build_query([
             'client_id' => $clientId,
@@ -1019,7 +1022,8 @@ class AuthController extends Controller
 
         $clientId = config('services.google.client_id');
         $clientSecret = config('services.google.client_secret');
-        $redirectUri = config('services.google.redirect') ?: route('auth.google.callback');
+        $redirectUri = session('google_oauth_redirect_uri') ?: (config('services.google.redirect') ?: route('auth.google.callback'));
+        session()->forget('google_oauth_redirect_uri');
 
         try {
             $tokenResponse = Http::asForm()->timeout(10)->post('https://oauth2.googleapis.com/token', [

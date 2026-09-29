@@ -33,6 +33,10 @@
         <i class="bi bi-cash-stack"></i>
         <span>Enrollment</span>
     </a>
+    <a href="{{ route('student.profile.edit') }}" class="nav-item">
+        <i class="bi bi-person-gear"></i>
+        <span>Account Details</span>
+    </a>
 @endsection
 
 @section('content')

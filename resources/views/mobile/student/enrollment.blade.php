@@ -65,4 +65,27 @@
 <script>
 document.addEventListener('DOMContentLoaded',function(){const s=document.getElementById('manual_method'),g=document.getElementById('gcash_help'),i=document.getElementById('instapay_help');function update(){if(!s)return;g.style.display=s.value==='gcash'?'block':'none';i.style.display=s.value==='instapay'?'block':'none'}if(s){s.addEventListener('change',update);update()}const f=document.getElementById('paymongo-form');if(f)f.addEventListener('submit',function(){const b=f.querySelector('button');b.disabled=true;b.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span>Opening checkout…'})});
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('paymongo-form');
+    if (!form) return;
+
+    const button = form.querySelector('button');
+    if (!button) return;
+    const originalHtml = button.innerHTML;
+    const originallyDisabled = button.disabled;
+
+    function resetCheckoutButton() {
+        if (originallyDisabled) return;
+        button.disabled = false;
+        button.innerHTML = originalHtml;
+    }
+
+    form.addEventListener('submit', function () {
+        window.setTimeout(resetCheckoutButton, 15000);
+    });
+
+    window.addEventListener('pageshow', resetCheckoutButton);
+});
+</script>
 @endsection

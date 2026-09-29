@@ -57,7 +57,9 @@ class SecurityHeadersMiddleware
                 "frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/",
                 "object-src 'none'",
                 "base-uri 'self'",
-                "form-action 'self'",
+                // Chrome also applies form-action to redirects after a form POST.
+                // The enrollment POST redirects to PayMongo's hosted checkout.
+                "form-action 'self' https://checkout.paymongo.com https://*.checkout.paymongo.com",
                 "upgrade-insecure-requests",
             ])
         );

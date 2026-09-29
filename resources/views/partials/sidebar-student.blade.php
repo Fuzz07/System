@@ -14,6 +14,10 @@
     <span class="nav-icon"><i class="bi bi-cash-stack"></i></span> Enrollment Fee
 </a>
 
+<a href="{{ route('student.profile.edit') }}" class="nav-link {{ request()->routeIs('student.profile.*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-person-gear"></i></span> Account Details
+</a>
+
 <div class="nav-section-label">Participate</div>
 <a href="{{ route('student.feedback') }}" class="nav-link {{ request()->routeIs('student.feedback') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-chat-dots"></i></span> Feedback

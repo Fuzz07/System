@@ -54,9 +54,14 @@ class PayMongoEnrollmentPaymentTest extends TestCase
 
         $student = $this->student('checkout.student@example.com');
 
-        $this->actingAs($student)
+        $response = $this->actingAs($student)
             ->post(route('student.enrollment.paymongo.checkout'))
             ->assertRedirect('https://checkout.paymongo.com/cs_test_checkout');
+
+        $this->assertStringContainsString(
+            "form-action 'self' https://checkout.paymongo.com https://*.checkout.paymongo.com",
+            (string) $response->headers->get('Content-Security-Policy')
+        );
 
         $payment = EnrollmentPayment::where('user_id', $student->id)->firstOrFail();
         $this->assertSame('paymongo', $payment->method);
@@ -69,12 +74,23 @@ class PayMongoEnrollmentPaymentTest extends TestCase
 
             return $request->method() === 'POST'
                 && $request->url() === 'https://api.paymongo.com/v2/checkout_sessions'
-                && $request->hasHeader('Authorization', 'Basic ' . base64_encode('sk_test_example:'))
+                && $request->hasHeader('Authorization', 'Basic '.base64_encode('sk_test_example:'))
                 && data_get($payload, 'data.attributes.line_items.0.amount') === 5000
                 && data_get($payload, 'data.attributes.billing.email') === $student->email
                 && data_get($payload, 'data.attributes.reference_number') === $payment->reference
                 && data_get($payload, 'data.attributes.payment_method_types') === ['gcash', 'qrph', 'card'];
         });
+    }
+
+    public function test_web_checkout_page_recovers_its_button_after_browser_back_navigation(): void
+    {
+        $student = $this->student('browser.back@example.com');
+
+        $this->actingAs($student)
+            ->get(route('student.enrollment.index'))
+            ->assertOk()
+            ->assertSee("window.addEventListener('pageshow', resetCheckoutButton)", false)
+            ->assertSee('window.setTimeout(resetCheckoutButton, 15000)', false);
     }
 
     public function test_signed_return_confirms_payment_without_double_crediting_budget(): void
@@ -124,7 +140,7 @@ class PayMongoEnrollmentPaymentTest extends TestCase
             ],
         ], JSON_UNESCAPED_SLASHES);
         $timestamp = time();
-        $signature = hash_hmac('sha256', $timestamp . '.' . $rawPayload, 'whsk_test_example');
+        $signature = hash_hmac('sha256', $timestamp.'.'.$rawPayload, 'whsk_test_example');
         $server = [
             'CONTENT_TYPE' => 'application/json',
             'HTTP_PAYMONGO_SIGNATURE' => "t={$timestamp},te={$signature},li=",
@@ -149,7 +165,7 @@ class PayMongoEnrollmentPaymentTest extends TestCase
 
         $this->call('POST', route('api.paymongo.webhook'), [], [], [], [
             'CONTENT_TYPE' => 'application/json',
-            'HTTP_PAYMONGO_SIGNATURE' => 't=' . time() . ',te=invalid,li=',
+            'HTTP_PAYMONGO_SIGNATURE' => 't='.time().',te=invalid,li=',
         ], $rawPayload)->assertUnauthorized();
 
         $this->assertSame('pending', $payment->fresh()->status);
