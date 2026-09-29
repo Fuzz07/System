@@ -74,6 +74,7 @@
                             @if($showArchived)
                             <th>Graduated</th>
                             <th>Archived On</th>
+                            <th>Status</th>
                             @else
                             <th>Year</th>
                             <th>Status</th>
@@ -91,6 +92,10 @@
                             @if($showArchived)
                             <td>{{ $user->graduated_school_year ? 'SY ' . $user->graduated_school_year : $user->year_level }}</td>
                             <td>{{ $user->archived_at?->format('M d, Y') }}</td>
+                            <td>
+                                {{-- Grey, not the yellow used for sign-ups awaiting approval. --}}
+                                <span class="badge bg-{{ $user->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($user->status) }}</span>
+                            </td>
                             @else
                             <td>{{ $user->year_level }}</td>
                             <td>
@@ -127,7 +132,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">{{ $showArchived ? 'No archived students yet.' : 'No students found.' }}</td>
+                            <td colspan="{{ $showArchived ? 8 : 7 }}" class="text-center text-muted py-4">{{ $showArchived ? 'No archived students yet.' : 'No students found.' }}</td>
                         </tr>
                         @endforelse
                     </tbody>

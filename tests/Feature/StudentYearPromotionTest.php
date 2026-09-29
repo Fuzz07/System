@@ -123,6 +123,8 @@ class StudentYearPromotionTest extends TestCase
             ->assertOk()
             ->assertSee('Recent Graduate')
             ->assertSee('SY 2025-2026')
+            ->assertSee('<th>Status</th>', false)
+            ->assertSee('<span class="badge bg-secondary">Inactive</span>', false)
             ->assertDontSee('Awaiting Approval');
 
         $this->actingAs($this->admin)
