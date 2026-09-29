@@ -244,8 +244,8 @@
                         <input type="text" name="student_id" class="form-control" value="{{ $fromAddStudent ? old('student_id') : '' }}" placeholder="2024-0001" pattern="\d{4}-\d{4}" title="Format: YYYY-XXXX" required>
                     </div>
                     <div class="col-md-8">
-                        <label class="form-label">School Email <span class="text-danger">*</span></label>
-                        <input type="email" name="email" class="form-control" value="{{ $fromAddStudent ? old('email') : '' }}" placeholder="name@mcclawis.edu.ph" required>
+                        <label class="form-label">Gmail Address <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" value="{{ $fromAddStudent ? old('email') : '' }}" placeholder="name@gmail.com" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Department <span class="text-danger">*</span></label>

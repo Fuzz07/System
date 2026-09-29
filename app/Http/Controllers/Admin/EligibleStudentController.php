@@ -52,14 +52,14 @@ class EligibleStudentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'email'        => 'required|email|ends_with:@mcclawis.edu.ph|unique:eligible_students,email',
+            'email'        => 'required|email|ends_with:@gmail.com,@mcclawis.edu.ph|unique:eligible_students,email',
             'student_name' => 'nullable|string|max:200',
             'department'   => 'nullable|string|max:100',
             'year_level'   => 'nullable|string|max:50',
             'notes'        => 'nullable|string|max:500',
         ], [
             'email.unique'      => 'This email is already in the eligible students list.',
-            'email.ends_with'   => 'Only @mcclawis.edu.ph emails are accepted.',
+            'email.ends_with'   => 'Only @gmail.com (or @mcclawis.edu.ph) emails are accepted.',
         ]);
 
         EligibleStudent::create([
@@ -123,7 +123,7 @@ class EligibleStudentController extends Controller
                 if (empty($email)) continue;
 
                 // Validate domain
-                if (!str_ends_with($email, '@mcclawis.edu.ph')) {
+                if (!str_ends_with($email, '@gmail.com') && !str_ends_with($email, '@mcclawis.edu.ph')) {
                     $invalid++;
                     continue;
                 }

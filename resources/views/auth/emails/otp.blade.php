@@ -25,7 +25,7 @@
                         <td style="padding: 40px 30px;">
                             <h2 style="margin-top: 0; color: #0f172a; font-size: 20px; font-weight: 700; letter-spacing: -0.2px;">Verify your email address</h2>
                             <p style="font-size: 15px; line-height: 1.6; color: #475569;">Hello,</p>
-                            <p style="font-size: 15px; line-height: 1.6; color: #475569;">You are initiating registration at the **Madridejos Community College Supreme Student Council Portal**. To confirm that you own this Microsoft 365 school account, please use this 6-digit verification code:</p>
+                            <p style="font-size: 15px; line-height: 1.6; color: #475569;">You are initiating registration at the **Madridejos Community College Supreme Student Council Portal**. To confirm that you own this Gmail account, please use this 6-digit verification code:</p>
                             
                             <!-- OTP Box -->
                             <div style="text-align: center; margin: 32px 0;">

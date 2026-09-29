@@ -109,28 +109,30 @@
             <i class="bi bi-shield-check success-icon"></i>
         </div>
 
-        <span class="status-badge">
-            <i class="bi bi-clock-history"></i> Awaiting Approval
+        <span class="status-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">
+            <i class="bi bi-check-circle-fill"></i> Account Active
         </span>
 
-        <h1 class="fw-bold mb-3" style="font-size: 1.85rem; letter-spacing: -0.5px;">Email Confirmed!</h1>
+        <h1 class="fw-bold mb-3" style="font-size: 1.85rem; letter-spacing: -0.5px;">Registration Successful!</h1>
         
         <p class="text-white-50 mb-4" style="line-height: 1.6; font-size: 0.98rem;">
-            Hello, <strong class="text-white">{{ $user->first_name }}</strong>! Your Microsoft 365 school email address (<strong>{{ $user->email }}</strong>) has been successfully verified.
+            Hello, <strong class="text-white">{{ $user->first_name }}</strong>! Your Gmail address (<strong>{{ $user->email }}</strong>) has been successfully verified.
         </p>
 
         <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 20px; text-align: left; margin-bottom: 30px;">
             <h6 class="fw-bold text-white d-flex align-items-center gap-2 mb-2" style="font-size:0.95rem;">
-                <i class="bi bi-shield-fill-exclamation text-warning"></i> What happens next?
+                <i class="bi bi-shield-check text-success"></i> Direct Access Enabled
             </h6>
             <p class="text-white-50 mb-0" style="font-size: 0.88rem; line-height: 1.65;">
-                Your verified account has been securely placed in the administrative queue. The **Supreme Student Council Administrator** will review your enrollment status. Once approved, your account will be fully activated, and you can access your portal.
+                Your account is active. You can directly access the student portal or sign in using your Gmail address and password anytime.
             </p>
         </div>
 
-        <a href="{{ route('login.student') }}" class="action-button">
-            <i class="bi bi-box-arrow-in-right"></i> Return to Login Portal
-        </a>
+        <div class="d-flex flex-column gap-2">
+            <a href="{{ route('student.proposals') }}" class="action-button justify-content-center">
+                <i class="bi bi-box-arrow-in-right"></i> Proceed to Student Portal
+            </a>
+        </div>
     </div>
 </div>
 </body>

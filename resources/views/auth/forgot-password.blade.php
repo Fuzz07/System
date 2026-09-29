@@ -39,10 +39,10 @@
             @csrf
             
             <div class="mb-4">
-                <label class="form-label-custom">Microsoft 365 Account (Outlook)</label>
-                <input type="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph" value="{{ old('email') }}" required autofocus style="background:#fff;">
+                <label class="form-label-custom">Gmail Address</label>
+                <input type="email" name="email" class="form-control-custom" placeholder="user@gmail.com" value="{{ old('email') }}" required autofocus style="background:#fff;">
                 <div class="form-text text-muted" style="font-size:0.75rem;margin-top:6px;">
-                    We will send a 6-digit password reset verification code to your official school Outlook inbox.
+                    We will send a 6-digit password reset verification code to your Gmail inbox.
                 </div>
             </div>
 
@@ -63,7 +63,7 @@
 <div id="forgot-loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,15,29,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:99999;align-items:center;justify-content:center;color:#fff;flex-direction:column;font-family:'Plus Jakarta Sans',sans-serif;animation:fadeInLoader 0.3s ease;">
   <div class="spinner-border text-primary" role="status" style="width: 3.5rem; height: 3.5rem; border-width: 0.35em; margin-bottom: 20px;"></div>
   <div style="font-weight: 700; font-size: 1.15rem; letter-spacing: 0.5px;">Sending Verification Code...</div>
-  <div style="font-size: 0.88rem; color: #a1a1aa; margin-top: 6px;">Communicating with Microsoft 365 Outlook Servers</div>
+  <div style="font-size: 0.88rem; color: #a1a1aa; margin-top: 6px;">Sending code to your Gmail inbox</div>
 </div>
 
 <style>

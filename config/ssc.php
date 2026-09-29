@@ -33,7 +33,7 @@ return [
     // Student registration eligibility whitelist.
     // When enabled, only emails pre-approved in the eligible_students table
     // may proceed through the OTP / registration flow.
-    'enforce_eligibility_whitelist' => env('ENFORCE_ELIGIBILITY_WHITELIST', true),
+    'enforce_eligibility_whitelist' => env('ENFORCE_ELIGIBILITY_WHITELIST', false),
 
     // SSC executive officers, used for signatories on printed documents.
     'executive_officers' => [

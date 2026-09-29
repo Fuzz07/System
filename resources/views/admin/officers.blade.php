@@ -62,7 +62,7 @@
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-md-6"><label class="form-label-custom">Student ID</label><input type="text" name="student_id" value="{{ $u->student_id }}" class="form-control-custom" pattern="\d{4}-\d{4}" placeholder="YYYY-XXXX" required></div>
-                            <div class="col-md-6"><label class="form-label-custom">MS Account</label><input type="email" name="email" value="{{ $u->email }}" class="form-control-custom" placeholder="user@mcclawis.edu.ph" required></div>
+                            <div class="col-md-6"><label class="form-label-custom">Email Address (Gmail)</label><input type="email" name="email" value="{{ $u->email }}" class="form-control-custom" placeholder="user@gmail.com" required></div>
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-md-6"><label class="form-label-custom">Password <span class="text-muted" style="font-weight:400;font-size:.78rem;">(Leave blank to keep current)</span></label>
@@ -112,7 +112,7 @@
             </div>
             <div class="row g-2 mb-3">
                 <div class="col-md-6"><label class="form-label-custom">Student ID</label><input type="text" name="student_id" class="form-control-custom" pattern="\d{4}-\d{4}" placeholder="YYYY-XXXX" required></div>
-                <div class="col-md-6"><label class="form-label-custom">MS Account</label><input type="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph" required></div>
+                <div class="col-md-6"><label class="form-label-custom">Email Address (Gmail)</label><input type="email" name="email" class="form-control-custom" placeholder="user@gmail.com" required></div>
             </div>
             <div class="row g-2 mb-3">
                 <div class="col-md-6"><label class="form-label-custom">Password</label>

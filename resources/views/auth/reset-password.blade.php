@@ -40,15 +40,15 @@
             @csrf
             
             <div class="mb-3">
-                <label class="form-label-custom">Microsoft 365 Account (Outlook)</label>
-                <input type="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph" value="{{ old('email', session('reset_password_email')) }}" required style="background:#fff;">
+                <label class="form-label-custom">Gmail Address</label>
+                <input type="email" name="email" class="form-control-custom" placeholder="user@gmail.com" value="{{ old('email', session('reset_password_email')) }}" required style="background:#fff;">
             </div>
 
             <div class="mb-3">
                 <label class="form-label-custom">6-Digit Verification Code (OTP)</label>
                 <input type="text" name="otp" class="form-control-custom text-center fw-bold" placeholder="000000" pattern="\d{6}" maxlength="6" value="{{ old('otp') }}" required style="letter-spacing:4px; font-size:1.15rem; background:#fff;">
                 <div class="form-text text-muted" style="font-size:0.75rem;margin-top:6px;">
-                    Enter the code sent to your Outlook inbox.
+                    Enter the code sent to your Gmail inbox.
                 </div>
             </div>
 

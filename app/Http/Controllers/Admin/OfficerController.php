@@ -42,7 +42,7 @@ class OfficerController extends Controller
             'year_level'  => 'required|string',
             'department'  => 'required|string|max:100',
             'student_id'  => 'required|string',
-            'email'       => 'required|email|unique:users,email|ends_with:@mcclawis.edu.ph',
+            'email'       => 'required|email|unique:users,email|ends_with:@gmail.com,@mcclawis.edu.ph',
             'password'    => 'required|min:6',
             'role'        => 'required|in:officer,treasurer',
         ]);
@@ -79,7 +79,7 @@ class OfficerController extends Controller
             'year_level'  => 'required|string',
             'department'  => 'required|string|max:100',
             'student_id'  => 'required|string',
-            'email'       => 'required|email|unique:users,email,' . $user->id . '|ends_with:@mcclawis.edu.ph',
+            'email'       => 'required|email|unique:users,email,' . $user->id . '|ends_with:@gmail.com,@mcclawis.edu.ph',
             'password'    => 'nullable|min:6',
             'role'        => 'required|in:officer,treasurer',
         ]);

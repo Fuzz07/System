@@ -130,7 +130,7 @@ class EnrollmentPaymentController extends Controller
             'middle_name' => ['nullable', 'string', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
             'last_name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
             'student_id' => ['required', 'regex:/^\d{4}-\d{4}$/', 'unique:users,student_id'],
-            'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@mcclawis.edu.ph', 'unique:users,email'],
+            'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@gmail.com', 'unique:users,email'],
             'department' => ['required', Rule::in(Budget::DEPARTMENTS)],
             'year_level' => ['required', Rule::in(self::YEAR_LEVELS)],
             'payment_status' => ['required', 'in:paid,unpaid'],
@@ -141,7 +141,7 @@ class EnrollmentPaymentController extends Controller
             'last_name.regex' => 'Last name may contain letters, spaces, periods, apostrophes, and hyphens only.',
             'student_id.regex' => 'Student ID must use the format YYYY-XXXX (for example, 2024-0001).',
             'student_id.unique' => 'A student with this Student ID already exists. Search for them in the list instead.',
-            'email.ends_with' => 'Use the student\'s @mcclawis.edu.ph school email.',
+            'email.ends_with' => 'Use the student\'s @gmail.com email.',
             'email.unique' => 'A student with this email already exists. Search for them in the list instead.',
         ]);
 

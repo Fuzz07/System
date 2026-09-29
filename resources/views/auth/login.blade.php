@@ -65,7 +65,7 @@
 
         <div class="mb-3">
           <label class="form-label-custom">Email Address</label>
-          <input type="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph"
+          <input type="email" name="email" class="form-control-custom" placeholder="user@gmail.com"
             value="{{ old('email') }}" required autofocus>
         </div>
         <div class="mb-4">

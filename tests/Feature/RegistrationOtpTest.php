@@ -12,7 +12,7 @@ class RegistrationOtpTest extends TestCase
 {
     use RefreshDatabase;
 
-    private string $email = 'otp.student@mcclawis.edu.ph';
+    private string $email = 'otp.student@gmail.com';
 
     protected function setUp(): void
     {
@@ -83,12 +83,12 @@ class RegistrationOtpTest extends TestCase
         $this->postJson('/register/verify-otp', ['email' => $this->email, 'otp' => session('register_otp')])
             ->assertJson(['success' => true]);
 
-        $this->postJson('/register/check-email', ['email' => 'other.student@mcclawis.edu.ph'])
+        $this->postJson('/register/check-email', ['email' => 'other.student@gmail.com'])
             ->assertOk()
             ->assertJson(['success' => true]);
 
         $this->assertNull(session('register_email_verified'));
-        $this->assertSame('other.student@mcclawis.edu.ph', session('register_email'));
+        $this->assertSame('other.student@gmail.com', session('register_email'));
     }
 
     public function test_registration_page_asks_for_the_code_before_the_form(): void
@@ -109,7 +109,7 @@ class RegistrationOtpTest extends TestCase
         // A taken student ID sends the student back with their input.
         \App\Models\User::create([
             'fullname' => 'Existing Student',
-            'email' => 'existing@mcclawis.edu.ph',
+            'email' => 'existing@gmail.com',
             'student_id' => '2024-0001',
             'password' => 'Password123',
             'role' => 'student',
@@ -189,7 +189,7 @@ class RegistrationOtpTest extends TestCase
     {
         $this->startVerification();
 
-        $this->postJson('/register/resend-otp', ['email' => 'someone.else@mcclawis.edu.ph'])
+        $this->postJson('/register/resend-otp', ['email' => 'someone.else@gmail.com'])
             ->assertOk()
             ->assertJson(['success' => false, 'restart' => true]);
     }

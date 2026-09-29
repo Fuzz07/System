@@ -2,11 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\EligibleStudent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -20,119 +18,76 @@ class StudentRegistrationEligibilityTest extends TestCase
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
         Cache::flush();
         Mail::fake();
-        Http::fake(['*' => Http::response(['IfExistsResult' => 0])]);
     }
 
     /**
-     * Test that an email not on the eligible students list returns a clear error message via AJAX check-email.
+     * Test that non-gmail email fails validation on check-email.
      */
-    public function test_ineligible_email_returns_error_response_in_check_email(): void
+    public function test_non_gmail_email_fails_check_email(): void
     {
-        config(['ssc.enforce_eligibility_whitelist' => true]);
-
         $response = $this->postJson('/register/check-email', [
-            'email' => 'unlisted.student@mcclawis.edu.ph',
+            'email' => 'student@yahoo.com',
         ]);
 
-        $response->assertForbidden();
+        $response->assertStatus(422);
         $response->assertJson([
             'success' => false,
-            'code' => 'not_eligible',
-            'message' => 'This Microsoft 365 account exists, but it is not yet authorized for SSC registration. Please contact the SSC administrator.',
+            'code' => 'invalid_email',
         ]);
     }
 
     /**
-     * Test that an eligible student email passes the check-email endpoint.
+     * Test that any valid Gmail directly passes check-email and sends OTP without eligibility whitelist restrictions.
      */
-    public function test_eligible_email_passes_check_email(): void
+    public function test_gmail_account_directly_passes_check_email_without_whitelist(): void
     {
-        config(['ssc.enforce_eligibility_whitelist' => true]);
-
-        EligibleStudent::create([
-            'email' => 'eligible.student@mcclawis.edu.ph',
-            'student_name' => 'Eligible Student',
-            'department' => 'BSIT',
-            'year_level' => '3rd Year',
-        ]);
-
         $response = $this->postJson('/register/check-email', [
-            'email' => 'eligible.student@mcclawis.edu.ph',
+            'email' => 'new.student@gmail.com',
         ]);
 
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
         ]);
+        $this->assertNotNull(session('register_otp'));
     }
 
-    public function test_registered_microsoft_account_returns_a_clear_error(): void
+    /**
+     * Test that an already registered Gmail account returns a clear conflict response.
+     */
+    public function test_registered_gmail_account_returns_a_clear_error(): void
     {
-        config(['ssc.enforce_eligibility_whitelist' => false]);
-
         User::create([
             'fullname' => 'Registered Student',
-            'email' => 'registered.student@mcclawis.edu.ph',
+            'email' => 'registered.student@gmail.com',
             'password' => 'Password123',
             'role' => 'student',
+            'status' => 'active',
         ]);
 
         $response = $this->postJson('/register/check-email', [
-            'email' => 'REGISTERED.STUDENT@MCCLAWIS.EDU.PH',
+            'email' => 'REGISTERED.STUDENT@GMAIL.COM',
         ]);
 
         $response->assertConflict()->assertJson([
             'success' => false,
             'code' => 'already_registered',
-            'message' => 'This Microsoft 365 school account is already registered. Please sign in or use Forgot Password to regain access.',
+            'message' => 'This Gmail account is already registered. Please sign in or use Forgot Password to regain access.',
         ]);
-    }
-
-    public function test_nonexistent_microsoft_account_returns_a_clear_error(): void
-    {
-        config(['ssc.enforce_eligibility_whitelist' => true]);
-        EligibleStudent::create(['email' => 'missing.student@mcclawis.edu.ph']);
-        Http::swap(new \Illuminate\Http\Client\Factory());
-        Http::fake([
-            '*' => Http::response(['IfExistsResult' => 1]),
-        ]);
-
-        $response = $this->postJson('/register/check-email', [
-            'email' => 'missing.student@mcclawis.edu.ph',
-        ]);
-
-        Http::assertSent(fn ($request) => $request->url() === 'https://login.microsoftonline.com/common/GetCredentialType');
-
-        $response->assertUnprocessable()->assertJson([
-            'success' => false,
-            'code' => 'microsoft_account_not_found',
-            'message' => 'We could not find this Microsoft 365 school account. Check the email address for typing errors, or contact the school IT administrator.',
-        ]);
-    }
-
-    public function test_microsoft_service_failure_does_not_silently_continue(): void
-    {
-        config(['ssc.enforce_eligibility_whitelist' => false]);
-        Http::swap(new \Illuminate\Http\Client\Factory());
-        Http::fake(['*' => Http::response([], 503)]);
-
-        $response = $this->postJson('/register/check-email', [
-            'email' => 'student@mcclawis.edu.ph',
-        ]);
-
-        $response->assertServiceUnavailable()->assertJson([
-            'success' => false,
-            'code' => 'microsoft_service_unavailable',
-        ]);
-        Mail::assertNothingSent();
     }
 
     /**
-     * Test that direct submission to /register with an ineligible email fails validation.
+     * Test that direct registration with verified Gmail activates account immediately and logs in.
      */
-    public function test_ineligible_email_fails_validation_on_direct_register_submit(): void
+    public function test_registration_with_verified_gmail_activates_account_and_logs_in(): void
     {
-        config(['ssc.enforce_eligibility_whitelist' => true]);
+        $email = 'fresh.student@gmail.com';
+
+        // Simulate successful OTP verification in session
+        session([
+            'register_email' => $email,
+            'register_email_verified' => true,
+        ]);
 
         $response = $this->post('/register', [
             'first_name' => 'John',
@@ -141,14 +96,18 @@ class StudentRegistrationEligibilityTest extends TestCase
             'year_level' => '3rd Year',
             'department' => 'BSIT',
             'student_id' => '2023-0001',
-            'email' => 'unlisted.student@mcclawis.edu.ph',
+            'email' => $email,
             'password' => 'Password123',
             'password_confirmation' => 'Password123',
         ]);
 
-        $response->assertSessionHasErrors([
-            'email' => 'This Microsoft 365 account exists, but it is not yet authorized for SSC registration. Please contact the SSC administrator.',
-        ]);
+        $response->assertOk();
+        $response->assertViewIs('auth.confirm-success');
+
+        $user = User::where('email', $email)->first();
+        $this->assertNotNull($user);
+        $this->assertSame('active', $user->status);
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_registration_page_renders_the_guided_flow_and_visual(): void

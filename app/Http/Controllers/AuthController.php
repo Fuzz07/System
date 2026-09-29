@@ -314,7 +314,7 @@ class AuthController extends Controller
             'year_level' => ['required', 'in:1st Year,2nd Year,3rd Year,4th Year'],
             'department' => ['required', 'in:BEED,BSED,BSBA,BSHM,BSIT'],
             'student_id' => ['required', 'regex:/^\d{4}-\d{4}$/', 'unique:users,student_id'],
-            'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email', 'ends_with:@mcclawis.edu.ph'],
+            'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email', 'ends_with:@gmail.com'],
             'password' => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
         ], [
             'first_name.regex' => 'First name may contain letters, spaces, periods, apostrophes, and hyphens only.',
@@ -325,9 +325,9 @@ class AuthController extends Controller
             'dob.after_or_equal' => 'Please enter a valid date of birth.',
             'student_id.regex' => 'Student ID must use the format YYYY-XXXX (for example, 2024-0001).',
             'student_id.unique' => 'This Student ID is already associated with a registered account. Please contact the SSC administrator if you need help.',
-            'email.email' => 'Enter a valid Microsoft 365 school email address.',
-            'email.ends_with' => 'Use your @mcclawis.edu.ph Microsoft 365 school account.',
-            'email.unique' => 'This Microsoft 365 school account is already registered. Please sign in or use Forgot Password to regain access.',
+            'email.email' => 'Enter a valid Gmail address.',
+            'email.ends_with' => 'Please use your @gmail.com account.',
+            'email.unique' => 'This Gmail account is already registered. Please sign in or use Forgot Password to regain access.',
             'password.regex' => 'Password must contain at least one letter and one number.',
             'password.min' => 'Password must be at least 8 characters.',
             'password.confirmed' => 'The password confirmation does not match.',
@@ -337,20 +337,11 @@ class AuthController extends Controller
         // from the validated date of birth before the account is saved.
         $age = now()->diffInYears($validated['dob']);
 
-        // ── Eligibility Whitelist Check ──────────────────────────────────────
-        if (config('ssc.enforce_eligibility_whitelist', true)) {
-            if (!\App\Models\EligibleStudent::whereRaw('LOWER(email) = ?', [$validated['email']])->exists()) {
-                return back()->withErrors([
-                    'email' => 'This Microsoft 365 account exists, but it is not yet authorized for SSC registration. Please contact the SSC administrator.',
-                ])->withInput();
-            }
-        }
-
         $sessionVerified = session('register_email_verified');
         $sessionEmail = session('register_email');
 
         if (!$sessionVerified || $sessionEmail !== $validated['email']) {
-            return back()->withErrors(['email' => 'Please verify your Microsoft 365 school account with the emailed code before filling up the registration form.'])->withInput();
+            return back()->withErrors(['email' => 'Please verify your Gmail account with the emailed code before filling up the registration form.'])->withInput();
         }
 
         if (!CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
@@ -371,7 +362,7 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'password' => $validated['password'],
             'role' => 'student',
-            'status' => 'inactive',
+            'status' => 'active',
         ]);
 
         SscHelper::logActivity($user->id, 'REGISTER', "Student registered and email verified via OTP: {$user->email}");
@@ -387,6 +378,10 @@ class AuthController extends Controller
             'register_otp_resend_count',
         ]);
 
+        // Directly log the student in after successful Gmail verification and registration
+        Auth::login($user, true);
+        $request->session()->regenerate();
+        $request->session()->save();
 
         return view('auth.confirm-success', compact('user'));
     }
@@ -411,10 +406,10 @@ class AuthController extends Controller
 
         try {
             $request->validate([
-                'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@mcclawis.edu.ph'],
+                'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@gmail.com'],
             ], [
-                'email.email' => 'Enter a valid Microsoft 365 school email address.',
-                'email.ends_with' => 'Use your @mcclawis.edu.ph Microsoft 365 school account.',
+                'email.email' => 'Enter a valid Gmail address.',
+                'email.ends_with' => 'Please use a valid @gmail.com address.',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -429,58 +424,9 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'code' => 'already_registered',
-                'message' => 'This Microsoft 365 school account is already registered. Please sign in or use Forgot Password to regain access.',
+                'message' => 'This Gmail account is already registered. Please sign in or use Forgot Password to regain access.',
             ], 409);
         }
-
-        // ── Eligibility Whitelist Check ──────────────────────────────────────
-        try {
-            $msResponse = Http::timeout(6)
-                ->post('https://login.microsoftonline.com/common/GetCredentialType', [
-                    'Username' => $request->email
-                ]);
-
-            if (!$msResponse->successful()) {
-                throw new \RuntimeException('Microsoft returned HTTP ' . $msResponse->status());
-            }
-
-            $credentials = $msResponse->json();
-            $ifExistsResult = is_array($credentials) ? ($credentials['IfExistsResult'] ?? null) : null;
-
-            if ($ifExistsResult !== null && (int) $ifExistsResult === 1) {
-                return response()->json([
-                    'success' => false,
-                    'code' => 'microsoft_account_not_found',
-                    'message' => 'We could not find this Microsoft 365 school account. Check the email address for typing errors, or contact the school IT administrator.',
-                ], 422);
-            }
-
-            // Microsoft reports an existing account as 0 or 5. Any other
-            // result is inconclusive and must not silently pass validation.
-            if ($ifExistsResult === null || !in_array((int) $ifExistsResult, [0, 5], true)) {
-                throw new \RuntimeException('Microsoft returned an inconclusive account result.');
-            }
-        } catch (\Exception $e) {
-            Log::warning('MS Account check failed during AJAX checkEmail', ['error' => $e->getMessage()]);
-
-            return response()->json([
-                'success' => false,
-                'code' => 'microsoft_service_unavailable',
-                'message' => 'We could not confirm your Microsoft 365 account right now. Please wait a moment and try again.',
-            ], 503);
-        }
-
-        // Keep account-existence and school-eligibility errors distinct.
-        if (config('ssc.enforce_eligibility_whitelist', true)) {
-            if (!\App\Models\EligibleStudent::whereRaw('LOWER(email) = ?', [$request->email])->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'code' => 'not_eligible',
-                    'message' => 'This Microsoft 365 account exists, but it is not yet authorized for SSC registration. Please contact the SSC administrator.',
-                ], 403);
-            }
-        }
-
 
         // ── Issue the first verification code for this email ─────────────────
         if (!$this->sendRegistrationOtp($request->email)) {
@@ -498,7 +444,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Verification code sent! Please check your Microsoft school email inbox (or spam folder) for the 6-digit code.',
+            'message' => 'Verification code sent! Please check your Gmail inbox (or spam folder) for the 6-digit code.',
             'expires_at' => session('register_otp_expires_at')->getTimestamp(),
             'resend_available_in' => self::OTP_RESEND_COOLDOWN,
         ]);
@@ -550,10 +496,10 @@ class AuthController extends Controller
 
         try {
             $request->validate([
-                'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@mcclawis.edu.ph'],
+                'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@gmail.com'],
             ], [
-                'email.email' => 'Enter a valid Microsoft 365 school email address.',
-                'email.ends_with' => 'Use your @mcclawis.edu.ph Microsoft 365 school account.',
+                'email.email' => 'Enter a valid Gmail address.',
+                'email.ends_with' => 'Please use your @gmail.com account.',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -605,7 +551,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'A new 6-digit verification code has been sent to your school email.',
+            'message' => 'A new 6-digit verification code has been sent to your Gmail.',
             'expires_at' => session('register_otp_expires_at')->getTimestamp(),
             'resend_available_in' => self::OTP_RESEND_COOLDOWN,
             'resends_left' => self::OTP_MAX_RESENDS - ($resendCount + 1),
@@ -621,7 +567,7 @@ class AuthController extends Controller
 
         try {
             $request->validate([
-                'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@mcclawis.edu.ph'],
+                'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@gmail.com'],
                 'otp' => 'required|string|size:6',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -691,7 +637,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Microsoft 365 account verified! You can now fill up the registration form.'
+            'message' => 'Gmail account verified! You can now fill up the registration form.'
         ]);
     }
 
@@ -752,15 +698,15 @@ class AuthController extends Controller
     public function sendResetCode(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|ends_with:@mcclawis.edu.ph',
+            'email' => 'required|email|ends_with:@gmail.com',
         ], [
-            'email.ends_with' => 'The email address must belong to the @mcclawis.edu.ph domain.',
+            'email.ends_with' => 'The email address must belong to @gmail.com.',
         ]);
 
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return back()->withErrors(['email' => 'This Microsoft 365 school account is not registered. Please sign up first.'])->withInput();
+            return back()->withErrors(['email' => 'This Gmail account is not registered. Please sign up first.'])->withInput();
         }
 
 
@@ -778,7 +724,7 @@ class AuthController extends Controller
                     ->subject('Your SSC Password Reset Verification Code')
                     ->html(view('auth.emails.reset-password', ['otp' => $otp])->render());
             });
-            return redirect()->route('password.reset')->with('success', 'Verification code sent! Please check your Outlook/school email inbox for the 6-digit password reset code.');
+            return redirect()->route('password.reset')->with('success', 'Verification code sent! Please check your Gmail inbox for the 6-digit password reset code.');
         } catch (\Exception $e) {
             Log::error('Reset password email failed to send', ['error' => $e->getMessage()]);
 
@@ -794,10 +740,11 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|ends_with:@mcclawis.edu.ph',
+            'email' => 'required|email|ends_with:@gmail.com',
             'otp' => 'required|string|size:6',
             'password' => ['required', 'min:8', 'confirmed', 'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/'],
         ], [
+            'email.ends_with' => 'The email address must belong to @gmail.com.',
             'otp.size' => 'The verification code must be exactly 6 digits.',
             'password.regex' => 'Password must contain at least one letter and one number.',
             'password.min' => 'Password must be at least 8 characters.',

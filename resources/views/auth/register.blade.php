@@ -422,7 +422,7 @@
                 <h2>Your voice. Your council. Your campus.</h2>
                 <p>Create one verified account to access council updates, transparent budget information, elections, and student services.</p>
                 <ul class="registration-trust-list">
-                    <li><i class="bi bi-microsoft"></i> Verified with your school Microsoft 365 account</li>
+                    <li><i class="bi bi-google"></i> Verified with your Gmail account</li>
                     <li><i class="bi bi-lock"></i> Protected by email code and security checks</li>
                     <li><i class="bi bi-bar-chart"></i> Built for open and accountable student governance</li>
                 </ul>
@@ -473,18 +473,18 @@
                 <input type="text" name="website_url" tabindex="-1" autocomplete="off">
             </div>
 
-            <!-- STEP 1: Verify the Microsoft 365 school account -->
+            <!-- STEP 1: Verify your Gmail account -->
             <div id="step-email">
-                <div class="step-graphic"><i class="bi bi-microsoft"></i></div>
+                <div class="step-graphic"><i class="bi bi-google"></i></div>
                 <div class="text-center mb-4">
-                    <h2 class="h5 fw-bold mb-1">Verify your school account</h2>
-                    <p class="text-muted small mb-0">We'll email a 6-digit code to your Microsoft 365 school account. Once it's verified, you can fill up the registration form.</p>
+                    <h2 class="h5 fw-bold mb-1">Verify your Gmail account</h2>
+                    <p class="text-muted small mb-0">We'll email a 6-digit code to your Gmail account. Once it's verified, you can fill up the registration form.</p>
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label-custom" for="email">Microsoft 365 School Account</label>
-                    <input type="email" id="email" name="email" class="form-control-custom" placeholder="user@mcclawis.edu.ph" value="{{ $resumeEmail ?? old('email') }}" autocomplete="email" maxlength="255" required>
-                    <div class="field-hint">Use your assigned @mcclawis.edu.ph email address.</div>
+                    <label class="form-label-custom" for="email">Gmail Address</label>
+                    <input type="email" id="email" name="email" class="form-control-custom" placeholder="user@gmail.com" value="{{ $resumeEmail ?? old('email') }}" autocomplete="email" maxlength="255" required>
+                    <div class="field-hint">Use your active @gmail.com address.</div>
                 </div>
 
                 <div id="email-error" class="alert registration-error d-none mb-3" role="alert" aria-live="assertive"></div>
@@ -499,7 +499,7 @@
             <div id="step-otp" class="d-none">
                 <div class="step-graphic"><i class="bi bi-envelope-check"></i></div>
                 <div class="text-center mb-3">
-                    <h2 class="h5 fw-bold mb-1">Check your school inbox</h2>
+                    <h2 class="h5 fw-bold mb-1">Check your Gmail inbox</h2>
                     <p class="text-muted small mb-0">Enter the code we sent to <strong id="otp-email-display"></strong></p>
                 </div>
                 <div id="otp-message" class="alert alert-info mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;line-height:1.5;"></div>
@@ -548,7 +548,7 @@
                 <div class="verified-account mb-4">
                     <i class="bi bi-patch-check-fill"></i>
                     <div class="verified-account-copy">
-                        <strong>Microsoft 365 account verified</strong>
+                        <strong>Gmail account verified</strong>
                         <span id="verified-email-display"></span>
                     </div>
                     <button type="button" id="btn-restart-verification" class="verified-account-change">Change</button>
@@ -856,8 +856,8 @@
             }
 
             if (field.name === 'email' && value) {
-                if (!field.validity.valid) return 'Enter a valid Microsoft 365 school email address.';
-                if (!value.endsWith('@mcclawis.edu.ph')) return 'Use your @mcclawis.edu.ph Microsoft 365 school account.';
+                if (!field.validity.valid) return 'Enter a valid Gmail address.';
+                if (!value.endsWith('@gmail.com')) return 'Please use a valid @gmail.com address.';
             }
 
             return null;
@@ -1058,7 +1058,7 @@
         });
 
         // ───────────────────────────────────────────────────────────────────
-        //  STEP 1: check the Microsoft 365 account and send the first code
+        //  STEP 1: check Gmail and send the verification code
         // ───────────────────────────────────────────────────────────────────
         btnSendCode.addEventListener('click', async (e) => {
             if (e) e.preventDefault();
@@ -1066,7 +1066,7 @@
             if (!validateFields([emailInput], emailError)) return;
 
             btnSendCode.disabled = true;
-            sendBtnText.textContent = "Verifying MS Account...";
+            sendBtnText.textContent = "Sending Verification Code...";
             sendBtnSpinner.classList.remove('d-none');
             clearStepError(emailError);
 
@@ -1101,7 +1101,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                showStepError(emailError, err.message || 'We could not verify your Microsoft 365 account right now. Check your connection and try again.', emailInput, 'microsoft_service_unavailable');
+                showStepError(emailError, err.message || 'We could not send the verification code right now. Check your connection and try again.', emailInput);
             } finally {
                 btnSendCode.disabled = false;
                 sendBtnText.innerHTML = '<i class="bi bi-send"></i> Send Verification Code';
@@ -1121,7 +1121,7 @@
                 return;
             }
             if (otpVal.length !== 6) {
-                showOtpError('Please enter the complete 6-digit code sent to your school email.');
+                showOtpError('Please enter the complete 6-digit code sent to your Gmail.');
                 otpCodeInput.focus();
                 return;
             }
