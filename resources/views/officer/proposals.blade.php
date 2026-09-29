@@ -212,7 +212,7 @@
                                     class="text-danger">*</span></label><input type="text" name="project_title"
                                 class="form-control-custom" placeholder="e.g. Inter-School Sports Fest 2026"
                                 value="{{ $fromCreate ? old('project_title') : '' }}" required></div>
-                        <div class="mb-3"><label class="form-label-custom">Description <span
+                        <div class="mb-3"><label class="form-label-custom">Items <span
                                     class="text-danger">*</span></label><textarea name="description"
                                 class="form-control-custom" rows="5" placeholder="Describe your project..." required
                                 style="resize:vertical;">{{ $fromCreate ? old('description') : '' }}</textarea></div>
