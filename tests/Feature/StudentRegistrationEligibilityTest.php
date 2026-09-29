@@ -97,6 +97,41 @@ class StudentRegistrationEligibilityTest extends TestCase
     }
 
     /**
+     * Test that registrants must be at least 17, counted to the day.
+     */
+    public function test_registrants_must_be_at_least_17_years_old(): void
+    {
+        $details = [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'year_level' => '1st Year',
+            'department' => 'BSIT',
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
+        ];
+
+        // One day short of turning 17.
+        $this->post('/register', $details + [
+            'dob' => now()->subYears(17)->addDay()->toDateString(),
+            'student_id' => '2026-0001',
+            'email' => 'too.young@gmail.com',
+        ])->assertSessionHasErrors(['dob' => 'You must be at least 17 years old to register.']);
+
+        $this->assertDatabaseMissing('users', ['email' => 'too.young@gmail.com']);
+
+        // Turning 17 today.
+        $this->post('/register', $details + [
+            'dob' => now()->subYears(17)->toDateString(),
+            'student_id' => '2026-0002',
+            'email' => 'just.seventeen@gmail.com',
+        ])->assertSessionHasNoErrors();
+
+        $registered = User::where('email', 'just.seventeen@gmail.com')->first();
+        $this->assertSame(17, $registered->age);
+        $this->assertSame(now()->subYears(17)->toDateString(), $registered->birthdate->toDateString());
+    }
+
+    /**
      * Test that the registration page renders the two-step flow and visuals.
      */
     public function test_registration_page_renders_the_guided_flow_and_visual(): void

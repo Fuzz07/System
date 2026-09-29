@@ -39,10 +39,15 @@
                             <input id="last_name" name="last_name" class="form-control-custom" value="{{ old('last_name', $student->last_name) }}" minlength="2" maxlength="100" autocomplete="family-name" required>
                         </div>
                         <div class="col-md-4">
-                            <label for="age" class="form-label-custom">Age</label>
-                            <input id="age" type="number" name="age" class="form-control-custom" value="{{ old('age', $student->age) }}" min="10" max="100" inputmode="numeric" required>
+                            <label for="birthdate" class="form-label-custom">Date of birth</label>
+                            <input id="birthdate" type="date" name="birthdate" class="form-control-custom" value="{{ old('birthdate', $student->birthdate?->toDateString()) }}" min="{{ \App\Models\User::earliestBirthdate() }}" max="{{ \App\Models\User::latestBirthdate() }}" data-birthdate-input data-age-target="age_display" autocomplete="bday" required>
+                            <div class="form-text">You must be at least {{ \App\Models\User::MIN_AGE }} years old.</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
+                            <label for="age_display" class="form-label-custom">Age</label>
+                            <input id="age_display" type="text" class="form-control-custom bg-light" value="{{ $student->birthdate?->age }}" readonly tabindex="-1" aria-readonly="true">
+                        </div>
+                        <div class="col-md-3">
                             <label for="year_level" class="form-label-custom">Year level</label>
                             <select id="year_level" name="year_level" class="form-select-custom" required>
                                 @foreach(['1st Year', '2nd Year', '3rd Year', '4th Year'] as $level)
@@ -50,7 +55,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label for="department" class="form-label-custom">Course / department</label>
                             <select id="department" name="department" class="form-select-custom" required>
                                 @foreach(['BEED', 'BSED', 'BSBA', 'BSHM', 'BSIT'] as $department)
@@ -113,3 +118,7 @@
     </div>
 </form>
 @endsection
+
+@push('scripts')
+    @include('partials.birthdate-age-script')
+@endpush

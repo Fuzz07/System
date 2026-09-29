@@ -310,7 +310,7 @@ class AuthController extends Controller
             'first_name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
             'middle_name' => ['nullable', 'string', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
             'last_name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
-            'dob' => ['required', 'date', 'after_or_equal:' . now()->subYears(100)->toDateString(), 'before_or_equal:' . now()->subYears(10)->toDateString()],
+            'dob' => ['required', 'date', 'after_or_equal:' . User::earliestBirthdate(), 'before_or_equal:' . User::latestBirthdate()],
             'year_level' => ['required', 'in:1st Year,2nd Year,3rd Year,4th Year'],
             'department' => ['required', 'in:BEED,BSED,BSBA,BSHM,BSIT'],
             'student_id' => ['required', 'regex:/^\d{4}-\d{4}$/', 'unique:users,student_id'],
@@ -321,7 +321,7 @@ class AuthController extends Controller
             'middle_name.regex' => 'Middle name may contain letters, spaces, periods, apostrophes, and hyphens only.',
             'last_name.regex' => 'Last name may contain letters, spaces, periods, apostrophes, and hyphens only.',
             'dob.required' => 'Please enter your date of birth.',
-            'dob.before_or_equal' => 'You must be at least 10 years old to register.',
+            'dob.before_or_equal' => 'You must be at least ' . User::MIN_AGE . ' years old to register.',
             'dob.after_or_equal' => 'Please enter a valid date of birth.',
             'student_id.regex' => 'Student ID must use the format YYYY-XXXX (for example, 2024-0001).',
             'student_id.unique' => 'This Student ID is already associated with a registered account. Please contact the SSC administrator if you need help.',
@@ -335,7 +335,9 @@ class AuthController extends Controller
 
         // Do not trust the readonly age input from the browser. It is derived
         // from the validated date of birth before the account is saved.
-        $age = now()->diffInYears($validated['dob']);
+        // Carbon's ->age counts whole years; now()->diffInYears($dob) is a
+        // signed fraction under Carbon 3 and saved every age as negative.
+        $age = \Illuminate\Support\Carbon::parse($validated['dob'])->age;
 
         if (!CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
             return back()->withErrors(['email' => 'Security check failed. Please verify that you are not a robot.'])->withInput();
@@ -348,6 +350,7 @@ class AuthController extends Controller
             'middle_name' => $validated['middle_name'],
             'last_name' => $validated['last_name'],
             'age' => $age,
+            'birthdate' => $validated['dob'],
             'year_level' => $validated['year_level'],
             'department' => $validated['department'],
             'student_id' => $validated['student_id'],

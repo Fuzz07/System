@@ -410,7 +410,7 @@
                 <div class="row g-2 mb-3">
                     <div class="col-md-5">
                         <label class="form-label-custom" for="dob_input">Date of Birth</label>
-                        <input type="date" id="dob_input" name="dob" class="form-control-custom" value="{{ old('dob') }}" min="{{ date('Y-m-d', strtotime('-100 years')) }}" max="{{ date('Y-m-d', strtotime('-10 years')) }}" required>
+                        <input type="date" id="dob_input" name="dob" class="form-control-custom" value="{{ old('dob') }}" min="{{ \App\Models\User::earliestBirthdate() }}" max="{{ \App\Models\User::latestBirthdate() }}" required>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label-custom" for="age_input">Age</label>
@@ -606,8 +606,11 @@
                 const today = new Date();
                 let age = today.getFullYear() - dob.getFullYear();
                 if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
-                if (dob.getFullYear() !== year || dob.getMonth() !== month - 1 || dob.getDate() !== day || age < 10 || age > 100) {
-                    return 'Enter a valid date of birth. Registrants must be between 10 and 100 years old.';
+                if (dob.getFullYear() !== year || dob.getMonth() !== month - 1 || dob.getDate() !== day || age > {{ \App\Models\User::MAX_AGE }}) {
+                    return 'Enter a valid date of birth.';
+                }
+                if (age < {{ \App\Models\User::MIN_AGE }}) {
+                    return 'You must be at least {{ \App\Models\User::MIN_AGE }} years old to register.';
                 }
             }
 

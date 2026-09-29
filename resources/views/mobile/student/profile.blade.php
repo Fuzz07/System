@@ -34,9 +34,11 @@
             <div class="m-field"><label for="first_name">First name</label><input id="first_name" name="first_name" class="profile-input" value="{{ old('first_name', $student->first_name) }}" minlength="2" maxlength="100" autocomplete="given-name" required></div>
             <div class="m-field"><label for="last_name">Last name</label><input id="last_name" name="last_name" class="profile-input" value="{{ old('last_name', $student->last_name) }}" minlength="2" maxlength="100" autocomplete="family-name" required></div>
             <div class="m-field wide"><label for="middle_name">Middle name (optional)</label><input id="middle_name" name="middle_name" class="profile-input" value="{{ old('middle_name', $student->middle_name) }}" maxlength="100" autocomplete="additional-name"></div>
-            <div class="m-field"><label for="age">Age</label><input id="age" type="number" name="age" class="profile-input" value="{{ old('age', $student->age) }}" min="10" max="100" inputmode="numeric" required></div>
+            <div class="m-field"><label for="birthdate">Date of birth</label><input id="birthdate" type="date" name="birthdate" class="profile-input" value="{{ old('birthdate', $student->birthdate?->toDateString()) }}" min="{{ \App\Models\User::earliestBirthdate() }}" max="{{ \App\Models\User::latestBirthdate() }}" data-birthdate-input data-age-target="age_display" autocomplete="bday" required></div>
+            <div class="m-field"><label for="age_display">Age</label><input id="age_display" type="text" class="profile-input" style="background:#f1f5f9" value="{{ $student->birthdate?->age }}" readonly tabindex="-1" aria-readonly="true"></div>
+            <div class="profile-help wide" style="margin-top:-8px">Your age is worked out from your date of birth. You must be at least {{ \App\Models\User::MIN_AGE }} years old.</div>
             <div class="m-field"><label for="year_level">Year level</label><select id="year_level" name="year_level" class="profile-input" required>@foreach(['1st Year','2nd Year','3rd Year','4th Year'] as $level)<option value="{{ $level }}" @selected(old('year_level', $student->year_level) === $level)>{{ $level }}</option>@endforeach</select></div>
-            <div class="m-field wide"><label for="department">Course / department</label><select id="department" name="department" class="profile-input" required>@foreach(['BEED','BSED','BSBA','BSHM','BSIT'] as $department)<option value="{{ $department }}" @selected(old('department', $student->department) === $department)>{{ $department }}</option>@endforeach</select></div>
+            <div class="m-field"><label for="department">Course / department</label><select id="department" name="department" class="profile-input" required>@foreach(['BEED','BSED','BSBA','BSHM','BSIT'] as $department)<option value="{{ $department }}" @selected(old('department', $student->department) === $department)>{{ $department }}</option>@endforeach</select></div>
             <div class="m-field wide"><label for="student_id">Student ID</label><input id="student_id" name="student_id" class="profile-input" value="{{ old('student_id', $student->student_id) }}" pattern="\d{4}-\d{4}" maxlength="9" placeholder="YYYY-XXXX" required></div>
             <div class="m-field wide"><label for="email">Gmail address</label><input id="email" type="email" name="email" class="profile-input" value="{{ old('email', $student->email) }}" autocomplete="email" required><div class="profile-help">Enter your current password below if you change this email.</div></div>
         </div>
@@ -55,3 +57,7 @@
     <button type="submit" class="m-btn m-btn-primary m-btn-block" style="min-height:50px;margin:4px 0 18px;font-weight:800"><i class="bi bi-check2-circle"></i> Save account details</button>
 </form>
 @endsection
+
+@push('scripts')
+    @include('partials.birthdate-age-script')
+@endpush

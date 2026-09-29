@@ -14,8 +14,12 @@ class User extends Authenticatable implements JWTSubject
 
     public $timestamps = false;
 
+    /** Youngest age a student may register with or set on their profile. */
+    public const MIN_AGE = 17;
+    public const MAX_AGE = 100;
+
     protected $fillable = [
-        'first_name', 'middle_name', 'last_name', 'age', 'year_level',
+        'first_name', 'middle_name', 'last_name', 'age', 'birthdate', 'year_level',
         'fullname', 'email', 'password', 'role', 'department',
         'student_id', 'profile_pic', 'status', 'position', 'party',
         'admin_device_token', 'remember_token', 'notifications_seen_at',
@@ -31,7 +35,33 @@ class User extends Authenticatable implements JWTSubject
             'created_at' => 'datetime',
             'notifications_seen_at' => 'datetime',
             'archived_at' => 'datetime',
+            'birthdate' => 'date',
         ];
+    }
+
+    /** The latest date of birth allowed: someone turning MIN_AGE today. */
+    public static function latestBirthdate(): string
+    {
+        return now()->subYears(self::MIN_AGE)->toDateString();
+    }
+
+    public static function earliestBirthdate(): string
+    {
+        return now()->subYears(self::MAX_AGE)->toDateString();
+    }
+
+    /**
+     * Age in whole years, worked out from the birthdate when there is one so it
+     * stays right as birthdays pass. The stored number is the fallback for
+     * accounts made before birthdates were recorded, and for officers.
+     */
+    public function getAgeAttribute($value): ?int
+    {
+        if ($this->birthdate) {
+            return $this->birthdate->age;
+        }
+
+        return $value === null ? null : (int) $value;
     }
 
     public function proposals() { return $this->hasMany(Proposal::class, 'officer_id'); }
