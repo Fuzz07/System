@@ -25,7 +25,7 @@
         @forelse($announcements as $a)
         <div class="col-12 col-sm-6 col-xl-4">
         @include('partials.announcement-post-card', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id, 'destroyUrl' => route('admin.announcements.destroy', $a)])
-        @include('partials.announcement-modal', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id, 'editModal' => 'editAnnModal' . $a->id])
+        @include('partials.announcement-modal', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id, 'editModal' => 'editAnnModal' . $a->id, 'showComments' => true, 'commentDestroyRoute' => 'admin.announcements.comments.destroy'])
 
         {{-- Edit Announcement Modal --}}
         <div class="modal fade" id="editAnnModal{{ $a->id }}" tabindex="-1" aria-hidden="true">

@@ -24,12 +24,8 @@ class AnnouncementController extends Controller
 
     public function comment(Request $request, Announcement $announcement)
     {
-        // Comments are only open on Lost & Found posts — general announcements
-        // stay one-way broadcasts, consistent with how they work everywhere else.
-        if ($announcement->category !== Announcement::CATEGORY_LOST_ITEM) {
-            abort(404);
-        }
-
+        // Open on every category: Lost & Found posts collect leads, general ones
+        // collect feedback that the posting officer reads on their own page.
         $request->validate(['comment' => 'required|string|min:1|max:2000']);
 
         $announcement->comments()->create([

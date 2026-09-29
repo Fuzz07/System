@@ -1,6 +1,9 @@
 {{--
     Full view of one announcement, opened from its post card.
-    Pass $commentRoute to show the Lost & Found comment thread and form.
+    Pass $commentRoute to show the comment thread with a form to post to it.
+    Pass $showComments = true to show the thread read-only (staff pages).
+    Pass $commentDestroyRoute (a route name taking [announcement, comment]) to
+    add a remove button to each comment.
     Pass $editModal (an element id) to show an Edit button that opens it.
 --}}
 @php $isLost = $a->category === \App\Models\Announcement::CATEGORY_LOST_ITEM; @endphp
@@ -28,16 +31,19 @@
             </div>
             @endif
 
-            @if($isLost && !empty($commentRoute))
+            @if(!empty($commentRoute) || !empty($showComments))
             <hr class="opacity-10 my-4">
             <h6 class="fw-bold mb-3"><i class="bi bi-chat-dots"></i> Comments ({{ $a->comments->count() }})</h6>
 
+            @if(!empty($commentRoute))
             <form method="POST" action="{{ $commentRoute }}" class="mb-4">
                 @csrf
-                <div class="mb-2"><textarea name="comment" class="form-control-custom" rows="2" placeholder="Found this item, or know whose it is? Leave a comment..." required style="border-radius:12px;"></textarea></div>
+                <div class="mb-2"><textarea name="comment" class="form-control-custom" rows="2" placeholder="{{ $isLost ? 'Found this item, or know whose it is? Leave a comment...' : 'Share your thoughts or feedback on this announcement...' }}" required style="border-radius:12px;"></textarea></div>
                 <button type="submit" class="btn-primary-custom px-4" style="padding:8px 18px;font-size:0.85rem;">Post Comment <i class="bi bi-send ms-1"></i></button>
             </form>
+            @endif
 
+            {{-- Students post anonymously, so their names stay hidden on staff pages too. --}}
             <div class="d-flex flex-column gap-3">
                 @forelse($a->comments as $c)
                 <div class="d-flex gap-3">
@@ -47,13 +53,28 @@
                     <div class="flex-fill">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="fw-bold text-dark small"><i class="bi bi-person-fill-lock"></i> Anonymous Student</span>
-                            <span class="text-muted small" style="font-size:0.7rem;">{{ $c->created_at?->diffForHumans() }}</span>
+                            <span class="d-inline-flex align-items-center gap-2">
+                                <span class="text-muted small" style="font-size:0.7rem;">{{ $c->created_at?->diffForHumans() }}</span>
+                                @if(!empty($commentDestroyRoute))
+                                <form method="POST" action="{{ route($commentDestroyRoute, [$a, $c]) }}" data-confirm="Remove this comment permanently?">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0 lh-1" title="Remove comment" aria-label="Remove comment"><i class="bi bi-trash"></i></button>
+                                </form>
+                                @endif
+                            </span>
                         </div>
                         <div class="p-3 bg-light rounded-4 small text-dark" style="line-height:1.6;">{!! nl2br(e($c->comment)) !!}</div>
                     </div>
                 </div>
                 @empty
-                <div class="text-center py-3 text-muted small">No comments yet. Be the first to help!</div>
+                <div class="text-center py-3 text-muted small">
+                    @if(!empty($commentRoute))
+                    {{ $isLost ? 'No comments yet. Be the first to help!' : 'No comments yet. Be the first to share your thoughts!' }}
+                    @else
+                    No student comments on this announcement yet.
+                    @endif
+                </div>
                 @endforelse
             </div>
             @endif

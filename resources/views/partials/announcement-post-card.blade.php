@@ -46,8 +46,8 @@
             <span><i class="bi bi-person-circle"></i> {{ $a->author->fullname ?? 'SSC Admin' }}</span>
             @endif
             <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
-            @if($isLost && $a->relationLoaded('comments'))
-            <span><i class="bi bi-chat-dots"></i> {{ $a->comments->count() }}</span>
+            @if($a->relationLoaded('comments'))
+            <span title="{{ $a->comments->count() }} {{ Str::plural('comment', $a->comments->count()) }}"><i class="bi bi-chat-dots"></i> {{ $a->comments->count() }}</span>
             @endif
         </div>
     </div>

@@ -124,7 +124,7 @@ class AnnouncementApiController extends Controller
     }
 
     /**
-     * Add a comment to a Lost & Found announcement.
+     * Add a comment to an announcement.
      */
     public function comment(Request $request, $id)
     {
@@ -135,13 +135,6 @@ class AnnouncementApiController extends Controller
                 'success' => false,
                 'message' => 'Announcement not found.',
             ], 404);
-        }
-
-        if ($announcement->category !== Announcement::CATEGORY_LOST_ITEM) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Comments are only allowed on Lost & Found items.',
-            ], 400);
         }
 
         $validator = Validator::make($request->all(), [

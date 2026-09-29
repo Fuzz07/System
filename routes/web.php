@@ -77,6 +77,7 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::post('/announcements', [Admin\AnnouncementController::class, 'store'])->name('announcements.store');
         Route::put('/announcements/{announcement}', [Admin\AnnouncementController::class, 'update'])->name('announcements.update');
         Route::delete('/announcements/{announcement}', [Admin\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+        Route::delete('/announcements/{announcement}/comments/{comment}', [Admin\AnnouncementController::class, 'destroyComment'])->scopeBindings()->name('announcements.comments.destroy');
 
         Route::get('/officers', [Admin\OfficerController::class, 'index'])->name('officers');
         Route::post('/officers', [Admin\OfficerController::class, 'store'])->name('officers.store');
@@ -155,6 +156,7 @@ Route::domain('officer.' . $baseDomain)->group(function () {
         Route::post('/announcements', [Officer\AnnouncementController::class, 'store'])->name('announcements.store');
         Route::put('/announcements/{announcement}', [Officer\AnnouncementController::class, 'update'])->name('announcements.update');
         Route::delete('/announcements/{announcement}', [Officer\AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+        Route::delete('/announcements/{announcement}/comments/{comment}', [Officer\AnnouncementController::class, 'destroyComment'])->scopeBindings()->name('announcements.comments.destroy');
 
         Route::get('/liquidation', [Officer\LiquidationController::class, 'index'])->name('liquidation');
         Route::post('/liquidation', [Officer\LiquidationController::class, 'store'])->name('liquidation.store');
@@ -461,10 +463,6 @@ Route::group([], function () use ($baseDomain) {
         })->name('announcements');
 
         Route::post('/announcements/{announcement}/comment', function (\Illuminate\Http\Request $request, \App\Models\Announcement $announcement) {
-            if ($announcement->category !== \App\Models\Announcement::CATEGORY_LOST_ITEM) {
-                abort(404);
-            }
-
             $request->validate(['comment' => 'required|string|min:1|max:2000']);
 
             $announcement->comments()->create([

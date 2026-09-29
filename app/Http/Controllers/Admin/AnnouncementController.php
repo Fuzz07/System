@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\AnnouncementComment;
 use App\Support\UploadValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,7 @@ class AnnouncementController extends Controller
     {
         $category = $request->input('category');
 
-        $query = Announcement::with(['author', 'proposal'])->orderByDesc('created_at');
+        $query = Announcement::with(['author', 'proposal', 'comments.user'])->orderByDesc('created_at');
         if ($category) {
             $query->where('category', $category);
         }
@@ -94,5 +95,12 @@ class AnnouncementController extends Controller
         SscHelper::logActivity(Auth::id(), 'ANNOUNCEMENT_DELETE', "Admin deleted announcement ID: {$announcement->id}");
         $announcement->delete();
         return redirect()->route('admin.announcements')->with('success', 'Announcement deleted successfully.');
+    }
+
+    public function destroyComment(Announcement $announcement, AnnouncementComment $comment)
+    {
+        SscHelper::logActivity(Auth::id(), 'ANNOUNCEMENT_COMMENT_DELETE', "Admin removed comment ID: {$comment->id} on announcement ID: {$announcement->id}");
+        $comment->delete();
+        return redirect()->back()->with('success', 'Comment removed.');
     }
 }

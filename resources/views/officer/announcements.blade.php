@@ -10,13 +10,16 @@
 
 <ul class="nav nav-pills nav-brand d-inline-flex gap-1 bg-white border rounded-3 p-1 mb-4 shadow-sm">
     <li class="nav-item">
-        <a href="{{ route('officer.announcements') }}" class="nav-link d-flex align-items-center gap-2 {{ !$category ? 'active' : '' }}"><i class="bi bi-grid"></i> All</a>
+        <a href="{{ route('officer.announcements') }}" class="nav-link d-flex align-items-center gap-2 {{ !$category && !$mineOnly ? 'active' : '' }}"><i class="bi bi-grid"></i> All</a>
     </li>
     <li class="nav-item">
-        <a href="{{ route('officer.announcements', ['category' => 'general']) }}" class="nav-link d-flex align-items-center gap-2 {{ $category === 'general' ? 'active' : '' }}"><i class="bi bi-megaphone"></i> General</a>
+        <a href="{{ route('officer.announcements', ['category' => 'general']) }}" class="nav-link d-flex align-items-center gap-2 {{ $category === 'general' && !$mineOnly ? 'active' : '' }}"><i class="bi bi-megaphone"></i> General</a>
     </li>
     <li class="nav-item">
-        <a href="{{ route('officer.announcements', ['category' => 'lost_item']) }}" class="nav-link d-flex align-items-center gap-2 {{ $category === 'lost_item' ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
+        <a href="{{ route('officer.announcements', ['category' => 'lost_item']) }}" class="nav-link d-flex align-items-center gap-2 {{ $category === 'lost_item' && !$mineOnly ? 'active' : '' }}"><i class="bi bi-search"></i> Lost &amp; Found</a>
+    </li>
+    <li class="nav-item">
+        <a href="{{ route('officer.announcements', ['mine' => 1]) }}" class="nav-link d-flex align-items-center gap-2 {{ $mineOnly ? 'active' : '' }}"><i class="bi bi-person-check"></i> My Posts</a>
     </li>
 </ul>
 
@@ -25,7 +28,7 @@
 <div class="col-12 col-sm-6 col-xl-4">
 @php $mine = $a->isAuthoredBy(Auth::user()); @endphp
 @include('partials.announcement-post-card', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id, 'mine' => $mine, 'destroyUrl' => $mine ? route('officer.announcements.destroy', $a) : null])
-@include('partials.announcement-modal', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id, 'editModal' => $mine ? 'editAnnModal' . $a->id : null])
+@include('partials.announcement-modal', ['a' => $a, 'modal' => 'viewAnnModal' . $a->id, 'editModal' => $mine ? 'editAnnModal' . $a->id : null, 'showComments' => true, 'commentDestroyRoute' => $mine ? 'officer.announcements.comments.destroy' : null])
 
 {{-- Edit Announcement Modal (own posts only) --}}
 @if($mine)
@@ -76,7 +79,7 @@
 <div class="card text-center" style="border-radius:var(--radius); border:1px solid var(--slate-200); box-shadow:none;">
     <div class="card-body-custom py-5">
         <div class="stat-icon primary bg-opacity-10 mx-auto mb-3" style="width:56px; height:56px; font-size:1.6rem;"><i class="bi bi-megaphone"></i></div>
-        <div class="fw-bold" style="color:var(--slate-800);">{{ $category ? 'No ' . (\App\Models\Announcement::CATEGORIES[$category] ?? 'matching') . ' announcements yet.' : 'No announcements yet.' }}</div>
+        <div class="fw-bold" style="color:var(--slate-800);">{{ $mineOnly ? "You haven't posted any announcements yet." : ($category ? 'No ' . (\App\Models\Announcement::CATEGORIES[$category] ?? 'matching') . ' announcements yet.' : 'No announcements yet.') }}</div>
     </div>
 </div>
 </div>

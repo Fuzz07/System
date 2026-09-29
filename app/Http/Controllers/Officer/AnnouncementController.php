@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Officer;
 use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\AnnouncementComment;
 use App\Support\UploadValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,14 +16,18 @@ class AnnouncementController extends Controller
     public function index(Request $request)
     {
         $category = $request->input('category');
+        $mineOnly = $request->boolean('mine');
 
-        $query = Announcement::with(['author', 'proposal'])->orderByDesc('created_at');
+        $query = Announcement::with(['author', 'proposal', 'comments.user'])->orderByDesc('created_at');
         if ($category) {
             $query->where('category', $category);
         }
+        if ($mineOnly) {
+            $query->where('created_by', Auth::id());
+        }
         $announcements = $query->get();
 
-        return view('officer.announcements', compact('announcements', 'category'));
+        return view('officer.announcements', compact('announcements', 'category', 'mineOnly'));
     }
 
     public function store(Request $request)
@@ -97,5 +102,15 @@ class AnnouncementController extends Controller
         abort_unless($announcement->isAuthoredBy(Auth::user()), 403, 'You can only delete announcements you posted.');
         $announcement->delete();
         return redirect()->route('officer.announcements')->with('success', 'Announcement deleted.');
+    }
+
+    public function destroyComment(Announcement $announcement, AnnouncementComment $comment)
+    {
+        // Officers moderate the threads under their own posts only.
+        abort_unless($announcement->isAuthoredBy(Auth::user()), 403, 'You can only remove comments on announcements you posted.');
+        $comment->delete();
+
+        SscHelper::logActivity(Auth::id(), 'ANNOUNCEMENT_COMMENT_DELETE', "Removed comment ID: {$comment->id} on announcement ID: {$announcement->id}");
+        return redirect()->back()->with('success', 'Comment removed.');
     }
 }

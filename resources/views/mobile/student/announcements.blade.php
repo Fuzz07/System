@@ -41,9 +41,7 @@
                 <div class="ann-card-meta">
                     <span><i class="bi bi-person-circle"></i> {{ $a->author->fullname ?? 'SSC Admin' }}</span>
                     <span><i class="bi bi-clock"></i> {{ $a->created_at?->diffForHumans() }}</span>
-                    @if($a->category === 'lost_item')
                     <span><i class="bi bi-chat-dots"></i> {{ $a->comments->count() }}</span>
-                    @endif
                 </div>
             </div>
         </div>
@@ -94,41 +92,39 @@
                         </div>
                     @endif
 
-                    {{-- Comments (Lost & Found only) --}}
-                    @if($a->category === 'lost_item')
-                        <div class="ann-comments">
-                            <div class="ann-comments-title">
-                                <i class="bi bi-chat-dots"></i> Comments ({{ $a->comments->count() }})
-                            </div>
-
-                            <form method="POST" action="{{ route('mobile.student.announcements.comment', $a) }}"
-                                class="ann-comment-form">
-                                @csrf
-                                <textarea name="comment" rows="2" required
-                                    placeholder="Found this item, or know whose it is?"></textarea>
-                                <button type="submit" class="ann-comment-submit">
-                                    Post Comment <i class="bi bi-send"></i>
-                                </button>
-                            </form>
-
-                            @forelse($a->comments as $c)
-                                <div class="ann-comment">
-                                    <div class="ann-comment-avatar"><i class="bi bi-person-circle"></i></div>
-                                    <div style="flex:1; min-width:0;">
-                                        <div class="ann-comment-head">
-                                            <span class="ann-comment-author">
-                                                <i class="bi bi-person-fill-lock"></i> Anonymous Student
-                                            </span>
-                                            <span class="ann-comment-time">{{ $c->created_at?->diffForHumans() }}</span>
-                                        </div>
-                                        <div class="ann-comment-bubble">{!! nl2br(e($c->comment)) !!}</div>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="ann-comments-empty">No comments yet. Be the first to help!</div>
-                            @endforelse
+                    {{-- Comments --}}
+                    <div class="ann-comments">
+                        <div class="ann-comments-title">
+                            <i class="bi bi-chat-dots"></i> Comments ({{ $a->comments->count() }})
                         </div>
-                    @endif
+
+                        <form method="POST" action="{{ route('mobile.student.announcements.comment', $a) }}"
+                            class="ann-comment-form">
+                            @csrf
+                            <textarea name="comment" rows="2" required
+                                placeholder="{{ $a->category === 'lost_item' ? 'Found this item, or know whose it is?' : 'Share your thoughts or feedback...' }}"></textarea>
+                            <button type="submit" class="ann-comment-submit">
+                                Post Comment <i class="bi bi-send"></i>
+                            </button>
+                        </form>
+
+                        @forelse($a->comments as $c)
+                            <div class="ann-comment">
+                                <div class="ann-comment-avatar"><i class="bi bi-person-circle"></i></div>
+                                <div style="flex:1; min-width:0;">
+                                    <div class="ann-comment-head">
+                                        <span class="ann-comment-author">
+                                            <i class="bi bi-person-fill-lock"></i> Anonymous Student
+                                        </span>
+                                        <span class="ann-comment-time">{{ $c->created_at?->diffForHumans() }}</span>
+                                    </div>
+                                    <div class="ann-comment-bubble">{!! nl2br(e($c->comment)) !!}</div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="ann-comments-empty">{{ $a->category === 'lost_item' ? 'No comments yet. Be the first to help!' : 'No comments yet. Be the first to share your thoughts!' }}</div>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>
