@@ -91,21 +91,17 @@ class RegistrationOtpTest extends TestCase
         $this->assertSame('other.student@gmail.com', session('register_email'));
     }
 
-    public function test_registration_page_asks_for_the_code_before_the_form(): void
+    public function test_registration_page_renders_clean_direct_steps(): void
     {
         $this->get('/register')
             ->assertOk()
-            ->assertSeeInOrder(['Email verification', 'Student details', 'Account security'])
-            ->assertSeeInOrder(['id="step-email"', 'id="step-otp"', 'id="step-details" class="d-none"', 'id="step-2" class="d-none"'], false)
-            ->assertSee('const resumeEmail = null;', false);
+            ->assertSeeInOrder(['Student details', 'Account security'])
+            ->assertSee('id="step-details"', false)
+            ->assertSee('id="step-2"', false);
     }
 
-    public function test_failed_submit_reopens_the_form_for_an_already_verified_email(): void
+    public function test_failed_submit_retains_old_input(): void
     {
-        $this->startVerification();
-        $this->postJson('/register/verify-otp', ['email' => $this->email, 'otp' => session('register_otp')])
-            ->assertJson(['success' => true]);
-
         // A taken student ID sends the student back with their input.
         \App\Models\User::create([
             'fullname' => 'Existing Student',
@@ -130,7 +126,7 @@ class RegistrationOtpTest extends TestCase
 
         $this->get('/register')
             ->assertOk()
-            ->assertSee('const resumeEmail = "' . $this->email . '";', false);
+            ->assertSee('value="Jane"', false);
     }
 
     public function test_expired_code_is_rejected_but_email_is_kept_for_resend(): void

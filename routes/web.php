@@ -266,6 +266,9 @@ Route::group([], function () use ($baseDomain) {
     Route::post('/login/admin/approval-fallback/{approvalId}', [AuthController::class, 'triggerOtpFallback'])->name('admin.login.approval_fallback.main');
 
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+    Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
+    Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+
     Route::get('/register', fn() => view('auth.register'))->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
     Route::post('/register/check-email', [AuthController::class, 'checkEmail'])->name('register.check-email');

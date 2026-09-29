@@ -337,13 +337,6 @@ class AuthController extends Controller
         // from the validated date of birth before the account is saved.
         $age = now()->diffInYears($validated['dob']);
 
-        $sessionVerified = session('register_email_verified');
-        $sessionEmail = session('register_email');
-
-        if (!$sessionVerified || $sessionEmail !== $validated['email']) {
-            return back()->withErrors(['email' => 'Please verify your Gmail account with the emailed code before filling up the registration form.'])->withInput();
-        }
-
         if (!CaptchaController::verifyToken($request->input('captcha_verified_token'))) {
             return back()->withErrors(['email' => 'Security check failed. Please verify that you are not a robot.'])->withInput();
         }
@@ -365,7 +358,7 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
-        SscHelper::logActivity($user->id, 'REGISTER', "Student registered and email verified via OTP: {$user->email}");
+        SscHelper::logActivity($user->id, 'REGISTER', "Student registered: {$user->email}");
 
 
         session()->forget([
@@ -965,5 +958,159 @@ class AuthController extends Controller
         }
 
         return redirect()->to($otpRoute)->with('success', 'A secure 6-digit verification code has been sent to your email address.');
+    }
+
+    /**
+     * Redirect student to Google OAuth authorization page.
+     */
+    public function redirectToGoogle(Request $request)
+    {
+        $clientId = config('services.google.client_id');
+        $redirectUri = config('services.google.redirect') ?: route('auth.google.callback');
+
+        if (empty($clientId)) {
+            return redirect()->route('login', ['portal' => 'student'])->withErrors([
+                'email' => 'Google Login is not yet configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file.',
+            ]);
+        }
+
+        $state = Str::random(40);
+        session(['google_oauth_state' => $state]);
+
+        $query = http_build_query([
+            'client_id' => $clientId,
+            'redirect_uri' => $redirectUri,
+            'response_type' => 'code',
+            'scope' => 'openid profile email',
+            'state' => $state,
+            'prompt' => 'select_account',
+        ]);
+
+        return redirect()->away('https://accounts.google.com/o/oauth2/v2/auth?' . $query);
+    }
+
+    /**
+     * Handle incoming Google OAuth callback.
+     */
+    public function handleGoogleCallback(Request $request)
+    {
+        if ($request->has('error')) {
+            return redirect()->route('login', ['portal' => 'student'])->withErrors([
+                'email' => 'Google authentication was cancelled or encountered an error.',
+            ]);
+        }
+
+        $state = $request->input('state');
+        $sessionState = session('google_oauth_state');
+        session()->forget('google_oauth_state');
+
+        if (empty($state) || $state !== $sessionState) {
+            return redirect()->route('login', ['portal' => 'student'])->withErrors([
+                'email' => 'Invalid or expired Google login session. Please try again.',
+            ]);
+        }
+
+        $code = $request->input('code');
+        if (empty($code)) {
+            return redirect()->route('login', ['portal' => 'student'])->withErrors([
+                'email' => 'Authorization code not provided by Google.',
+            ]);
+        }
+
+        $clientId = config('services.google.client_id');
+        $clientSecret = config('services.google.client_secret');
+        $redirectUri = config('services.google.redirect') ?: route('auth.google.callback');
+
+        try {
+            $tokenResponse = Http::asForm()->timeout(10)->post('https://oauth2.googleapis.com/token', [
+                'code' => $code,
+                'client_id' => $clientId,
+                'client_secret' => $clientSecret,
+                'redirect_uri' => $redirectUri,
+                'grant_type' => 'authorization_code',
+            ]);
+
+            if (!$tokenResponse->successful()) {
+                Log::error('Google OAuth token request failed', ['body' => $tokenResponse->body()]);
+                return redirect()->route('login', ['portal' => 'student'])->withErrors([
+                    'email' => 'Failed to obtain access token from Google.',
+                ]);
+            }
+
+            $tokens = $tokenResponse->json();
+            $accessToken = $tokens['access_token'] ?? null;
+
+            if (!$accessToken) {
+                return redirect()->route('login', ['portal' => 'student'])->withErrors([
+                    'email' => 'Invalid token response received from Google.',
+                ]);
+            }
+
+            $userinfoResponse = Http::withToken($accessToken)->timeout(10)->get('https://www.googleapis.com/oauth2/v3/userinfo');
+
+            if (!$userinfoResponse->successful()) {
+                Log::error('Google userinfo request failed', ['body' => $userinfoResponse->body()]);
+                return redirect()->route('login', ['portal' => 'student'])->withErrors([
+                    'email' => 'Failed to retrieve profile information from Google.',
+                ]);
+            }
+
+            $googleUser = $userinfoResponse->json();
+            $email = Str::lower(trim($googleUser['email'] ?? ''));
+
+            if (empty($email)) {
+                return redirect()->route('login', ['portal' => 'student'])->withErrors([
+                    'email' => 'Google account does not provide an email address.',
+                ]);
+            }
+
+            // Find existing user or create a new student account
+            $user = User::where('email', $email)->first();
+
+            if ($user) {
+                if ($user->status !== 'active') {
+                    return redirect()->route('login', ['portal' => 'student'])->withErrors([
+                        'email' => 'Your account is inactive. Please contact the administrator.',
+                    ]);
+                }
+            } else {
+                $givenName = $googleUser['given_name'] ?? '';
+                $familyName = $googleUser['family_name'] ?? '';
+                $name = $googleUser['name'] ?? 'Google User';
+
+                if (empty($givenName)) {
+                    $parts = explode(' ', $name, 2);
+                    $givenName = $parts[0] ?? 'Student';
+                    $familyName = $parts[1] ?? 'User';
+                }
+
+                $user = User::create([
+                    'first_name' => $givenName,
+                    'last_name' => $familyName ?: 'User',
+                    'fullname' => $name,
+                    'email' => $email,
+                    'password' => Hash::make(Str::random(32)),
+                    'role' => 'student',
+                    'status' => 'active',
+                    'profile_pic' => $googleUser['picture'] ?? null,
+                ]);
+
+                SscHelper::logActivity($user->id, 'REGISTER_GOOGLE', "Registered via Google Login: {$email}");
+            }
+
+            Auth::login($user, true);
+            $request->session()->regenerate();
+            $request->session()->save();
+
+            SscHelper::logActivity($user->id, 'LOGIN_GOOGLE', "Logged in via Google Sign-In: {$email}");
+
+            return $this->redirectByRole($user, true);
+
+        } catch (\Exception $e) {
+            Log::error('Google OAuth callback exception', ['error' => $e->getMessage()]);
+            return redirect()->route('login', ['portal' => 'student'])->withErrors([
+                'email' => 'An error occurred during Google sign-in. Please try again.',
+            ]);
+        }
     }
 }

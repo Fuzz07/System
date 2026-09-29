@@ -17,45 +17,7 @@
     <link href="{{ asset('assets/css/style.css') }}?v={{ @filemtime(public_path('assets/css/style.css')) ?: 1 }}" rel="stylesheet">
     <link href="{{ asset('assets/css/dialogs.css') }}?v={{ @filemtime(public_path('assets/css/dialogs.css')) ?: 1 }}" rel="stylesheet">
     <style>
-        /* ── OTP verification step ─────────────────────────────────────────── */
-        .otp-meta {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            font-size: .78rem;
-            color: #64748b;
-        }
-        .otp-timer { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; color: #334155; }
-        .otp-timer.is-warning { color: var(--warning); }
-        .otp-timer.is-expired { color: var(--danger); }
-        .otp-input.is-invalid-field {
-            border-color: var(--danger) !important;
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, .15) !important;
-        }
-        .otp-input:disabled { background: #f1f5f9; color: #94a3b8; cursor: not-allowed; }
-        .shake-once { animation: fieldShake .38s ease; }
-        @keyframes fieldShake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-7px); }
-            40% { transform: translateX(6px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(3px); }
-        }
-        .otp-resend-row { font-size: .8rem; color: #64748b; }
-        .btn-resend {
-            background: none;
-            border: none;
-            padding: 0 0 0 4px;
-            font-weight: 600;
-            font-size: .8rem;
-            color: var(--primary);
-            cursor: pointer;
-        }
-        .btn-resend:disabled { color: #94a3b8; cursor: not-allowed; }
-        .btn-resend:not(:disabled):hover { text-decoration: underline; }
-
-        /* ── Password strength & requirements (Step 2 only) ────────────────── */
+        /* ── Password strength & requirements (Step 2) ─────────────────────── */
         .pw-panel {
             border: 1px solid #e2e8f0;
             background: #f8fafc;
@@ -105,7 +67,7 @@
         }
         .form-control-custom.is-valid-field,
         .form-select-custom.is-valid-field { border-color: var(--success) !important; }
-        .field-hint { font-size: .74rem; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+        .field-hint { font-size: .74rem; margin-top: 5px; display: flex; align-items: center; gap: 5px; color: #64748b; }
         .field-hint.is-error { color: var(--danger); }
         .field-hint.is-ok { color: var(--success); }
         .btn-primary-custom:disabled { opacity: .55; cursor: not-allowed; }
@@ -241,7 +203,7 @@
         .registration-steps {
             position: relative;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 8px;
             margin: 25px 0 28px;
             padding: 0;
@@ -251,8 +213,8 @@
             content: '';
             position: absolute;
             top: 17px;
-            right: 16.66%;
-            left: 16.66%;
+            right: 25%;
+            left: 25%;
             height: 2px;
             background: #e2e8f0;
         }
@@ -335,47 +297,9 @@
             font-weight: 800;
             text-decoration: none;
         }
-        .step-graphic {
-            display: grid;
-            width: 70px;
-            height: 70px;
-            margin: 0 auto 16px;
-            place-items: center;
-            border-radius: 22px;
-            background: linear-gradient(145deg, #eef2ff, #ecfeff);
-            color: #4f46e5;
-            font-size: 1.9rem;
-            box-shadow: inset 0 0 0 1px rgba(99, 102, 241, .1), 0 14px 30px rgba(79, 70, 229, .1);
-        }
-        .verified-account {
-            display: flex;
-            align-items: center;
-            gap: 11px;
-            padding: 12px 14px;
-            border: 1px solid #99f6e4;
-            border-radius: var(--radius-sm);
-            background: #ecfdf5;
-            color: #0f766e;
-        }
-        .verified-account > i { font-size: 1.35rem; }
-        .verified-account-copy { flex: 1; min-width: 0; }
-        .verified-account-copy strong { display: block; font-size: .8rem; }
-        .verified-account-copy span { display: block; overflow: hidden; color: #134e4a; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
-        .verified-account-change {
-            flex-shrink: 0;
-            padding: 6px 11px;
-            border: 0;
-            border-radius: 8px;
-            background: rgba(15, 118, 110, .1);
-            color: #0f766e;
-            font-size: .74rem;
-            font-weight: 800;
-        }
-        .verified-account-change:hover { background: rgba(15, 118, 110, .18); }
         .registration-signin { margin-top: 21px; text-align: center; color: #64748b; font-size: .8rem; }
         .registration-signin a { color: #4338ca; font-weight: 800; text-decoration: none; }
         .registration-signin a:hover { text-decoration: underline; }
-        .field-hint { color: #64748b; }
 
         @media (max-width: 991.98px) {
             .registration-page { align-items: flex-start; padding: 18px; }
@@ -418,12 +342,12 @@
             </div>
 
             <div class="registration-visual-copy">
-                <div class="registration-visual-kicker"><i class="bi bi-shield-check"></i> Secure student registration</div>
+                <div class="registration-visual-kicker"><i class="bi bi-shield-check"></i> Direct student registration</div>
                 <h2>Your voice. Your council. Your campus.</h2>
-                <p>Create one verified account to access council updates, transparent budget information, elections, and student services.</p>
+                <p>Create your student account to access council updates, transparent budget information, elections, and student services.</p>
                 <ul class="registration-trust-list">
-                    <li><i class="bi bi-google"></i> Verified with your Gmail account</li>
-                    <li><i class="bi bi-lock"></i> Protected by email code and security checks</li>
+                    <li><i class="bi bi-google"></i> Sign up using your Gmail account</li>
+                    <li><i class="bi bi-lock"></i> Protected by modern security checks</li>
                     <li><i class="bi bi-bar-chart"></i> Built for open and accountable student governance</li>
                 </ul>
             </div>
@@ -438,13 +362,12 @@
             <header>
                 <div class="registration-eyebrow"><i class="bi bi-person-badge"></i> Student access</div>
                 <h1 class="registration-title">Create your account</h1>
-                <p class="registration-subtitle">Complete the three secure steps below. It only takes a few minutes.</p>
+                <p class="registration-subtitle">Complete the two simple steps below. It only takes a minute.</p>
             </header>
 
             <ol class="registration-steps" aria-label="Registration progress">
-                <li class="registration-step is-active" data-stage="1"><span class="registration-step-number">1</span><span class="registration-step-label">Email verification</span></li>
-                <li class="registration-step" data-stage="2"><span class="registration-step-number">2</span><span class="registration-step-label">Student details</span></li>
-                <li class="registration-step" data-stage="3"><span class="registration-step-number">3</span><span class="registration-step-label">Account security</span></li>
+                <li class="registration-step is-active" data-stage="1"><span class="registration-step-number">1</span><span class="registration-step-label">Student details</span></li>
+                <li class="registration-step" data-stage="2"><span class="registration-step-number">2</span><span class="registration-step-label">Account security</span></li>
             </ol>
 
         @if($errors->any())
@@ -458,13 +381,7 @@
         @endif
 
         @php
-            // After a failed submit the page comes back with old input. If that
-            // email was already verified in this session, reopen the form instead
-            // of asking for another code.
-            $resumeEmail = session('register_email_verified') && old('email')
-                && \Illuminate\Support\Str::lower(trim(old('email'))) === session('register_email')
-                ? session('register_email')
-                : null;
+            $hasAccountErrors = $errors->has('email') || $errors->has('password') || $errors->has('captcha_token') || $errors->has('captcha_verified_token');
         @endphp
 
         <form method="POST" action="{{ route('register.submit') }}" id="registerForm" novalidate>
@@ -473,92 +390,13 @@
                 <input type="text" name="website_url" tabindex="-1" autocomplete="off">
             </div>
 
-            <!-- STEP 1: Verify your Gmail account -->
-            <div id="step-email">
-                <div class="step-graphic"><i class="bi bi-google"></i></div>
-                <div class="text-center mb-4">
-                    <h2 class="h5 fw-bold mb-1">Verify your Gmail account</h2>
-                    <p class="text-muted small mb-0">We'll email a 6-digit code to your Gmail account. Once it's verified, you can fill up the registration form.</p>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label-custom" for="email">Gmail Address</label>
-                    <input type="email" id="email" name="email" class="form-control-custom" placeholder="user@gmail.com" value="{{ $resumeEmail ?? old('email') }}" autocomplete="email" maxlength="255" required>
-                    <div class="field-hint">Use your active @gmail.com address.</div>
-                </div>
-
-                <div id="email-error" class="alert registration-error d-none mb-3" role="alert" aria-live="assertive"></div>
-
-                <button type="button" id="btn-send-code" class="btn-primary-custom w-100 justify-content-center" style="padding:14px;">
-                    <span id="send-btn-text"><i class="bi bi-send"></i> Send Verification Code</span>
-                    <div id="send-btn-spinner" class="spinner-border spinner-border-sm text-white d-none" role="status" style="margin-left:8px;"></div>
-                </button>
-            </div>
-
-            <!-- STEP 1b: OTP Verification -->
-            <div id="step-otp" class="d-none">
-                <div class="step-graphic"><i class="bi bi-envelope-check"></i></div>
-                <div class="text-center mb-3">
-                    <h2 class="h5 fw-bold mb-1">Check your Gmail inbox</h2>
-                    <p class="text-muted small mb-0">Enter the code we sent to <strong id="otp-email-display"></strong></p>
-                </div>
-                <div id="otp-message" class="alert alert-info mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;line-height:1.5;"></div>
-
-                <div class="mb-2 text-center">
-                    <label for="otp_code" class="form-label-custom d-block mb-2 text-start">6-Digit Verification Code</label>
-                    <input type="text" id="otp_code" class="form-control-custom text-center fw-bold otp-input"
-                           style="font-size:24px; letter-spacing:8px; max-width:240px; margin:0 auto;"
-                           placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-                           spellcheck="false" aria-describedby="otp-status">
-                </div>
-
-                <div class="otp-meta mb-3" id="otp-status">
-                    <span><i class="bi bi-clock-history"></i> Code expires in <span id="otp-countdown" class="otp-timer">03:00</span></span>
-                    <span id="otp-attempts"></span>
-                </div>
-
-                <div id="otp-error" class="alert alert-danger d-none mb-3" role="alert" style="border-radius:var(--radius-sm);font-size:.85rem;">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <span id="otp-error-text"></span>
-                </div>
-
-                <div id="otp-resent" class="alert alert-success d-none mb-3" role="status" style="border-radius:var(--radius-sm);font-size:.85rem;">
-                    <i class="bi bi-envelope-check-fill"></i> <span id="otp-resent-text"></span>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="button" id="btn-change-email" class="btn-secondary-custom" style="padding:14px; width:130px; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600; border-radius:var(--radius-sm); border:1.5px solid #cbd5e1; background:#fff; color:#475569;">
-                        <i class="bi bi-arrow-left-circle"></i> Change Email
-                    </button>
-                    <button type="button" id="btn-verify-otp" class="btn-primary-custom flex-grow-1 justify-content-center" style="padding:14px; display:flex; align-items:center; gap:8px;" disabled>
-                        <span id="verify-btn-text">Verify Code</span>
-                        <div id="verify-btn-spinner" class="spinner-border spinner-border-sm text-white d-none" role="status"></div>
-                    </button>
-                </div>
-
-                <div class="text-center mt-3 otp-resend-row">
-                    <span>Didn't receive the code?</span>
-                    <button type="button" id="btn-resend-otp" class="btn-resend" disabled>
-                        <span id="resend-btn-text">Resend code</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- STEP 2: Registration form (only reachable once the account is verified) -->
-            <div id="step-details" class="d-none">
-                <div class="verified-account mb-4">
-                    <i class="bi bi-patch-check-fill"></i>
-                    <div class="verified-account-copy">
-                        <strong>Gmail account verified</strong>
-                        <span id="verified-email-display"></span>
-                    </div>
-                    <button type="button" id="btn-restart-verification" class="verified-account-change">Change</button>
-                </div>
-
+            <!-- STEP 1: Student details -->
+            <div id="step-details" class="{{ $hasAccountErrors ? 'd-none' : '' }}">
                 <div class="form-section-heading"><span><i class="bi bi-person-vcard"></i></span> Personal information</div>
                 <div class="row g-2 mb-3">
                     <div class="col-md-4">
                         <label class="form-label-custom" for="first_name">First Name</label>
-                        <input type="text" id="first_name" name="first_name" class="form-control-custom" value="{{ old('first_name') }}" minlength="2" maxlength="100" autocomplete="given-name" required>
+                        <input type="text" id="first_name" name="first_name" class="form-control-custom" value="{{ old('first_name') }}" minlength="2" maxlength="100" autocomplete="given-name" required autofocus>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label-custom" for="middle_name">Middle Name <span class="text-muted fw-normal">(optional)</span></label>
@@ -608,22 +446,28 @@
                 <div id="details-error" class="alert registration-error d-none mb-3" role="alert" aria-live="assertive"></div>
 
                 <button type="button" id="btn-details-next" class="btn-primary-custom w-100 justify-content-center" style="padding:14px;">
-                    <i class="bi bi-arrow-right-circle"></i> Continue
+                    <span>Continue to Account Security</span> <i class="bi bi-arrow-right-circle ms-1"></i>
                 </button>
             </div>
 
-            <!-- STEP 3: Password Creation & CAPTCHA Verification -->
-            <div id="step-2" class="d-none">
-                <div class="step-graphic"><i class="bi bi-shield-lock"></i></div>
-                <div class="alert alert-success mb-3" style="border-radius:var(--radius-sm);font-size:.85rem;">
-                    <i class="bi bi-check-circle-fill"></i> Almost done! Secure your account by creating a password.
+            <!-- STEP 2: Account Security & Credentials -->
+            <div id="step-2" class="{{ $hasAccountErrors ? '' : 'd-none' }}">
+                <div class="form-section-heading"><span><i class="bi bi-shield-lock"></i></span> Account credentials</div>
+
+                <div class="mb-3">
+                    <label class="form-label-custom" for="email">Gmail Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light" style="border-color: #dbe3ef; border-radius: 12px 0 0 12px; color: #ea4335;"><i class="bi bi-google"></i></span>
+                        <input type="email" id="email" name="email" class="form-control-custom" style="border-radius: 0 12px 12px 0;" placeholder="user@gmail.com" value="{{ old('email') }}" autocomplete="email" maxlength="255" required>
+                    </div>
+                    <div class="field-hint">Must be an active @gmail.com address for student access.</div>
                 </div>
 
                 <div class="row g-2 mb-3">
                     <div class="col-md-6">
                         <label class="form-label-custom" for="register_password">Password</label>
                         <div style="position: relative;">
-                            <input type="password" name="password" id="register_password" class="form-control-custom" minlength="8" autocomplete="new-password" aria-describedby="pw-panel" style="padding-right: 44px;">
+                            <input type="password" name="password" id="register_password" class="form-control-custom" minlength="8" autocomplete="new-password" aria-describedby="pw-panel" style="padding-right: 44px;" required>
                             <button type="button" onclick="togglePasswordVisibility('register_password', this)" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; color: #64748b; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -632,7 +476,7 @@
                     <div class="col-md-6">
                         <label class="form-label-custom" for="register_password_confirmation">Confirm Password</label>
                         <div style="position: relative;">
-                            <input type="password" name="password_confirmation" id="register_password_confirmation" class="form-control-custom" minlength="8" autocomplete="new-password" aria-describedby="pw-match-hint" style="padding-right: 44px;">
+                            <input type="password" name="password_confirmation" id="register_password_confirmation" class="form-control-custom" minlength="8" autocomplete="new-password" aria-describedby="pw-match-hint" style="padding-right: 44px;" required>
                             <button type="button" onclick="togglePasswordVisibility('register_password_confirmation', this)" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; color: #64748b; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -657,8 +501,8 @@
                     </div>
                 </div>
 
-                <div id="password-error" class="alert alert-danger d-none mb-3" role="alert" style="border-radius:var(--radius-sm);font-size:.85rem;">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <span id="password-error-text"></span>
+                <div id="account-error" class="alert alert-danger d-none mb-3" role="alert" style="border-radius:var(--radius-sm);font-size:.85rem;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> <span id="account-error-text"></span>
                 </div>
 
                 @include('partials.captcha')
@@ -667,7 +511,7 @@
                     <button type="button" id="btn-back-step" class="btn-secondary-custom" style="padding:14px; width:110px; display:flex; align-items:center; justify-content:center; gap:6px; font-weight:600; border-radius:var(--radius-sm); border:1.5px solid #cbd5e1; background:#fff; color:#475569;">
                         <i class="bi bi-arrow-left-circle"></i> Back
                     </button>
-                    <button type="submit" id="btn-complete-registration" class="btn-primary-custom flex-grow-1 justify-content-center" style="padding:14px;" disabled>
+                    <button type="submit" id="btn-complete-registration" class="btn-primary-custom flex-grow-1 justify-content-center" style="padding:14px;">
                         <i class="bi bi-person-plus"></i> Complete Registration
                     </button>
                 </div>
@@ -683,120 +527,29 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const btnSendCode = document.getElementById('btn-send-code');
-        const btnChangeEmail = document.getElementById('btn-change-email');
-        const btnRestartVerification = document.getElementById('btn-restart-verification');
         const btnDetailsNext = document.getElementById('btn-details-next');
         const btnBackStep = document.getElementById('btn-back-step');
-        const btnVerifyOtp = document.getElementById('btn-verify-otp');
-        const btnResendOtp = document.getElementById('btn-resend-otp');
         const btnComplete = document.getElementById('btn-complete-registration');
 
-        const stepEmail = document.getElementById('step-email');
-        const stepOtp = document.getElementById('step-otp');
         const stepDetails = document.getElementById('step-details');
         const step2 = document.getElementById('step-2');
 
-        const emailError = document.getElementById('email-error');
         const detailsError = document.getElementById('details-error');
-        const verifiedEmailDisplay = document.getElementById('verified-email-display');
-        const otpError = document.getElementById('otp-error');
-        const otpErrorText = document.getElementById('otp-error-text');
-        const otpResent = document.getElementById('otp-resent');
-        const otpResentText = document.getElementById('otp-resent-text');
-        const otpMessage = document.getElementById('otp-message');
-        const otpEmailDisplay = document.getElementById('otp-email-display');
-        const otpCountdown = document.getElementById('otp-countdown');
-        const otpAttempts = document.getElementById('otp-attempts');
+        const accountError = document.getElementById('account-error');
+        const accountErrorText = document.getElementById('account-error-text');
         const progressSteps = document.querySelectorAll('.registration-step');
 
-        const sendBtnText = document.getElementById('send-btn-text');
-        const sendBtnSpinner = document.getElementById('send-btn-spinner');
-        const verifyBtnText = document.getElementById('verify-btn-text');
-        const verifyBtnSpinner = document.getElementById('verify-btn-spinner');
-        const resendBtnText = document.getElementById('resend-btn-text');
-
         const registerForm = document.getElementById('registerForm');
-        const otpCodeInput = document.getElementById('otp_code');
-
+        const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('register_password');
         const confirmInput = document.getElementById('register_password_confirmation');
         const pwMeterBar = document.getElementById('pw-meter-bar');
         const pwMeter = pwMeterBar ? pwMeterBar.parentElement : null;
         const pwStrengthText = document.getElementById('pw-strength-text');
         const pwMatchHint = document.getElementById('pw-match-hint');
-        const passwordError = document.getElementById('password-error');
-        const passwordErrorText = document.getElementById('password-error-text');
         const pwReqNodes = document.querySelectorAll('#step-2 .pw-req');
 
-        const OTP_LIFETIME_SECONDS = 180;
-        let expiryTimerId = null;
-        let cooldownTimerId = null;
-        let otpLocked = false;
-
-        if (!btnSendCode) return;
-
-        const endpoints = {
-            checkEmail: @json(route('register.check-email')),
-            verifyOtp: @json(route('register.verify-otp')),
-            resendOtp: @json(route('register.resend-otp')),
-            login: @json(route('login.student')),
-            forgotPassword: @json(route('password.request'))
-        };
-        const resumeEmail = @json($resumeEmail);
-        const csrfToken = () => registerForm.querySelector('input[name="_token"]').value;
-        const emailInput = document.getElementById('email');
-        const currentEmail = () => emailInput.value.trim().toLowerCase();
-        const detailsFields = stepDetails.querySelectorAll('input, select');
-
-        // Every panel maps onto one of the three progress markers.
-        const panels = { email: [stepEmail, 1], otp: [stepOtp, 1], details: [stepDetails, 2], password: [step2, 3] };
-
-        function showPanel(name) {
-            Object.entries(panels).forEach(([key, [panel]]) => panel.classList.toggle('d-none', key !== name));
-            setRegistrationStage(panels[name][1]);
-        }
-
-        function clearStepError(container) {
-            container.classList.add('d-none');
-            container.textContent = '';
-        }
-
-        function showStepError(container, message, field = null, code = null) {
-            container.replaceChildren();
-
-            const icon = document.createElement('i');
-            icon.className = code === 'microsoft_service_unavailable'
-                ? 'bi bi-wifi-off'
-                : 'bi bi-exclamation-octagon-fill';
-
-            const copy = document.createElement('div');
-            copy.className = 'registration-error-copy';
-            copy.textContent = message;
-
-            if (code === 'already_registered') {
-                const actions = document.createElement('div');
-                actions.className = 'registration-error-actions';
-
-                const loginLink = document.createElement('a');
-                loginLink.href = endpoints.login;
-                loginLink.textContent = 'Sign in';
-
-                const resetLink = document.createElement('a');
-                resetLink.href = endpoints.forgotPassword;
-                resetLink.textContent = 'Forgot password';
-
-                actions.append(loginLink, resetLink);
-                copy.append(actions);
-            }
-
-            container.append(icon, copy);
-            container.classList.remove('d-none');
-            if (field) {
-                field.classList.add('is-invalid-field');
-                field.focus();
-            }
-        }
+        const detailsFields = stepDetails.querySelectorAll('input:not([readonly]), select');
 
         function setRegistrationStage(stage) {
             progressSteps.forEach((step) => {
@@ -808,25 +561,32 @@
             });
         }
 
-        async function requestJson(url, options) {
-            const response = await fetch(url, options);
-            const contentType = response.headers.get('content-type') || '';
-
-            if (!contentType.includes('application/json')) {
-                const error = new Error(response.status === 419
-                    ? 'Your session has expired. Refresh the page and try again.'
-                    : 'The server returned an unexpected response. Please try again.');
-                error.status = response.status;
-                throw error;
-            }
-
-            const data = await response.json();
-            return { response, data };
-        }
-
         function clearFieldState(field) {
             field.setCustomValidity('');
             field.classList.remove('is-invalid-field');
+        }
+
+        function clearStepError(container) {
+            container.classList.add('d-none');
+            container.textContent = '';
+        }
+
+        function showStepError(container, message, field = null) {
+            container.replaceChildren();
+
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-exclamation-octagon-fill';
+
+            const copy = document.createElement('div');
+            copy.className = 'registration-error-copy';
+            copy.textContent = message;
+
+            container.append(icon, copy);
+            container.classList.remove('d-none');
+            if (field) {
+                field.classList.add('is-invalid-field');
+                field.focus();
+            }
         }
 
         function fieldValidationError(field) {
@@ -857,7 +617,7 @@
 
             if (field.name === 'email' && value) {
                 if (!field.validity.valid) return 'Enter a valid Gmail address.';
-                if (!value.endsWith('@gmail.com')) return 'Please use a valid @gmail.com address.';
+                if (!value.toLowerCase().endsWith('@gmail.com')) return 'Please use a valid @gmail.com address.';
             }
 
             return null;
@@ -883,7 +643,6 @@
                 clearFieldState(field);
                 clearStepError(detailsError);
             });
-            // Enter moves the form forward instead of attempting a submit.
             if (field.tagName === 'INPUT') {
                 field.addEventListener('keydown', (e) => {
                     if (e.key !== 'Enter') return;
@@ -893,383 +652,26 @@
             }
         });
 
-        emailInput.addEventListener('input', () => {
-            clearFieldState(emailInput);
-            clearStepError(emailError);
-        });
-
-        emailInput.addEventListener('keydown', (e) => {
-            if (e.key !== 'Enter') return;
-            e.preventDefault();
-            if (!emailInput.readOnly) btnSendCode.click();
-        });
-
-        emailInput.addEventListener('blur', () => {
-            emailInput.value = currentEmail();
-        });
-
-        // The email is locked once verified — the server only accepts the
-        // address that received the code.
-        function markEmailVerified(email) {
-            emailInput.value = email;
-            emailInput.readOnly = true;
-            verifiedEmailDisplay.textContent = email;
-        }
-
-        // ───────────────────────────────────────────────────────────────────
-        //  OTP STEP HELPERS
-        // ───────────────────────────────────────────────────────────────────
-        function showOtpError(message, shake = true) {
-            otpResent.classList.add('d-none');
-            otpErrorText.textContent = message;
-            otpError.classList.remove('d-none');
-            otpCodeInput.classList.add('is-invalid-field');
-            if (shake) {
-                otpCodeInput.classList.remove('shake-once');
-                void otpCodeInput.offsetWidth; // restart the animation
-                otpCodeInput.classList.add('shake-once');
-            }
-        }
-
-        function clearOtpError() {
-            otpError.classList.add('d-none');
-            otpErrorText.textContent = '';
-            otpCodeInput.classList.remove('is-invalid-field', 'shake-once');
-        }
-
-        function showOtpNotice(message) {
-            otpResentText.textContent = message;
-            otpResent.classList.remove('d-none');
-        }
-
-        function setAttemptsLeft(remaining) {
-            if (remaining === null || remaining === undefined) {
-                otpAttempts.textContent = '';
-                otpAttempts.style.color = '';
-                return;
-            }
-            otpAttempts.textContent = remaining + ' attempt' + (remaining === 1 ? '' : 's') + ' remaining';
-            otpAttempts.style.color = remaining <= 2 ? 'var(--danger)' : '#64748b';
-        }
-
-        function setOtpLocked(locked) {
-            otpLocked = locked;
-            otpCodeInput.disabled = locked;
-            if (locked) {
-                stopExpiryCountdown();
-                otpCountdown.textContent = 'EXPIRED';
-                otpCountdown.classList.remove('is-warning');
-                otpCountdown.classList.add('is-expired');
-                btnVerifyOtp.disabled = true;
-                // A new code can be requested right away once the old one is dead.
-                stopResendCooldown();
-                enableResend();
-            } else {
-                syncVerifyButton();
-            }
-        }
-
-        function syncVerifyButton() {
-            btnVerifyOtp.disabled = otpLocked || otpCodeInput.value.trim().length !== 6;
-        }
-
-        function stopExpiryCountdown() {
-            if (expiryTimerId) { clearInterval(expiryTimerId); expiryTimerId = null; }
-        }
-
-        function startExpiryCountdown(expiresAtSeconds) {
-            stopExpiryCountdown();
-            const deadline = (expiresAtSeconds ? expiresAtSeconds * 1000 : Date.now() + OTP_LIFETIME_SECONDS * 1000);
-
-            const tick = () => {
-                const remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
-                if (remaining <= 0) {
-                    stopExpiryCountdown();
-                    otpCountdown.textContent = 'EXPIRED';
-                    otpCountdown.classList.remove('is-warning');
-                    otpCountdown.classList.add('is-expired');
-                    setOtpLocked(true);
-                    showOtpError('This verification code has expired. Please request a new code.', false);
-                    return;
-                }
-                const mins = Math.floor(remaining / 60);
-                const secs = remaining % 60;
-                otpCountdown.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-                otpCountdown.classList.toggle('is-warning', remaining <= 30);
-                otpCountdown.classList.remove('is-expired');
-            };
-
-            tick();
-            expiryTimerId = setInterval(tick, 1000);
-        }
-
-        function stopResendCooldown() {
-            if (cooldownTimerId) { clearInterval(cooldownTimerId); cooldownTimerId = null; }
-        }
-
-        function enableResend() {
-            btnResendOtp.disabled = false;
-            resendBtnText.textContent = 'Resend code';
-        }
-
-        function startResendCooldown(seconds) {
-            stopResendCooldown();
-            let remaining = Math.max(0, parseInt(seconds, 10) || 0);
-            if (remaining === 0) { enableResend(); return; }
-
-            btnResendOtp.disabled = true;
-            const tick = () => {
-                if (remaining <= 0) {
-                    stopResendCooldown();
-                    enableResend();
-                    return;
-                }
-                resendBtnText.textContent = 'Resend code in ' + remaining + 's';
-                remaining--;
-            };
-            tick();
-            cooldownTimerId = setInterval(tick, 1000);
-        }
-
-        // Digits only, and keep the Verify button in sync with what is typed.
-        otpCodeInput.addEventListener('input', () => {
-            const cleaned = otpCodeInput.value.replace(/\D/g, '').slice(0, 6);
-            if (cleaned !== otpCodeInput.value) otpCodeInput.value = cleaned;
-            if (otpError && !otpError.classList.contains('d-none')) clearOtpError();
-            syncVerifyButton();
-        });
-
-        otpCodeInput.addEventListener('paste', (e) => {
-            const pasted = (e.clipboardData || window.clipboardData).getData('text') || '';
-            const digits = pasted.replace(/\D/g, '').slice(0, 6);
-            if (digits) {
-                e.preventDefault();
-                otpCodeInput.value = digits;
-                clearOtpError();
-                syncVerifyButton();
-            }
-        });
-
-        otpCodeInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (!btnVerifyOtp.disabled) btnVerifyOtp.click();
-            }
-        });
-
-        // ───────────────────────────────────────────────────────────────────
-        //  STEP 1: check Gmail and send the verification code
-        // ───────────────────────────────────────────────────────────────────
-        btnSendCode.addEventListener('click', async (e) => {
-            if (e) e.preventDefault();
-            emailInput.value = currentEmail();
-            if (!validateFields([emailInput], emailError)) return;
-
-            btnSendCode.disabled = true;
-            sendBtnText.textContent = "Sending Verification Code...";
-            sendBtnSpinner.classList.remove('d-none');
-            clearStepError(emailError);
-
-            try {
-                const { data } = await requestJson(endpoints.checkEmail, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken()
-                    },
-                    body: JSON.stringify({ email: currentEmail() })
-                });
-
-                if (data.success) {
-                    otpMessage.innerHTML = '<i class="bi bi-envelope-check-fill text-primary"></i> ' + (data.message || 'Verification code sent.');
-                    otpEmailDisplay.textContent = currentEmail();
-                    showPanel('otp');
-
-                    otpCodeInput.value = '';
-                    otpCodeInput.disabled = false;
-                    otpLocked = false;
-                    clearOtpError();
-                    otpResent.classList.add('d-none');
-                    setAttemptsLeft(null);
-                    syncVerifyButton();
-                    startExpiryCountdown(data.expires_at);
-                    startResendCooldown(data.resend_available_in);
-                    otpCodeInput.focus();
-                } else {
-                    showStepError(emailError, data.message || 'We could not verify this email address. Please try again.', emailInput, data.code);
-                }
-            } catch (err) {
-                console.error(err);
-                showStepError(emailError, err.message || 'We could not send the verification code right now. Check your connection and try again.', emailInput);
-            } finally {
-                btnSendCode.disabled = false;
-                sendBtnText.innerHTML = '<i class="bi bi-send"></i> Send Verification Code';
-                sendBtnSpinner.classList.add('d-none');
-            }
-        });
-
-        // ───────────────────────────────────────────────────────────────────
-        //  OTP → REGISTRATION FORM: verify the code
-        // ───────────────────────────────────────────────────────────────────
-        btnVerifyOtp.addEventListener('click', async (e) => {
-            if (e) e.preventDefault();
-            const otpVal = otpCodeInput.value.trim();
-
-            if (otpLocked) {
-                showOtpError('This code is no longer valid. Please request a new code.');
-                return;
-            }
-            if (otpVal.length !== 6) {
-                showOtpError('Please enter the complete 6-digit code sent to your Gmail.');
-                otpCodeInput.focus();
-                return;
-            }
-
-            btnVerifyOtp.disabled = true;
-            verifyBtnText.textContent = "Verifying Code...";
-            verifyBtnSpinner.classList.remove('d-none');
-            clearOtpError();
-            otpResent.classList.add('d-none');
-
-            try {
-                const { data } = await requestJson(endpoints.verifyOtp, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken()
-                    },
-                    body: JSON.stringify({ email: currentEmail(), otp: otpVal })
-                });
-
-                verifyBtnText.textContent = "Verify Code";
-                verifyBtnSpinner.classList.add('d-none');
-
-                if (data.success) {
-                    stopExpiryCountdown();
-                    stopResendCooldown();
-                    markEmailVerified(currentEmail());
-                    showPanel('details');
-                    document.getElementById('first_name').focus();
-                    return;
-                }
-
-                showOtpError(data.message || 'Invalid verification code.');
-                otpCodeInput.select();
-
-                if (typeof data.attempts_left === 'number') {
-                    setAttemptsLeft(data.attempts_left);
-                }
-                if (data.locked || data.expired || data.can_resend) {
-                    setAttemptsLeft(null);
-                    setOtpLocked(true);
-                } else {
-                    syncVerifyButton();
-                }
-            } catch (err) {
-                console.error(err);
-                verifyBtnText.textContent = "Verify Code";
-                verifyBtnSpinner.classList.add('d-none');
-                syncVerifyButton();
-                showOtpError(err.message || 'We could not verify the code right now. Please try again.', false);
-            }
-        });
-
-        // ───────────────────────────────────────────────────────────────────
-        //  RESEND CODE
-        // ───────────────────────────────────────────────────────────────────
-        btnResendOtp.addEventListener('click', async (e) => {
-            if (e) e.preventDefault();
-            if (btnResendOtp.disabled) return;
-
-            btnResendOtp.disabled = true;
-            resendBtnText.textContent = 'Sending...';
-            clearOtpError();
-            otpResent.classList.add('d-none');
-
-            try {
-                const { data } = await requestJson(endpoints.resendOtp, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken()
-                    },
-                    body: JSON.stringify({ email: currentEmail() })
-                });
-
-                if (data.success) {
-                    otpCodeInput.disabled = false;
-                    otpCodeInput.value = '';
-                    otpLocked = false;
-                    otpCountdown.classList.remove('is-expired');
-                    setAttemptsLeft(null);
-                    syncVerifyButton();
-                    startExpiryCountdown(data.expires_at);
-                    startResendCooldown(data.resend_available_in);
-
-                    let notice = data.message || 'A new verification code has been sent.';
-                    if (typeof data.resends_left === 'number') {
-                        notice += ' You may request ' + data.resends_left + ' more code' + (data.resends_left === 1 ? '' : 's') + '.';
-                    }
-                    showOtpNotice(notice);
-                    otpCodeInput.focus();
-                } else {
-                    showOtpError(data.message || 'Could not resend the verification code.', false);
-                    if (data.restart) {
-                        // The verification session is finished — only "Edit Info" can recover it.
-                        setOtpLocked(true);
-                        stopResendCooldown();
-                        btnResendOtp.disabled = true;
-                        resendBtnText.textContent = 'Resend unavailable';
-                    } else {
-                        startResendCooldown(data.resend_available_in || 60);
-                    }
-                }
-            } catch (err) {
-                console.error(err);
-                showOtpError(err.message || 'We could not resend the code right now. Please try again.', false);
-                enableResend();
-            }
-        });
-
-        // OTP → email: fix a typo or use another account.
-        btnChangeEmail.addEventListener('click', () => {
-            stopExpiryCountdown();
-            stopResendCooldown();
-            showPanel('email');
-            emailInput.focus();
-        });
-
-        // Registration form → email: start over with a different account. A new
-        // code has to be verified before the form opens again.
-        btnRestartVerification.addEventListener('click', () => {
-            emailInput.readOnly = false;
-            verifiedEmailDisplay.textContent = '';
-            showPanel('email');
-            emailInput.focus();
-            emailInput.select();
-        });
-
-        // Registration form → password step
+        // Continue to Step 2
         btnDetailsNext.addEventListener('click', (e) => {
             if (e) e.preventDefault();
             if (!validateFields(detailsFields, detailsError)) return;
-            showPanel('password');
-            setStepTwoActive(true);
-            passwordInput.focus();
+
+            stepDetails.classList.add('d-none');
+            step2.classList.remove('d-none');
+            setRegistrationStage(2);
+            emailInput.focus();
         });
 
-        // Password step → registration form
+        // Back to Step 1
         btnBackStep.addEventListener('click', () => {
-            setStepTwoActive(false);
-            showPanel('details');
+            step2.classList.add('d-none');
+            stepDetails.classList.remove('d-none');
+            setRegistrationStage(1);
+            document.getElementById('first_name').focus();
         });
 
-        // ───────────────────────────────────────────────────────────────────
-        //  STEP 2: PASSWORD VALIDATION (scoped to the password section only)
-        // ───────────────────────────────────────────────────────────────────
+        // ── Password Validation & Strength ──────────────────────────────────
         const STRENGTH_LEVELS = [
             { label: 'Very weak', color: '#ef4444', width: 15 },
             { label: 'Weak',      color: '#ef4444', width: 30 },
@@ -1279,7 +681,6 @@
             { label: 'Very strong', color: '#10b981', width: 100 }
         ];
 
-        // Mirrors the server rules: min 8 characters, at least one letter and one number.
         function passwordChecks() {
             const pw = passwordInput.value;
             const confirm = confirmInput.value;
@@ -1299,14 +700,8 @@
             if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
             if (/\d/.test(pw)) score++;
             if (/[^A-Za-z0-9]/.test(pw)) score++;
-            // A password that fails the baseline rules can never read above "Weak".
             if (pw.length < 8 || !/[a-zA-Z]/.test(pw) || !/\d/.test(pw)) score = Math.min(score, 1);
             return score;
-        }
-
-        function isPasswordSectionValid() {
-            const checks = passwordChecks();
-            return checks.length && checks.letter && checks.number && checks.match;
         }
 
         function evaluatePasswordSection() {
@@ -1316,7 +711,6 @@
             const confirm = confirmInput.value;
             const checks = passwordChecks();
 
-            // Requirement checklist
             pwReqNodes.forEach((node) => {
                 const key = node.getAttribute('data-req');
                 const met = !!checks[key];
@@ -1330,7 +724,6 @@
                     : (touched ? 'bi bi-x-circle-fill' : 'bi bi-circle');
             });
 
-            // Strength meter
             const score = strengthScore(pw);
             if (score < 0) {
                 pwMeterBar.style.width = '0%';
@@ -1347,11 +740,9 @@
                 if (pwMeter) pwMeter.setAttribute('aria-valuenow', level.width);
             }
 
-            // Password field state
             passwordInput.classList.toggle('is-valid-field', checks.length && checks.letter && checks.number);
             passwordInput.classList.toggle('is-invalid-field', pw.length > 0 && !(checks.length && checks.letter && checks.number));
 
-            // Confirm field state + inline hint
             if (confirm.length === 0) {
                 confirmInput.classList.remove('is-valid-field', 'is-invalid-field');
                 pwMatchHint.classList.add('d-none');
@@ -1368,35 +759,21 @@
                 pwMatchHint.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Passwords do not match';
             }
 
-            const valid = isPasswordSectionValid();
+            const valid = checks.length && checks.letter && checks.number && checks.match;
             if (btnComplete) btnComplete.disabled = !valid;
-            if (valid) hidePasswordError();
+            if (valid) hideAccountError();
 
             return valid;
         }
 
-        function showPasswordError(message) {
-            passwordErrorText.textContent = message;
-            passwordError.classList.remove('d-none');
+        function showAccountError(message) {
+            accountErrorText.textContent = message;
+            accountError.classList.remove('d-none');
         }
 
-        function hidePasswordError() {
-            passwordError.classList.add('d-none');
-            passwordErrorText.textContent = '';
-        }
-
-        // The password fields only become real form requirements once Step 2 is on
-        // screen, so the browser never validates a hidden section.
-        function setStepTwoActive(active) {
-            if (!passwordInput) return;
-            if (active) {
-                passwordInput.setAttribute('required', 'required');
-                confirmInput.setAttribute('required', 'required');
-                evaluatePasswordSection();
-            } else {
-                passwordInput.removeAttribute('required');
-                confirmInput.removeAttribute('required');
-            }
+        function hideAccountError() {
+            accountError.classList.add('d-none');
+            accountErrorText.textContent = '';
         }
 
         if (passwordInput && confirmInput) {
@@ -1404,17 +781,27 @@
                 passwordInput.addEventListener(evt, () => setTimeout(evaluatePasswordSection, 0));
                 confirmInput.addEventListener(evt, () => setTimeout(evaluatePasswordSection, 0));
             });
-            setStepTwoActive(false);
             evaluatePasswordSection();
         }
 
-        // ───────────────────────────────────────────────────────────────────
-        //  FINAL SUBMIT
-        // ───────────────────────────────────────────────────────────────────
+        emailInput.addEventListener('input', () => {
+            clearFieldState(emailInput);
+            hideAccountError();
+        });
+
+        // ── Form Submission ─────────────────────────────────────────────────
         registerForm.addEventListener('submit', (e) => {
-            // Never allow a submit before the password step is reached.
             if (step2.classList.contains('d-none')) {
                 e.preventDefault();
+                btnDetailsNext.click();
+                return false;
+            }
+
+            const emailVal = emailInput.value.trim().toLowerCase();
+            if (!emailVal || !emailVal.endsWith('@gmail.com')) {
+                e.preventDefault();
+                showAccountError('Please provide a valid @gmail.com address.');
+                emailInput.focus();
                 return false;
             }
 
@@ -1422,32 +809,29 @@
                 e.preventDefault();
                 const checks = passwordChecks();
                 if (!checks.length || !checks.letter || !checks.number) {
-                    showPasswordError('Your password must be at least 8 characters long and include both a letter and a number.');
+                    showAccountError('Your password must be at least 8 characters long and include both a letter and a number.');
                     passwordInput.focus();
                 } else {
-                    showPasswordError('The passwords you entered do not match. Please re-enter them.');
+                    showAccountError('The passwords you entered do not match. Please re-enter them.');
                     confirmInput.focus();
                 }
                 return false;
             }
 
-            // Ensure CAPTCHA verified token is present if official site key exists
             const verifiedTokenInput = document.getElementById('captcha_verified_token');
             if (verifiedTokenInput && !verifiedTokenInput.value) {
                 e.preventDefault();
-                showPasswordError('Please complete the "I am not a robot" security check before continuing.');
+                showAccountError('Please complete the "I am not a robot" security check before continuing.');
                 return false;
             }
 
-            hidePasswordError();
+            hideAccountError();
         });
 
-        // Back from a failed submit with an email this session already verified:
-        // reopen the registration form rather than asking for another code.
-        if (resumeEmail) {
-            markEmailVerified(resumeEmail);
-            showPanel('details');
-        }
+        // If returned with account/credentials errors from server, set stage to 2
+        @if($hasAccountErrors)
+            setRegistrationStage(2);
+        @endif
 
         // Date of Birth - Auto Age Calculator
         const dobInput = document.getElementById('dob_input');
