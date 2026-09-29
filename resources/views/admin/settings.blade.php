@@ -334,7 +334,9 @@
                                         @endif
                                     </td>
                                     <td class="text-end">
-                                        <form method="POST" action="{{ route('admin.settings.sy.activate', $sy) }}" class="d-inline-flex align-items-center gap-1">
+                                        @php $yearsAhead = $promotionYears[$sy->id] ?? 0; @endphp
+                                        <form method="POST" action="{{ route('admin.settings.sy.activate', $sy) }}" class="d-inline-flex align-items-center gap-1"
+                                            @if($yearsAhead > 0) data-confirm="Activating {{ $sy->label }} moves every student up {{ $yearsAhead }} year level{{ $yearsAhead > 1 ? 's' : '' }}. 4th-year students will be marked as graduated, set inactive, and moved to the student archive. Continue?" @endif>
                                             @csrf @method('PATCH')
                                             <select name="semester" class="form-select form-select-sm" style="width: 125px; font-size: 0.72rem;" aria-label="Semester for {{ $sy->label }}">
                                                 @foreach(\App\Models\SchoolYear::SEMESTERS as $value => $label)

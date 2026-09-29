@@ -27,7 +27,8 @@ class EnrollmentPaymentController extends Controller
         $currentSy = SscHelper::getActiveAcademicTerm();
         $currentTermKeys = SscHelper::getActiveEnrollmentTermKeys();
 
-        $students = User::where('role', 'student')
+        // Archived graduates no longer owe fees for the new term.
+        $students = User::where('role', 'student')->notArchived()
             ->with(['enrollmentPayments' => function ($q) use ($currentTermKeys) {
                 $q->whereIn('semester', $currentTermKeys)->orderByDesc('created_at');
             }]);
@@ -64,7 +65,7 @@ class EnrollmentPaymentController extends Controller
         $students = $students->orderBy('fullname')->paginate(8);
 
         $departments = User::where('role', 'student')->select('department')->distinct()->pluck('department');
-        $years = User::where('role', 'student')->select('year_level')->distinct()->pluck('year_level');
+        $years = User::where('role', 'student')->notArchived()->select('year_level')->distinct()->pluck('year_level');
         $distribution = $this->departmentDistribution($currentSy, $currentTermKeys);
 
         $portal = $this->portal($request);
@@ -326,7 +327,7 @@ class EnrollmentPaymentController extends Controller
         $termKeys ??= [$schoolYear];
         $rows = [];
 
-        $studentRows = User::where('role', 'student')
+        $studentRows = User::where('role', 'student')->notArchived()
             ->groupBy('department')
             ->selectRaw('department, COUNT(*) as total')
             ->get();

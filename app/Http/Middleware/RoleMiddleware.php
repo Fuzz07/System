@@ -21,6 +21,21 @@ class RoleMiddleware
             abort(403, 'Unauthorized access.');
         }
 
+        // ── Archived (graduated) students ───────
+        // Graduates are archived when a new school year starts. Close any
+        // session they still have open so the portal stops working for them
+        // right away instead of whenever they next log in.
+        $sessionUser = $request->user();
+        if ($sessionUser && $sessionUser->role === 'student' && $sessionUser->isArchived()) {
+            \Illuminate\Support\Facades\Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login.student')->withErrors([
+                'email' => 'Your account has been archived because you have graduated. Please contact the administrator if this is incorrect.',
+            ]);
+        }
+
         // ── Admin Active Session / Device Check ───────
         $user = $request->user();
         if ($user && $user->role === 'admin') {

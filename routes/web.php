@@ -90,6 +90,7 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         registerEnrollmentPaymentRoutes();
         Route::patch('/students/{user}/approve', [Admin\StudentController::class, 'approve'])->name('students.approve');
         Route::patch('/students/{user}/toggle', [Admin\StudentController::class, 'toggleStatus'])->name('students.toggle');
+        Route::patch('/students/{user}/restore', [Admin\StudentController::class, 'restore'])->name('students.restore');
         Route::delete('/students/{user}', [Admin\StudentController::class, 'destroy'])->name('students.destroy');
 
         Route::get('/feedback', [Admin\FeedbackController::class, 'index'])->name('feedback');

@@ -19,6 +19,7 @@ class User extends Authenticatable implements JWTSubject
         'fullname', 'email', 'password', 'role', 'department',
         'student_id', 'profile_pic', 'status', 'position', 'party',
         'admin_device_token', 'remember_token', 'notifications_seen_at',
+        'archived_at', 'graduated_school_year',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -29,6 +30,7 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'hashed',
             'created_at' => 'datetime',
             'notifications_seen_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
     }
 
@@ -93,6 +95,15 @@ class User extends Authenticatable implements JWTSubject
     public function isStudent(): bool { return $this->role === 'student'; }
     public function isDean(): bool { return $this->role === 'dean'; }
     public function isAdminOrTreasurer(): bool { return in_array($this->role, ['admin', 'treasurer']); }
+    public function isArchived(): bool { return $this->archived_at !== null; }
+
+    /**
+     * Students still on the roster. Graduates are archived when a new school
+     * year starts, and stay out of lists, counts and "pending" badges, where
+     * their inactive status would otherwise read as awaiting approval.
+     */
+    public function scopeNotArchived($query) { return $query->whereNull('archived_at'); }
+    public function scopeArchived($query) { return $query->whereNotNull('archived_at'); }
 
     // Determine whether a student is considered graduated based on configured values
     public function isGraduated(): bool

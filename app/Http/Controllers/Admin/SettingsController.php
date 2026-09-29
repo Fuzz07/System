@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
 use App\Models\SchoolYear;
+use App\Services\StudentPromotionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,8 @@ class SettingsController extends Controller
     public function index()
     {
         $schoolYears = SchoolYear::orderByDesc('id')->get();
+        $promotion = app(StudentPromotionService::class);
+        $promotionYears = $schoolYears->mapWithKeys(fn ($sy) => [$sy->id => $promotion->yearsAhead($sy)]);
         $dbStats = [];
         $tables = ['users','budgets','proposals','expenses','announcements','feedback','activity_logs','liquidations'];
         foreach ($tables as $t) {
@@ -48,7 +51,7 @@ class SettingsController extends Controller
 
         $maintenanceData = \App\Helpers\MaintenanceHelper::getData();
 
-        return view('admin.settings', compact('schoolYears', 'dbStats', 'activeSessions', 'maintenanceData'));
+        return view('admin.settings', compact('schoolYears', 'promotionYears', 'dbStats', 'activeSessions', 'maintenanceData'));
     }
 
     public function logoutDevice(Request $request, string $sessionId)
@@ -181,11 +184,19 @@ class SettingsController extends Controller
             'semester' => $validated['semester'],
         ]);
 
+        // A later school year moves students up a year level and archives the
+        // graduating 4th years; a semester switch or an older year does nothing.
+        $promotion = app(StudentPromotionService::class)->advanceTo($schoolYear);
+        if ($promotion['years'] > 0) {
+            SscHelper::logActivity(Auth::id(), 'STUDENT_PROMOTION', "Moved students up {$promotion['years']} year level(s) for {$schoolYear->label}: {$promotion['promoted']} promoted, {$promotion['graduated']} graduated and archived");
+        }
+
         // ── Keep SSC_CURRENT_SCHOOL_YEAR .env key in sync ──────────────────
         // This ensures any code still reading config('ssc.current_school_year')
         // (e.g. legacy references) stays consistent with the DB-driven active SY.
+        // Skipped under tests so a test run never rewrites the developer's .env.
         $envPath = base_path('.env');
-        if (file_exists($envPath)) {
+        if (file_exists($envPath) && !app()->runningUnitTests()) {
             $envContent = file_get_contents($envPath);
             $newLabel   = $schoolYear->label;
 
@@ -204,10 +215,12 @@ class SettingsController extends Controller
         $semesterLabel = $schoolYear->semester_label;
         SscHelper::logActivity(Auth::id(), 'SETTINGS_CHANGE', "Changed active academic term to {$schoolYear->label} - {$semesterLabel}");
 
-        return redirect()->route('admin.settings')->with(
-            'success',
-            "Active academic term updated to {$schoolYear->label} - {$semesterLabel}. Enrollment payment records now use this semester."
-        );
+        $message = "Active academic term updated to {$schoolYear->label} - {$semesterLabel}. Enrollment payment records now use this semester.";
+        if ($promotion['years'] > 0) {
+            $message .= " {$promotion['promoted']} student(s) moved up a year level and {$promotion['graduated']} graduating student(s) were archived.";
+        }
+
+        return redirect()->route('admin.settings')->with('success', $message);
     }
 
     public function deleteSchoolYear(SchoolYear $schoolYear)

@@ -386,8 +386,8 @@ class PushNotificationService
                 'url' => \App\Helpers\SscHelper::studentRoute('mobile.student.announcements'),
             ];
 
-            // Send to all students
-            $studentIds = \App\Models\User::where('role', 'student')->pluck('id')->toArray();
+            // Send to all students still on the roster (not archived graduates)
+            $studentIds = \App\Models\User::where('role', 'student')->notArchived()->pluck('id')->toArray();
             
             return self::sendToUsers($studentIds, $title, $body, $data);
         } catch (\Exception $e) {

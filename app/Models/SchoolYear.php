@@ -25,9 +25,11 @@ class SchoolYear extends Model
         'voting_starts_at',
         'voting_ends_at',
         'results_announced',
+        'students_promoted_at',
     ];
     protected $casts = [
         'created_at' => 'datetime',
+        'students_promoted_at' => 'datetime',
         'is_active' => 'boolean',
         'candidacy_open' => 'boolean',
         'voting_open' => 'boolean',
@@ -44,6 +46,15 @@ class SchoolYear extends Model
     public function getAcademicTermAttribute(): string
     {
         return $this->label . ' - ' . $this->semester_label;
+    }
+
+    /**
+     * The first year of the label, e.g. 2026 for "2026-2027", used to tell how
+     * far one school year is ahead of another. Null for a malformed label.
+     */
+    public function getStartYearAttribute(): ?int
+    {
+        return preg_match('/^(\d{4})-\d{4}$/', (string) $this->label, $m) ? (int) $m[1] : null;
     }
 
     /**
