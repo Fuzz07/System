@@ -119,6 +119,10 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::post('/election/close', [Admin\CandidacyController::class, 'closeVoting'])->name('election.close');
         Route::post('/election/announce', [Admin\CandidacyController::class, 'announceResults'])->name('election.announce');
         Route::delete('/candidacies/{candidacy}', [Admin\CandidacyController::class, 'destroy'])->name('candidacy.destroy');
+        Route::post('/party-lists', [Admin\PartyListController::class, 'store'])->name('party_lists.store');
+        Route::put('/party-lists/{partyList}', [Admin\PartyListController::class, 'update'])->name('party_lists.update');
+        Route::patch('/party-lists/{partyList}/toggle', [Admin\PartyListController::class, 'toggle'])->name('party_lists.toggle');
+        Route::delete('/party-lists/{partyList}', [Admin\PartyListController::class, 'destroy'])->name('party_lists.destroy');
         Route::get('/election-results', [Admin\CandidacyController::class, 'results'])->name('election.results');
 
         // Eligible Students Whitelist
@@ -354,8 +358,11 @@ Route::group([], function () use ($baseDomain) {
 
             $request->validate([
                 'position' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::in($allowedPositions)],
+                'party_list_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('party_lists', 'id')->where('is_active', true)],
                 'platform' => 'required|string|min:20|max:3000',
                 'photo'    => \App\Support\UploadValidation::optionalFile(),
+            ], [
+                'party_list_id.exists' => 'That party list is not accepting candidates. Choose another or run as an independent.',
             ]);
 
             $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();
@@ -365,6 +372,13 @@ Route::group([], function () use ($baseDomain) {
             $exists = $student->candidacies()->where('school_year', $activeSy->label)->exists();
             if ($exists) {
                 return back()->with('danger', 'You have already submitted an application for this school year.');
+            }
+
+            // A party list fields one candidate per position each school year.
+            $partyListId = $request->filled('party_list_id') ? (int) $request->party_list_id : null;
+            if (\App\Models\Candidacy::partySlotTaken($partyListId, $request->position, $activeSy->label)) {
+                $partyName = \App\Models\PartyList::find($partyListId)->name;
+                return back()->withErrors(['party_list_id' => "{$partyName} already has a candidate for {$request->position} this school year. Choose another position, another party list, or run as an independent."])->withInput();
             }
 
             // Campaign photo is optional. Cloudinary when it is configured, local
@@ -387,6 +401,7 @@ Route::group([], function () use ($baseDomain) {
                 'photo_path' => $photoPath,
                 'status' => 'pending',
                 'school_year' => $activeSy->label,
+                'party_list_id' => $partyListId,
             ]);
             \App\Helpers\SscHelper::logActivity($student->id, 'CANDIDACY_APPLY', "Submitted candidacy application for {$request->position}");
             return redirect()->route('student.candidacy')->with('success', 'Your candidacy application has been submitted successfully.');
@@ -530,8 +545,11 @@ Route::group([], function () use ($baseDomain) {
 
             $request->validate([
                 'position' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::in($allowedPositions)],
+                'party_list_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('party_lists', 'id')->where('is_active', true)],
                 'platform' => 'required|string|min:20|max:3000',
                 'photo'    => \App\Support\UploadValidation::optionalFile(),
+            ], [
+                'party_list_id.exists' => 'That party list is not accepting candidates. Choose another or run as an independent.',
             ]);
 
             $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();
@@ -541,6 +559,13 @@ Route::group([], function () use ($baseDomain) {
             $exists = $student->candidacies()->where('school_year', $activeSy->label)->exists();
             if ($exists) {
                 return redirect()->route('mobile.student.candidacy')->with('danger', 'You have already submitted an application.');
+            }
+
+            // A party list fields one candidate per position each school year.
+            $partyListId = $request->filled('party_list_id') ? (int) $request->party_list_id : null;
+            if (\App\Models\Candidacy::partySlotTaken($partyListId, $request->position, $activeSy->label)) {
+                $partyName = \App\Models\PartyList::find($partyListId)->name;
+                return redirect()->route('mobile.student.candidacy')->withErrors(['party_list_id' => "{$partyName} already has a candidate for {$request->position} this school year. Choose another position, another party list, or run as an independent."])->withInput();
             }
 
             // Campaign photo is optional. Cloudinary when it is configured, local
@@ -563,6 +588,7 @@ Route::group([], function () use ($baseDomain) {
                 'photo_path' => $photoPath,
                 'status' => 'pending',
                 'school_year' => $activeSy->label,
+                'party_list_id' => $partyListId,
             ]);
             \App\Helpers\SscHelper::logActivity($student->id, 'CANDIDACY_APPLY', "Submitted mobile candidacy application for {$request->position}");
             return redirect()->route('mobile.student.candidacy')->with('success', 'Application submitted!');

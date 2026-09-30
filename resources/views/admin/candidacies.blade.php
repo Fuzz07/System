@@ -169,6 +169,126 @@
     </div>
 </div>
 
+{{-- Party List Registry --}}
+<div class="card border-0 shadow-sm mb-4" style="border-radius:20px; overflow:hidden;">
+    <div class="card-header-custom bg-light p-4 border-0 d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <span class="card-title h5 mb-1 fw-bold text-dark d-block">
+                <i class="bi bi-flag-fill text-primary me-1"></i> Registered Party Lists
+            </span>
+            <span class="text-muted small">Candidates file under one of these or run as independents. Each party list fields one candidate per position.</span>
+        </div>
+        <button type="button" class="btn btn-brand d-inline-flex align-items-center gap-2 px-3 py-2" data-bs-toggle="modal" data-bs-target="#partyCreateModal">
+            <i class="bi bi-plus-circle"></i> Register Party List
+        </button>
+    </div>
+    <div class="card-body-custom p-4">
+        @if($partyLists->isEmpty())
+            <div class="text-center text-muted py-3">
+                <i class="bi bi-flag" style="font-size:1.8rem; opacity:.3;"></i>
+                <div class="mt-2 small">No party lists registered yet. Until one is, every candidate runs as an independent.</div>
+            </div>
+        @else
+            <div class="row g-3">
+                @foreach($partyLists as $party)
+                <div class="col-md-6 col-xl-4">
+                    <div class="h-100 d-flex flex-column" style="border:1px solid #E2E8F0; border-left:6px solid {{ $party->color }}; border-radius:14px; padding:14px 16px; {{ $party->is_active ? '' : 'opacity:.7; background:#F8FAFC;' }}">
+                        <div class="d-flex align-items-start justify-content-between gap-2">
+                            <div style="min-width:0;">
+                                <div class="fw-bold text-dark text-truncate">{{ $party->name }}</div>
+                                <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                                    @include('partials.party-badge', ['party' => $party])
+                                    @if($party->is_active)
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size:0.65rem;">Open for filing</span>
+                                    @else
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25" style="font-size:0.65rem;">Closed</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="text-end flex-shrink-0">
+                                <div class="fw-bold text-dark" style="font-size:1.1rem; line-height:1;">{{ $party->year_candidacies_count }}</div>
+                                <div class="text-muted" style="font-size:0.65rem;">{{ $selectedSy && $selectedSy !== 'all' ? 'candidates this SY' : 'active candidates' }}</div>
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-2 mb-3 flex-grow-1" style="line-height:1.5;">{{ \Illuminate\Support\Str::limit($party->description ?: 'No platform statement on file.', 140) }}</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#partyEditModal{{ $party->id }}"><i class="bi bi-pencil"></i> Edit</button>
+                            <form method="POST" action="{{ route('admin.party_lists.toggle', $party) }}" class="d-inline"
+                                data-confirm="{{ $party->is_active ? 'Close ' . $party->name . ' to new candidates? Candidates already filed keep their party.' : 'Reopen ' . $party->name . ' for candidacy filing?' }}">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="btn btn-sm {{ $party->is_active ? 'btn-outline-warning' : 'btn-outline-success' }}">
+                                    <i class="bi {{ $party->is_active ? 'bi-lock' : 'bi-unlock' }}"></i> {{ $party->is_active ? 'Close' : 'Reopen' }}
+                                </button>
+                            </form>
+                            @if($party->candidacies_count === 0)
+                            <form method="POST" action="{{ route('admin.party_lists.destroy', $party) }}" class="d-inline" data-confirm="Delete {{ $party->name }}? This cannot be undone.">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="partyEditModal{{ $party->id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content" style="border-radius:var(--radius); border:none;">
+                            <div class="modal-header modal-header-custom">
+                                <h5 class="modal-title" style="font-weight:700;"><i class="bi bi-pencil"></i> Edit Party List</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form method="POST" action="{{ route('admin.party_lists.update', $party) }}">
+                                @csrf @method('PUT')
+                                <input type="hidden" name="_form" value="party_edit_{{ $party->id }}">
+                                @include('partials.party-list-form-fields', ['party' => $party, 'prefix' => 'edit' . $party->id])
+                                <div class="modal-footer border-0 pt-0">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn-primary-custom"><i class="bi bi-check2"></i> Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+</div>
+
+<div class="modal fade" id="partyCreateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius:var(--radius); border:none;">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title" style="font-weight:700;"><i class="bi bi-flag-fill"></i> Register Party List</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ route('admin.party_lists.store') }}">
+                @csrf
+                <input type="hidden" name="_form" value="party_create">
+                @include('partials.party-list-form-fields', ['party' => null, 'prefix' => 'create'])
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-primary-custom"><i class="bi bi-check2"></i> Register</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@if($errors->any() && str_starts_with((string) old('_form'), 'party_'))
+@push('scripts')
+<script>
+    // Reopen the party list form that failed validation so it can be fixed in place.
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = @json(old('_form'));
+        var id = form === 'party_create' ? 'partyCreateModal' : 'partyEditModal' + form.replace('party_edit_', '');
+        var modal = document.getElementById(id);
+        if (modal && window.bootstrap) bootstrap.Modal.getOrCreateInstance(modal).show();
+    });
+</script>
+@endpush
+@endif
+
 {{-- Candidacy Table with Year Filter --}}
 <div class="card border-0 shadow-sm mb-5" style="border-radius:20px; overflow:hidden;">
     <div class="card-header-custom bg-light p-4 border-0 d-flex flex-wrap align-items-center justify-content-between gap-3">
@@ -221,6 +341,7 @@
                                 <div>
                                     <div class="fw-bold text-dark">{{ $c->user->fullname }}</div>
                                     <div class="text-muted small">ID: {{ $c->user->student_id }} · Yr: {{ $c->user->year_level }}</div>
+                                    <div class="mt-1">@include('partials.party-badge', ['party' => $c->partyList])</div>
                                 </div>
                             </div>
                         </td>
@@ -391,6 +512,7 @@
                                                 <div class="text-muted small text-truncate" style="font-size:0.75rem;">
                                                     {{ $cand->department }} · ID: {{ $cand->user->student_id }}
                                                 </div>
+                                                <div class="mt-1">@include('partials.party-badge', ['party' => $cand->partyList])</div>
                                             </div>
                                         </div>
                                     </div>

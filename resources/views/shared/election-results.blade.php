@@ -91,6 +91,8 @@
                     </p>
                 </div>
             @else
+                @include('partials.party-standings', ['final' => $isArchive || $selectedSy->results_announced])
+
                 <div class="tab-content" id="resultsTabContent">
                     {{-- 1. DETAILED TALLY LIST VIEW --}}
                     <div class="tab-pane fade show active" id="list-view" role="tabpanel" aria-labelledby="list-tab">
@@ -139,7 +141,10 @@
                                                                             <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-0.5 rounded-pill" style="font-size: 0.65rem; font-weight:700;">Leading</span>
                                                                         @endif
                                                                     </div>
-                                                                    <div class="text-muted small" style="font-size:0.75rem;">Department: {{ $cand->department }}</div>
+                                                                    <div class="text-muted small d-flex flex-wrap align-items-center gap-2" style="font-size:0.75rem;">
+                                                                        @include('partials.party-badge', ['party' => $cand->partyList])
+                                                                        <span>Department: {{ $cand->department }}</span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                             <div class="text-end">
@@ -221,7 +226,7 @@
     const electionChartData = {
         @foreach($candidatesByPosition as $pos => $candidates)
             @php
-                $candNames = collect($candidates)->map(fn($c) => $c->user->fullname)->toArray();
+                $candNames = collect($candidates)->map(fn($c) => $c->user->fullname . ' (' . ($c->partyList?->short_name ?? \App\Models\PartyList::INDEPENDENT) . ')')->toArray();
                 $candVotes = collect($candidates)->map(fn($c) => (int)$c->votes_count)->toArray();
             @endphp
             "{{ Str::slug($pos) }}": {

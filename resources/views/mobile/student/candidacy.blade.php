@@ -40,6 +40,7 @@
                     </div>
                     <div style="font-size: 0.9rem; font-weight: 700; color: var(--slate-800);">{{ $candidacy->position }}</div>
                     <div style="font-size: 0.74rem; color: var(--slate-400); margin-top: 2px;">Department: {{ $candidacy->department }}</div>
+                    <div style="margin-top: 8px;">@include('partials.party-badge', ['party' => $candidacy->partyList, 'full' => true])</div>
                 </div>
 
                 <div style="margin-bottom: 20px;">
@@ -86,13 +87,13 @@
                     <div style="margin-bottom: 16px;">
                         <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--slate-700); margin-bottom: 6px;">Target Position</label>
                         <select name="position" style="width: 100%; border: 1px solid var(--slate-200); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; font-family: inherit; background: #fff;" required>
-                            <option value="{{ Auth::user()->department }} Representative">{{ Auth::user()->department }} Representative</option>
-                            <option value="SSC President">SSC President</option>
-                            <option value="SSC Vice President">SSC Vice President</option>
-                            <option value="SSC Secretary">SSC Secretary</option>
-                            <option value="SSC Treasurer">SSC Treasurer</option>
+                            @foreach([Auth::user()->department . ' Representative', 'SSC President', 'SSC Vice President', 'SSC Secretary', 'SSC Treasurer'] as $positionOption)
+                            <option value="{{ $positionOption }}" @selected(old('position') === $positionOption)>{{ $positionOption }}</option>
+                            @endforeach
                         </select>
                     </div>
+
+                    @include('partials.party-list-field', ['partyLists' => \App\Models\PartyList::active()->orderBy('name')->get(), 'mobile' => true])
 
 
                     <div style="margin-bottom: 16px;">
@@ -114,7 +115,7 @@
 
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--slate-700); margin-bottom: 6px;">Platform Manifesto</label>
-                        <textarea name="platform" placeholder="Briefly state your vision, program of actions, or platform..." style="width: 100%; border: 1px solid var(--slate-200); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; font-family: inherit; background: var(--slate-50); resize: none; min-height: 120px;" required minlength="20"></textarea>
+                        <textarea name="platform" placeholder="Briefly state your vision, program of actions, or platform..." style="width: 100%; border: 1px solid var(--slate-200); border-radius: 10px; padding: 10px 12px; font-size: 0.85rem; font-family: inherit; background: var(--slate-50); resize: none; min-height: 120px;" required minlength="20">{{ old('platform') }}</textarea>
                     </div>
 
                     <button type="submit" class="install-close-btn" style="width: 100%; padding: 12px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">

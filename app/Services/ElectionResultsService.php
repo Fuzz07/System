@@ -69,6 +69,37 @@ class ElectionResultsService
             'archivedYears'        => $archivedYears,
             'isArchive'            => $selectedSy && (!$activeSy || $selectedSy->label !== $activeSy->label),
             'candidatesByPosition' => $candidatesByPosition,
+            'partyStandings'       => self::partyStandings($candidatesByPosition),
         ];
+    }
+
+    /**
+     * How each party list (and the independents) did across every position:
+     * seats won — the top candidate of a position, once they have votes, the
+     * same rule the announcement uses to promote winners — then candidates
+     * fielded and total votes. Most seats first, then most votes.
+     *
+     * @param  array<string, array<int, Candidacy>>  $candidatesByPosition  Each list sorted by votes, highest first.
+     * @return array<int, array{party: ?\App\Models\PartyList, seats: int, candidates: int, votes: int}>
+     */
+    public static function partyStandings(array $candidatesByPosition): array
+    {
+        $standings = [];
+
+        foreach ($candidatesByPosition as $candidates) {
+            foreach ($candidates as $index => $candidate) {
+                $key = $candidate->party_list_id ?? 'independent';
+                $standings[$key] ??= ['party' => $candidate->partyList, 'seats' => 0, 'candidates' => 0, 'votes' => 0];
+                $standings[$key]['candidates']++;
+                $standings[$key]['votes'] += (int) $candidate->votes_count;
+                if ($index === 0 && $candidate->votes_count > 0) {
+                    $standings[$key]['seats']++;
+                }
+            }
+        }
+
+        usort($standings, fn ($a, $b) => [$b['seats'], $b['votes']] <=> [$a['seats'], $a['votes']]);
+
+        return $standings;
     }
 }

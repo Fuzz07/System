@@ -131,7 +131,13 @@ class VotingApiController extends Controller
             return [
                 'id'          => $c->id,
                 'position'    => $c->position,
-                'party'       => $c->party,
+                'party'       => $c->party_name,
+                'party_list'  => $c->partyList ? [
+                    'id'      => $c->partyList->id,
+                    'name'    => $c->partyList->name,
+                    'acronym' => $c->partyList->acronym,
+                    'color'   => $c->partyList->color,
+                ] : null,
                 'platform'    => $c->platform,
                 'photo_url'   => $c->photo_url ?? $c->user?->photo_url,
                 'student'     => [
@@ -384,7 +390,7 @@ class VotingApiController extends Controller
                     'position'    => $v->position,
                     'candidate'   => $v->candidacy?->user?->fullname,
                     'photo_url'   => $v->candidacy?->photo_url ?? $v->candidacy?->user?->photo_url,
-                    'party'       => $v->candidacy?->party,
+                    'party'       => $v->candidacy?->party_name,
                     'voted_at'    => $v->created_at?->toIso8601String(),
                 ];
             });

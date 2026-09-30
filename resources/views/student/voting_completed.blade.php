@@ -28,7 +28,7 @@
                         <div>
                             <div class="fw-bold text-dark" style="font-size:0.95rem;">{{ $pos }}</div>
                             @if($myVote)
-                                <div class="text-success small fw-semibold mt-0.5"><i class="bi bi-check2"></i> Selected: {{ $myVote->candidacy->user->fullname }}</div>
+                                <div class="text-success small fw-semibold mt-0.5"><i class="bi bi-check2"></i> Selected: {{ $myVote->candidacy->user->fullname }} <span class="ms-1">@include('partials.party-badge', ['party' => $myVote->candidacy->partyList])</span></div>
                             @else
                                 <div class="text-danger small fw-semibold mt-0.5"><i class="bi bi-clock-history"></i> Skipped / Expired</div>
                             @endif

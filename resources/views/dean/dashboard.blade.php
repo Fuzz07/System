@@ -92,7 +92,7 @@
                                     @endif
                                 </div>
                                 <div>
-                                    <div class="fw-bold text-dark">{{ $c->user->fullname }}</div>
+                                    <div class="fw-bold text-dark d-flex flex-wrap align-items-center gap-2">{{ $c->user->fullname }} @include('partials.party-badge', ['party' => $c->partyList])</div>
                                     <div class="text-muted small">ID: {{ $c->user->student_id }} · {{ $c->user->year_level }} ({{ $c->user->department }})</div>
                                 </div>
                             </div>

@@ -32,7 +32,10 @@
                             <div style="font-size:2rem;">🗳️</div>
                             <div>
                                 <div class="fw-bold text-dark mb-1" style="font-size:1.1rem;">Applied for: {{ $candidacy->position }}</div>
-                                <div class="text-muted" style="font-size:0.82rem;">Department: {{ $candidacy->department }} · SY {{ $candidacy->school_year }}</div>
+                                <div class="text-muted d-flex flex-wrap align-items-center gap-2" style="font-size:0.82rem;">
+                                    <span>Department: {{ $candidacy->department }} · SY {{ $candidacy->school_year }}</span>
+                                    @include('partials.party-badge', ['party' => $candidacy->partyList, 'full' => true])
+                                </div>
                             </div>
                             <div class="ms-auto">
                                 @if($candidacy->status === 'pending')
@@ -88,13 +91,13 @@
                             <div class="mb-3">
                                 <label class="form-label-custom">Select Target Position</label>
                                 <select name="position" class="form-select-custom" required>
-                                    <option value="{{ Auth::user()->department }} Representative">{{ Auth::user()->department }} Representative</option>
-                                    <option value="SSC President">SSC President</option>
-                                    <option value="SSC Vice President">SSC Vice President</option>
-                                    <option value="SSC Secretary">SSC Secretary</option>
-                                    <option value="SSC Treasurer">SSC Treasurer</option>
+                                    @foreach([Auth::user()->department . ' Representative', 'SSC President', 'SSC Vice President', 'SSC Secretary', 'SSC Treasurer'] as $positionOption)
+                                    <option value="{{ $positionOption }}" @selected(old('position') === $positionOption)>{{ $positionOption }}</option>
+                                    @endforeach
                                 </select>
                             </div>
+
+                            @include('partials.party-list-field', ['partyLists' => \App\Models\PartyList::active()->orderBy('name')->get()])
 
                             <div class="mb-3">
                                 <label class="form-label-custom">Campaign Photo <span class="text-muted fw-normal">(optional)</span></label>
@@ -116,7 +119,7 @@
 
                             <div class="mb-4">
                                 <label class="form-label-custom">Platform / Manifesto</label>
-                                <textarea name="platform" class="form-control-custom" rows="6" placeholder="Explain your platform, key projects, and why you should be selected..." required minlength="20"></textarea>
+                                <textarea name="platform" class="form-control-custom" rows="6" placeholder="Explain your platform, key projects, and why you should be selected..." required minlength="20">{{ old('platform') }}</textarea>
                                 <div class="form-text mt-1 text-muted" style="font-size:0.75rem;">Minimum of 20 characters. Outline your platform clearly.</div>
                             </div>
 

@@ -40,6 +40,7 @@
                             </div>
                             <div>
                                 <h5 class="fw-bold text-dark mb-0">{{ $cand->user->fullname }}</h5>
+                                <div class="my-1">@include('partials.party-badge', ['party' => $cand->partyList, 'full' => true])</div>
                                 <p class="text-muted mb-0 small">Department: {{ $cand->department }} · Candidate #{{ $cand->id }}</p>
                             </div>
                         </div>

@@ -60,6 +60,25 @@
         @else
             {{-- Tab 1: Detailed Tally View --}}
             <div id="mobile-tally-view" style="display:flex; flex-direction:column; gap:16px;">
+                @if(!empty($partyStandings))
+                    @php $final = $isArchive || $selectedSy->results_announced; @endphp
+                    <div style="background:#fff; border-radius:18px; padding:16px; box-shadow:0 10px 30px rgba(15, 23, 42, 0.04);">
+                        <div style="font-size:0.9rem; font-weight:800; color:#0f172a;"><i class="bi bi-flag-fill" style="color:var(--primary);"></i> Party List Standings</div>
+                        <div style="font-size:0.72rem; color:#64748b; margin-bottom:10px;">{{ $final ? 'Seats won' : 'Seats currently leading' }} across all positions</div>
+                        @foreach($partyStandings as $row)
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; {{ $loop->last ? '' : 'border-bottom:1px solid #f1f5f9;' }}">
+                                <div style="min-width:0;">
+                                    @include('partials.party-badge', ['party' => $row['party']])
+                                    <div style="font-size:0.68rem; color:#6b7280; margin-top:3px;">{{ $row['candidates'] }} candidate{{ $row['candidates'] !== 1 ? 's' : '' }} · {{ number_format($row['votes']) }} vote{{ $row['votes'] !== 1 ? 's' : '' }}</div>
+                                </div>
+                                <div style="text-align:right; flex-shrink:0;">
+                                    <div style="font-size:1rem; font-weight:800; color:{{ $row['seats'] ? '#16a34a' : '#94a3b8' }};">{{ $row['seats'] }}</div>
+                                    <div style="font-size:0.62rem; color:#6b7280;">{{ $final ? 'seats' : 'leading' }}</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
                 @foreach($candidatesByPosition as $position => $candidates)
                     @php
                         $totalVotes = collect($candidates)->sum('votes_count');
@@ -89,6 +108,7 @@
                                             @endif</div>
                                             <div>
                                                 <div style="font-size:0.84rem; font-weight:700; color:#111827;">{{ $cand->user->fullname }}</div>
+                                                <div style="margin:2px 0;">@include('partials.party-badge', ['party' => $cand->partyList])</div>
                                                 <div style="font-size:0.7rem; color:#6b7280;">{{ $cand->department }}</div>
                                             </div>
                                         </div>
@@ -179,7 +199,7 @@
     var mobileChartData = {
         @foreach($candidatesByPosition as $pos => $candidates)
             @php
-                $candNames = collect($candidates)->map(fn($c) => $c->user->fullname)->toArray();
+                $candNames = collect($candidates)->map(fn($c) => $c->user->fullname . ' (' . ($c->partyList?->short_name ?? \App\Models\PartyList::INDEPENDENT) . ')')->toArray();
                 $candVotes = collect($candidates)->map(fn($c) => (int)$c->votes_count)->toArray();
             @endphp
             "{{ Str::slug($pos) }}": {

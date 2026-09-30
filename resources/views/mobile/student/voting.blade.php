@@ -115,6 +115,7 @@
                         </div>
                         <div>
                             <div style="font-size: 0.82rem; font-weight: 700; color: var(--slate-800);">{{ $votedCand->user->fullname }}</div>
+                            <div style="margin: 2px 0;">@include('partials.party-badge', ['party' => $votedCand->partyList])</div>
                             <div style="font-size: 0.68rem; color: var(--slate-400);">Voted candidate #{{ $votedCand->id }}</div>
                         </div>
                     </div>
@@ -138,6 +139,7 @@
                                         </div>
                                         <div>
                                             <div style="font-size: 0.8rem; font-weight: 700; color: var(--slate-800);">{{ $cand->user->fullname }}</div>
+                                            <div style="margin: 2px 0;">@include('partials.party-badge', ['party' => $cand->partyList])</div>
                                             <div style="font-size: 0.66rem; color: var(--slate-400);">{{ $cand->department }}</div>
                                         </div>
                                     </div>
@@ -147,6 +149,7 @@
                                     <button type="button" class="install-banner-btn" style="width: 100%; border: 1px solid var(--primary); background: transparent; color: var(--primary); padding: 8px; font-size: 0.76rem; border-radius: 8px; font-weight: 700; cursor: pointer;"
                                         data-candidacy-id="{{ $cand->id }}"
                                         data-candidate-name="{{ e($cand->user->fullname) }}"
+                                        data-party="{{ $cand->party_name }}"
                                         data-position="{{ e($pos) }}"
                                         data-platform="{{ e($cand->platform) }}"
                                         data-photo="{{ $cand->photo_url ?? '' }}"
@@ -256,7 +259,7 @@
         const platform = button.dataset.platform;
 
         mobileModalCandName.textContent     = candName;
-        mobileModalCandPos.textContent      = position;
+        mobileModalCandPos.textContent      = button.dataset.party ? position + ' · ' + button.dataset.party : position;
         mobileModalCandPlatform.textContent = platform;
         mobileModalCandidacyId.value        = candidacyId;
         paintCandidateAvatar(mobileModalAvatar, button.dataset.photo, candName);

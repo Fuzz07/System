@@ -6,6 +6,7 @@ use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
 use App\Services\ElectionResultsService;
 use App\Models\Candidacy;
+use App\Models\PartyList;
 use App\Models\SchoolYear;
 use App\Models\User;
 use App\Notifications\ElectionOpenNotification;
@@ -76,13 +77,24 @@ class CandidacyController extends Controller
             }
         }
 
+        $partyLists = PartyList::withCount([
+                'candidacies',
+                'candidacies as year_candidacies_count' => fn ($q) => $selectedSy && $selectedSy !== 'all'
+                    ? $q->where('school_year', $selectedSy)->whereIn('status', ['pending', 'approved'])
+                    : $q->whereIn('status', ['pending', 'approved']),
+            ])
+            ->orderByDesc('is_active')
+            ->orderBy('name')
+            ->get();
+
         return view('admin.candidacies', compact(
             'candidacies',
             'stats',
             'activeSy',
             'selectedSy',
             'allSchoolYears',
-            'archivedElections'
+            'archivedElections',
+            'partyLists'
         ));
     }
 
@@ -200,6 +212,8 @@ class CandidacyController extends Controller
                 'role' => $newRole,
                 'position' => $position,
                 'status' => 'active',
+                // Shown as "Political Party" on the officers roster.
+                'party' => $winner->partyList?->name,
             ];
 
             // Carry the campaign photo they filed with onto the officer roster,
@@ -214,7 +228,7 @@ class CandidacyController extends Controller
 
             $winnerUser->update($promotion);
 
-            $winnersText[] = "- **{$position}**: {$winnerUser->fullname} (Winner, {$winner->votes_count} votes)";
+            $winnersText[] = "- **{$position}**: {$winnerUser->fullname}, {$winner->party_name} (Winner, {$winner->votes_count} votes)";
         }
 
         $activeSy->update([
