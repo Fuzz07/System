@@ -9,7 +9,7 @@
     <span class="nav-icon"><i class="bi bi-wallet2"></i></span> Budget Management
 </a>
 <a href="{{ route('admin.enrollment.payments') }}" class="nav-link {{ request()->routeIs('admin.enrollment.payments') ? 'active' : '' }}">
-    <span class="nav-icon"><i class="bi bi-cash-stack"></i></span> Enrollment Payments
+    <span class="nav-icon"><i class="bi bi-cash-stack"></i></span> Contribution Fees
 </a>
 <a href="{{ route('admin.proposals') }}" class="nav-link {{ request()->routeIs('admin.proposals') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-file-earmark-text"></i></span> Proposals

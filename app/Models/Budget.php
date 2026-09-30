@@ -9,8 +9,16 @@ class Budget extends Model
     /** Departments that can receive a manually created budget. */
     public const DEPARTMENTS = ['BEED', 'BSED', 'BSBA', 'BSHM', 'BSIT'];
 
-    /** Title prefix for the auto-maintained per-department enrollment fee budgets. */
-    public const ENROLLMENT_TITLE_PREFIX = 'Enrollment Fees';
+    /** One shared fund for every department, rather than a copy per department. */
+    public const ALL_DEPARTMENTS = 'All Departments';
+
+    /**
+     * Title prefix for the auto-maintained contribution fee budgets (formerly
+     * "Enrollment Fees"; existing rows are renamed by a migration). The
+     * constant keeps its old name because the code calls these payments
+     * "enrollment" throughout.
+     */
+    public const ENROLLMENT_TITLE_PREFIX = 'Contribution Fees';
 
     /** Bucket for students whose department is missing or blank. */
     public const UNASSIGNED_DEPARTMENT = 'Unassigned';
@@ -58,12 +66,12 @@ class Budget extends Model
                 'school_year' => $schoolYear,
             ],
             [
-                'department'        => 'All Departments',
+                'department'        => self::ALL_DEPARTMENTS,
                 'allocated_amount'  => 0,
                 'remaining_balance' => 0,
                 'status'            => 'Approved',
                 'created_by'        => \Illuminate\Support\Facades\Auth::id() ?: 1,
-                'notes'             => 'Consolidated enrollment fees collection for all departments.',
+                'notes'             => 'Consolidated contribution fees collection for all departments.',
             ]
         );
 
@@ -88,7 +96,7 @@ class Budget extends Model
         $remaining = max(0, $allocated - $totalSpent);
 
         $mainBudget->update([
-            'department'        => 'All Departments',
+            'department'        => self::ALL_DEPARTMENTS,
             'allocated_amount'  => $allocated,
             'remaining_balance' => $remaining,
             'status'            => 'Approved',

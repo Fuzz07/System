@@ -94,7 +94,7 @@ class EnrollmentAddStudentTest extends TestCase
 
         $this->withViewErrors([])->get(route('treasurer.enrollment.payments'))
             ->assertOk()
-            ->assertSee('Semester Enrollment Payments')
+            ->assertSee('Semester Contribution Fees')
             ->assertSee(route('treasurer.enrollment.payments'), false)
             ->assertSee(route('treasurer.cashbook'), false)
             ->assertSee('action="' . route('treasurer.enrollment.payments.students.store') . '"', false)

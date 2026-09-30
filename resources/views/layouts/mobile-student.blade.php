@@ -151,7 +151,7 @@
                 <div class="nav-tab-icon"><i
                         class="bi bi-credit-card{{ request()->routeIs('mobile.student.enrollment') ? '-fill' : '' }}"></i>
                 </div>
-                <div class="nav-tab-label">Enroll</div>
+                <div class="nav-tab-label">Fees</div>
             </a>
         </nav>
 

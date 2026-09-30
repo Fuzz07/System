@@ -109,7 +109,7 @@ class StudentApiController extends Controller
         if ($payment && $payment->status === 'paid') {
             return response()->json([
                 'success' => false,
-                'message' => 'Your enrollment fee is already marked as paid.',
+                'message' => 'Your contribution fee is already marked as paid.',
             ], 400);
         }
 
@@ -206,7 +206,7 @@ class StudentApiController extends Controller
         if ($payment?->status === 'paid') {
             return response()->json([
                 'success' => false,
-                'message' => 'Your enrollment fee is already paid.',
+                'message' => 'Your contribution fee is already paid.',
                 'is_paid' => true,
             ], 409);
         }
@@ -262,7 +262,7 @@ class StudentApiController extends Controller
                     'email' => $student->email,
                 ],
                 'line_items' => [[
-                    'name'        => 'Semester Enrollment Fee',
+                    'name'        => 'Semester Contribution Fee',
                     'description' => SscHelper::getActiveAcademicTerm(),
                     'amount'      => $amountCentavos,
                     'currency'    => 'PHP',
@@ -273,7 +273,7 @@ class StudentApiController extends Controller
                 'cancel_url'           => route('api.student.enrollment.paymongo.cancel', [
                     'payment' => $payment->id,
                 ]),
-                'description'          => 'SSC semester enrollment fee for ' . SscHelper::getActiveAcademicTerm(),
+                'description'          => 'SSC semester contribution fee for ' . SscHelper::getActiveAcademicTerm(),
                 'reference_number'     => $payment->reference,
                 'send_email_receipt'   => true,
                 'show_description'     => true,
@@ -332,7 +332,7 @@ class StudentApiController extends Controller
             return response()->json([
                 'success' => true,
                 'is_paid' => true,
-                'message' => 'Payment confirmed. Your enrollment fee is paid.',
+                'message' => 'Payment confirmed. Your contribution fee is paid.',
             ]);
         }
 
@@ -367,7 +367,7 @@ class StudentApiController extends Controller
             return response()->json([
                 'success' => true,
                 'is_paid' => true,
-                'message' => 'Payment confirmed. Your enrollment fee is now marked as paid.',
+                'message' => 'Payment confirmed. Your contribution fee is now marked as paid.',
             ]);
         } catch (Throwable $exception) {
             Log::error('Unable to verify PayMongo checkout from API.', [

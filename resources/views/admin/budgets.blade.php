@@ -230,11 +230,11 @@
             ->sortKeys();
         $printFilterLabels = [
             'all' => 'All budget types',
-            'enrollment' => 'Enrollment fees only',
+            'enrollment' => 'Contribution fees only',
             'custom' => 'Custom / other budgets',
         ];
         $printSortLabels = [
-            'dept_enrollment' => 'Enrollment fees first',
+            'dept_enrollment' => 'Contribution fees first',
             'amount_desc' => 'Highest amount',
             'title_asc' => 'Title A-Z',
             'latest' => 'Newest first',
@@ -424,7 +424,7 @@
         <div class="page-header d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="h3 fw-bold text-dark mb-1">Budget Management</h1>
-                <p class="text-muted mb-0">Create, monitor, and manage department enrollment fees and budget allocations</p>
+                <p class="text-muted mb-0">Create, monitor, and manage department contribution fees and budget allocations</p>
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i> Print
@@ -461,7 +461,7 @@
                         </div>
                         <div>
                             <div class="text-muted small fw-semibold text-uppercase"
-                                style="font-size: 0.72rem; letter-spacing: 0.5px;">Enrollment Fees Fund</div>
+                                style="font-size: 0.72rem; letter-spacing: 0.5px;">Contribution Fees Fund</div>
                             <div class="fs-5 fw-bold text-dark">
                                 {!! \App\Helpers\SscHelper::formatCurrency($totalEnrollmentFees) !!}</div>
                         </div>
@@ -514,13 +514,13 @@
                     <div class="col-md-3">
                         <select name="filter" class="form-select form-control-custom" onchange="this.form.submit()">
                             <option value="all" @selected($filter === 'all')>All Budget Types</option>
-                            <option value="enrollment" @selected($filter === 'enrollment')>🎓 Enrollment Fees Only</option>
+                            <option value="enrollment" @selected($filter === 'enrollment')>🎓 Contribution Fees Only</option>
                             <option value="custom" @selected($filter === 'custom')>📋 Custom / Other Budgets</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <select name="sort" class="form-select form-control-custom" onchange="this.form.submit()">
-                            <option value="dept_enrollment" @selected($sort === 'dept_enrollment')>Sort: Enrollment Fees First
+                            <option value="dept_enrollment" @selected($sort === 'dept_enrollment')>Sort: Contribution Fees First
                             </option>
                             <option value="amount_desc" @selected($sort === 'amount_desc')>Sort: Highest Amount</option>
                             <option value="title_asc" @selected($sort === 'title_asc')>Sort: Title (A - Z)</option>
@@ -565,7 +565,7 @@
                                         <span
                                             class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mt-1"
                                             style="font-size:0.65rem; font-weight:700;">
-                                            <i class="bi bi-mortarboard-fill me-1"></i> Consolidated Enrollment Fees
+                                            <i class="bi bi-mortarboard-fill me-1"></i> Consolidated Contribution Fees
                                         </span>
                                     @endif
                                 </td>
@@ -652,6 +652,8 @@
                                         class="form-select form-control-custom @error('department') is-invalid @enderror"
                                         required>
                                         <option value="" disabled @selected(!old('department'))>Select a department</option>
+                                        <option value="{{ \App\Models\Budget::ALL_DEPARTMENTS }}" @selected(old('department') === \App\Models\Budget::ALL_DEPARTMENTS)>
+                                            {{ \App\Models\Budget::ALL_DEPARTMENTS }}</option>
                                         @foreach($departmentOptions as $department)
                                             <option value="{{ $department }}" @selected(old('department') === $department)>
                                                 {{ $department }}</option>

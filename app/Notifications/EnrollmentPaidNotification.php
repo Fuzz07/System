@@ -29,7 +29,7 @@ class EnrollmentPaidNotification extends Notification
     public function toDatabase($notifiable)
     {
         return [
-            'message' => "Your enrollment payment ({$this->payment->reference}) has been marked as paid.",
+            'message' => "Your contribution fee payment ({$this->payment->reference}) has been marked as paid.",
             'payment_id' => $this->payment->id,
             'amount' => $this->payment->amount,
             'paid_at' => $this->payment->paid_at,
@@ -39,7 +39,7 @@ class EnrollmentPaidNotification extends Notification
     public function toBroadcast($notifiable)
     {
         return new BroadcastMessage([
-            'message' => "Your enrollment payment ({$this->payment->reference}) has been marked as paid.",
+            'message' => "Your contribution fee payment ({$this->payment->reference}) has been marked as paid.",
             'payment_id' => $this->payment->id,
             'amount' => $this->payment->amount,
             'paid_at' => $this->payment->paid_at,
@@ -49,8 +49,8 @@ class EnrollmentPaidNotification extends Notification
     public function toFcm($notifiable): array
     {
         return [
-            'title' => 'Enrollment payment confirmed',
-            'body' => "Your enrollment payment ({$this->payment->reference}) has been marked as paid.",
+            'title' => 'Contribution fee payment confirmed',
+            'body' => "Your contribution fee payment ({$this->payment->reference}) has been marked as paid.",
             'data' => [
                 'type' => 'enrollment_paid',
                 'id' => $this->payment->id,

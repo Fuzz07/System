@@ -116,9 +116,9 @@ class ChatbotController extends Controller
         try {
             $activeYear = SchoolYear::query()->where('is_active', true)->first();
 
-            if ($this->matches($normalized, ['enrollment', 'payment', 'paid', 'gcash', 'instapay', 'fee'])) {
+            if ($this->matches($normalized, ['contribution', 'enrollment', 'payment', 'paid', 'gcash', 'instapay', 'fee'])) {
                 if (!$student) {
-                    return 'Please sign in to the student portal to check your enrollment fee, payment record, and proof status.';
+                    return 'Please sign in to the student portal to check your contribution fee, payment record, and proof status.';
                 }
 
                 $academicTerm = $activeYear?->academic_term;
@@ -131,20 +131,20 @@ class ChatbotController extends Controller
                     : null;
 
                 if (!$academicTerm) {
-                    return 'No active school year is configured, so I cannot verify your current enrollment payment. Please contact the SSC or an administrator.';
+                    return 'No active school year is configured, so I cannot verify your current contribution fee payment. Please contact the SSC or an administrator.';
                 }
 
                 if ($payment?->status === 'paid') {
-                    return "Your enrollment fee for {$academicTerm} is marked as paid. You can verify the payment details on the Enrollment page.";
+                    return "Your contribution fee for {$academicTerm} is marked as paid. You can verify the payment details on the Contribution Fee page.";
                 }
 
                 if ($payment) {
                     $proof = $payment->proof_status ? " Your proof status is {$payment->proof_status}." : '';
-                    return "Your enrollment payment for {$academicTerm} is currently {$payment->status}.{$proof} Open the Enrollment page to review the record or upload the required proof.";
+                    return "Your contribution fee payment for {$academicTerm} is currently {$payment->status}.{$proof} Open the Contribution Fee page to review the record or upload the required proof.";
                 }
 
                 $amount = number_format((float) config('ssc.enrollment_fee_amount', 50), 2);
-                return "There is no enrollment payment record for your account for {$academicTerm}. The configured fee is PHP {$amount}; open the Enrollment page to view the approved payment methods and submit proof.";
+                return "There is no contribution fee payment record for your account for {$academicTerm}. The configured fee is PHP {$amount}; open the Contribution Fee page to view the approved payment methods and submit proof.";
             }
 
             if ($this->matches($normalized, ['vote', 'voting', 'election', 'ballot'])) {
@@ -342,7 +342,7 @@ PROMPT;
     {
         $lines = [
             'Generated at: ' . now()->timezone(config('app.timezone', 'Asia/Manila'))->format('Y-m-d H:i T'),
-            'Portal capabilities: students can view and discuss visible proposals; read announcements; submit confidential feedback; file candidacy when open; vote when open; and review or submit enrollment payment proof.',
+            'Portal capabilities: students can view and discuss visible proposals; read announcements; submit confidential feedback; file candidacy when open; vote when open; and review or submit contribution fee payment proof.',
         ];
 
         try {
@@ -384,7 +384,7 @@ PROMPT;
                         ->where('school_year', $activeYear->label)
                         ->first();
 
-                    $lines[] = 'Student enrollment payment: ' . json_encode($payment ? [
+                    $lines[] = 'Student contribution fee payment: ' . json_encode($payment ? [
                         'status' => $payment->status,
                         'amount_php' => (float) $payment->amount,
                         'method' => $payment->method,

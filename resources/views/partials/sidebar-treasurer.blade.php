@@ -9,7 +9,7 @@
     <span class="nav-icon"><i class="bi bi-cash-coin"></i></span> Release Budget
 </a>
 <a href="{{ route('treasurer.enrollment.payments') }}" class="nav-link {{ request()->routeIs('treasurer.enrollment.payments') ? 'active' : '' }}">
-    <span class="nav-icon"><i class="bi bi-cash-stack"></i></span> Enrollment Payments
+    <span class="nav-icon"><i class="bi bi-cash-stack"></i></span> Contribution Fees
 </a>
 <a href="{{ route('treasurer.cashbook') }}" class="nav-link {{ request()->routeIs('treasurer.cashbook*') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-journal-bookmark"></i></span> Cash Book

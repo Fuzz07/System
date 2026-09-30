@@ -46,7 +46,7 @@ class EnrollmentPaymentSettlementService
                     'remaining_balance' => 0,
                     'status' => 'Approved',
                     'created_by' => null,
-                    'notes' => 'Consolidated enrollment fees collection for all departments.',
+                    'notes' => 'Consolidated contribution fees collection for all departments.',
                 ]
             );
 

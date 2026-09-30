@@ -41,7 +41,7 @@ class EnrollmentController extends Controller
         $redirectRoute = $this->indexRoute($request);
 
         if ($payment && $payment->status === 'paid') {
-            return redirect()->route($redirectRoute)->with('info', 'Your enrollment fee is already marked as paid.');
+            return redirect()->route($redirectRoute)->with('info', 'Your contribution fee is already marked as paid.');
         }
 
         $request->validate([
@@ -110,7 +110,7 @@ class EnrollmentController extends Controller
         $amountInCentavos = (int) round($amount * 100);
 
         if ($payment?->status === 'paid') {
-            return redirect()->route($redirectRoute)->with('info', 'Your enrollment fee is already paid.');
+            return redirect()->route($redirectRoute)->with('info', 'Your contribution fee is already paid.');
         }
 
         if ($payment?->paymongo_checkout_session_id) {
@@ -126,7 +126,7 @@ class EnrollmentController extends Controller
                         );
 
                         return redirect()->route($redirectRoute)
-                            ->with('success', 'Payment confirmed. Your enrollment fee is now marked as paid.');
+                            ->with('success', 'Payment confirmed. Your contribution fee is now marked as paid.');
                     }
 
                     $checkoutUrl = data_get($session, 'attributes.checkout_url');
@@ -165,7 +165,7 @@ class EnrollmentController extends Controller
                     'email' => $student->email,
                 ],
                 'line_items' => [[
-                    'name' => 'Semester Enrollment Fee',
+                    'name' => 'Semester Contribution Fee',
                     'description' => SscHelper::getActiveAcademicTerm(),
                     'amount' => $amountInCentavos,
                     'currency' => 'PHP',
@@ -178,7 +178,7 @@ class EnrollmentController extends Controller
                     ['payment' => $payment->id]
                 ),
                 'cancel_url' => route($redirectRoute, ['paymongo' => 'cancelled']),
-                'description' => 'SSC semester enrollment fee for ' . SscHelper::getActiveAcademicTerm(),
+                'description' => 'SSC semester contribution fee for ' . SscHelper::getActiveAcademicTerm(),
                 'reference_number' => $payment->reference,
                 'send_email_receipt' => true,
                 'show_description' => true,
@@ -220,12 +220,12 @@ class EnrollmentController extends Controller
 
         if ($payment->status === 'paid') {
             return redirect()->route($redirectRoute)
-                ->with('success', 'Payment confirmed. Your enrollment fee is paid.');
+                ->with('success', 'Payment confirmed. Your contribution fee is paid.');
         }
 
         if (blank($payment->paymongo_checkout_session_id)) {
             return redirect()->route($redirectRoute)
-                ->with('error', 'We could not match this checkout to an enrollment payment.');
+                ->with('error', 'We could not match this checkout to a contribution fee payment.');
         }
 
         try {
@@ -246,7 +246,7 @@ class EnrollmentController extends Controller
             );
 
             return redirect()->route($redirectRoute)
-                ->with('success', 'Payment confirmed. Your enrollment fee is now marked as paid.');
+                ->with('success', 'Payment confirmed. Your contribution fee is now marked as paid.');
         } catch (Throwable $exception) {
             Log::error('Unable to verify the returned PayMongo enrollment checkout.', [
                 'payment_id' => $payment->id,

@@ -114,7 +114,7 @@ class PushNotificationDeliveryTest extends TestCase
             ->assertRedirect();
 
         $push = $this->onlyPush();
-        $this->assertSame('Enrollment payment confirmed', $push['notification']['title']);
+        $this->assertSame('Contribution fee payment confirmed', $push['notification']['title']);
         $this->assertStudentLink('/m/student/enrollment', $push['data']['url']);
     }
 

@@ -26,7 +26,7 @@ class EnrollmentProofRejectedNotification extends Notification
 
     protected function message(): string
     {
-        $message = "Your enrollment payment proof ({$this->payment->reference}) was rejected. Please upload a new one.";
+        $message = "Your contribution fee payment proof ({$this->payment->reference}) was rejected. Please upload a new one.";
 
         if (filled($this->payment->proof_notes)) {
             $message .= " Reason: {$this->payment->proof_notes}";

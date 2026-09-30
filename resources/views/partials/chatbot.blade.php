@@ -68,7 +68,7 @@
           <span class="btn-emoji">📞</span> Contact SSC Officers
         </button>
         <button class="shortcut-btn" data-query="payment">
-          <span class="btn-emoji">💳</span> Check Enrollment Payment
+          <span class="btn-emoji">💳</span> Check Contribution Fee
         </button>
       </div>
     </div>
@@ -1046,8 +1046,8 @@
       const normalized = input.toLowerCase().trim();
       const includesAny = terms => terms.some(term => normalized.includes(term));
 
-      if (includesAny(['enrollment', 'payment', 'gcash', 'instapay', 'fee'])) {
-        return "<a href='{{ $chatbotEnrollmentUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'Open the Enrollment page' : 'Sign in to the student portal' }}</a> to view your current fee, payment record, approved payment methods, and proof status. I cannot verify your live account status while the assistant service is unavailable.";
+      if (includesAny(['contribution', 'enrollment', 'payment', 'gcash', 'instapay', 'fee'])) {
+        return "<a href='{{ $chatbotEnrollmentUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'Open the Contribution Fee page' : 'Sign in to the student portal' }}</a> to view your current fee, payment record, approved payment methods, and proof status. I cannot verify your live account status while the assistant service is unavailable.";
       }
       if (includesAny(['voting', 'vote', 'election', 'ballot'])) {
         return "<a href='{{ $chatbotVotingUrl }}' class='chat-link'>{{ $chatbotIsStudent ? 'Open the Voting page' : 'Sign in to the student portal' }}</a> to see whether voting is currently open and to view your official ballot status. Do not rely on a cached chat response for election availability.";

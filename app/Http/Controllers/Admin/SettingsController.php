@@ -215,7 +215,7 @@ class SettingsController extends Controller
         $semesterLabel = $schoolYear->semester_label;
         SscHelper::logActivity(Auth::id(), 'SETTINGS_CHANGE', "Changed active academic term to {$schoolYear->label} - {$semesterLabel}");
 
-        $message = "Active academic term updated to {$schoolYear->label} - {$semesterLabel}. Enrollment payment records now use this semester.";
+        $message = "Active academic term updated to {$schoolYear->label} - {$semesterLabel}. Contribution fee records now use this semester.";
         if ($promotion['years'] > 0) {
             $message .= " {$promotion['promoted']} student(s) moved up a year level and {$promotion['graduated']} graduating student(s) were archived.";
         }

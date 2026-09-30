@@ -80,7 +80,7 @@ class BudgetController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'department' => ['required', Rule::in(Budget::DEPARTMENTS)],
+            'department' => ['required', Rule::in([Budget::ALL_DEPARTMENTS, ...Budget::DEPARTMENTS])],
             'allocated_amount' => ['bail', 'required', 'regex:/^[1-9]\d*(?:\.\d{1,2})?$/', 'numeric', 'min:1'],
             'school_year' => [
                 'bail',
@@ -96,7 +96,7 @@ class BudgetController extends Controller
             ],
             'notes' => 'nullable|string',
         ], [
-            'department.in' => 'Please select one of the five available departments.',
+            'department.in' => 'Please select All Departments or one of the five available departments.',
             'allocated_amount.regex' => 'The allocated amount must start with a digit from 1 to 9 and have no more than two decimal places.',
             'school_year.regex' => 'Please select a valid school year.',
         ]);

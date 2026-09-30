@@ -41,6 +41,66 @@ class AdminBudgetCreationTest extends TestCase
         }
     }
 
+    public function test_funds_can_be_added_for_all_departments(): void
+    {
+        $this->withViewErrors([])->get(route('admin.budgets'))
+            ->assertOk()
+            ->assertSee('value="All Departments"', false);
+
+        $this->post(route('admin.budgets.store'), [
+            'title' => 'Council General Fund',
+            'department' => 'All Departments',
+            'allocated_amount' => '20000',
+            'school_year' => '2026-2027',
+        ])->assertRedirect(route('admin.budgets'))
+            ->assertSessionHasNoErrors()
+            ->assertSessionHas('success', 'Funds added successfully.');
+
+        $this->assertDatabaseHas('budgets', [
+            'title' => 'Council General Fund',
+            'department' => 'All Departments',
+            'allocated_amount' => 20000,
+        ]);
+        $this->assertDatabaseCount('budgets', 1);
+    }
+
+    public function test_budget_page_uses_contribution_fee_wording(): void
+    {
+        $this->withViewErrors([])->get(route('admin.budgets'))
+            ->assertOk()
+            ->assertSee('Contribution Fees Fund')
+            ->assertSee('Contribution Fees Only')
+            ->assertSee('Contribution Fees', false)
+            ->assertDontSee('Enrollment Payments')
+            ->assertDontSee('Enrollment Fees');
+    }
+
+    public function test_existing_enrollment_fee_budgets_are_renamed(): void
+    {
+        foreach (['Enrollment Fees', 'Enrollment Fees - BSIT', 'Enrollment Fund Drive'] as $title) {
+            Budget::create([
+                'title' => $title,
+                'department' => 'All Departments',
+                'allocated_amount' => 100,
+                'remaining_balance' => 100,
+                'school_year' => '2026-2027',
+                'status' => 'Approved',
+                'created_by' => auth()->id(),
+                'notes' => 'Consolidated enrollment fees collection for all departments.',
+            ]);
+        }
+
+        $migration = require database_path('migrations/2026_09_30_000003_rename_enrollment_fee_budgets_to_contribution_fees.php');
+        $migration->up();
+
+        $this->assertSame(
+            ['Contribution Fees', 'Contribution Fees - BSIT', 'Enrollment Fund Drive'],
+            Budget::orderBy('id')->pluck('title')->all()
+        );
+        $this->assertSame(2, Budget::enrollmentFees()->count());
+        $this->assertSame(3, Budget::where('notes', 'Consolidated contribution fees collection for all departments.')->count());
+    }
+
     public function test_print_report_contains_a_normalized_financial_breakdown(): void
     {
         Budget::create([

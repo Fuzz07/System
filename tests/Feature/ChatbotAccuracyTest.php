@@ -32,7 +32,7 @@ class ChatbotAccuracyTest extends TestCase
             ->assertOk()
             ->assertJson([
                 'success' => true,
-                'answer' => 'Please sign in to the student portal to check your enrollment fee, payment record, and proof status.',
+                'answer' => 'Please sign in to the student portal to check your contribution fee, payment record, and proof status.',
             ]);
     }
 
@@ -62,7 +62,7 @@ class ChatbotAccuracyTest extends TestCase
             ->assertOk()
             ->assertJson([
                 'success' => true,
-                'answer' => 'Your enrollment fee for 2026-2027 - First Semester is marked as paid. You can verify the payment details on the Enrollment page.',
+                'answer' => 'Your contribution fee for 2026-2027 - First Semester is marked as paid. You can verify the payment details on the Contribution Fee page.',
             ]);
     }
 

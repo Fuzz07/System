@@ -31,7 +31,7 @@
     </a>
     <a href="{{ route('student.enrollment.index') }}" class="nav-item">
         <i class="bi bi-cash-stack"></i>
-        <span>Enrollment</span>
+        <span>Contribution Fee</span>
     </a>
     <a href="{{ route('student.profile.edit') }}" class="nav-item">
         <i class="bi bi-person-gear"></i>

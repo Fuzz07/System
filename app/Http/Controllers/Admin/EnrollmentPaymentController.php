@@ -304,7 +304,7 @@ class EnrollmentPaymentController extends Controller
                 'remaining_balance' => 0,
                 'status'            => 'Approved',
                 'created_by'        => Auth::id() ?: 1,
-                'notes'             => 'Consolidated enrollment fees collection for all departments.',
+                'notes'             => 'Consolidated contribution fees collection for all departments.',
             ]
         );
 

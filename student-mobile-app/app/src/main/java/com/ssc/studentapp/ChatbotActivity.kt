@@ -240,7 +240,7 @@ class ChatbotActivity : AppCompatActivity() {
                 "Open the portal's Proposals page to review the latest visible project and budget records. I cannot quote a current amount while the live assistant service is unavailable."
             }
             input.contains("enroll") || input.contains("payment") || input.contains("gcash") -> {
-                "Need to settle your enrollment fee? 💳\n\nHead to the Enrollment page on your sidebar to:\n• View your current payment status for this school year.\n• Pay via GCash/bank transfer and upload proof, or wait for admin confirmation of a walk-in payment.\n• Once confirmed, your status updates automatically and you'll be notified."
+                "Need to settle your contribution fee? 💳\n\nHead to the Contribution Fee page on your sidebar to:\n• View your current payment status for this school year.\n• Pay via GCash/bank transfer and upload proof, or wait for admin confirmation of a walk-in payment.\n• Once confirmed, your status updates automatically and you'll be notified."
             }
             input.contains("announcement") || input.contains("news") || input.contains("update") -> {
                 "Want to stay in the loop? 📰\n\nAll official SSC announcements, project updates, and campus news are posted on the Announcements page, accessible from your sidebar."

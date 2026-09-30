@@ -11,7 +11,7 @@
 </a>
 
 <a href="{{ route('student.enrollment.index') }}" class="nav-link {{ request()->routeIs('student.enrollment*') ? 'active' : '' }}">
-    <span class="nav-icon"><i class="bi bi-cash-stack"></i></span> Enrollment Fee
+    <span class="nav-icon"><i class="bi bi-cash-stack"></i></span> Contribution Fee
 </a>
 
 <a href="{{ route('student.profile.edit') }}" class="nav-link {{ request()->routeIs('student.profile.*') ? 'active' : '' }}">

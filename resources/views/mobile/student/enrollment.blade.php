@@ -1,5 +1,5 @@
 @php
-    $pageTitle = 'Enrollment Fee';
+    $pageTitle = 'Contribution Fee';
     $labels = ['gcash' => 'Manual GCash', 'instapay' => 'InstaPay', 'walk_in' => 'Walk-in', 'paymongo' => 'PayMongo'];
     $methodLabel = $payment ? ($labels[$payment->method] ?? ucfirst($payment->method)) : null;
     $manualMethod = old('payment_method', in_array($payment?->method, ['gcash', 'instapay'], true) ? $payment->method : 'gcash');
@@ -22,7 +22,7 @@
 
 <section class="fee-hero">
     <span class="fee-term"><i class="bi bi-calendar3 me-1"></i>{{ $currentSy }}</span>
-    <div style="font-weight:750;margin-top:14px;opacity:.9">Semester enrollment fee</div>
+    <div style="font-weight:750;margin-top:14px;opacity:.9">Semester contribution fee</div>
     <div class="fee-total">{{ \App\Helpers\SscHelper::formatCurrency($amount) }}</div>
     <div style="font-size:.77rem;opacity:.74;margin-top:8px">One payment for the active semester</div>
 </section>

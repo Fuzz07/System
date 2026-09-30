@@ -5,7 +5,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h4 class="mb-0">Semester Enrollment Payments</h4>
+            <h4 class="mb-0">Semester Contribution Fees</h4>
             <small class="text-muted">Current term: {{ $currentSy }}</small>
         </div>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="bi bi-person-plus"></i> Add Student</button>
@@ -23,7 +23,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h6 class="mb-0">Budget Distribution by Department</h6>
-                    <small class="text-muted">Enrollment fees collected for {{ $currentSy }}, credited to each department's own budget.</small>
+                    <small class="text-muted">Contribution fees collected for {{ $currentSy }}, credited to each department's own budget.</small>
                 </div>
                 @if($portal === 'admin')
                 <a href="{{ route('admin.budgets') }}" class="btn btn-sm btn-outline-primary">Open Budgets</a>

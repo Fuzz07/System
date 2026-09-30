@@ -117,7 +117,7 @@
                 <div class="modal-body p-4">
                     <div class="mb-4">
                         <label class="form-label-custom">Announcement Title <span class="text-danger">*</span></label>
-                        <input type="text" name="title" class="form-control-custom" placeholder="e.g. Notice on Semester Enrollment Fee Extensions" required>
+                        <input type="text" name="title" class="form-control-custom" placeholder="e.g. Notice on Semester Contribution Fee Extensions" required>
                     </div>
                     <div class="mb-4">
                         <label class="form-label-custom">Category</label>

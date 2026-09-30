@@ -51,7 +51,7 @@
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-4">
                     <div>
                         <span class="term-chip mb-3"><i class="bi bi-calendar3"></i> {{ $currentSy }}</span>
-                        <h1 id="enrollment-fee-title" class="h4 fw-bold mb-2">Semester Enrollment Fee</h1>
+                        <h1 id="enrollment-fee-title" class="h4 fw-bold mb-2">Semester Contribution Fee</h1>
                         <p class="mb-0 opacity-75">Complete your payment securely or submit a manual transfer receipt.</p>
                     </div>
                     <div class="text-md-end">
@@ -88,7 +88,7 @@
                     <i class="bi bi-check-circle-fill fs-4"></i>
                     <div class="flex-grow-1">
                         <div class="fw-bold fs-5">Payment complete</div>
-                        <div class="mt-1">Your enrollment fee for {{ $currentSy }} has been confirmed.</div>
+                        <div class="mt-1">Your contribution fee for {{ $currentSy }} has been confirmed.</div>
                         <div class="small mt-3 d-flex flex-wrap gap-3">
                             <span><strong>Method:</strong> {{ $paymentMethodLabel }}</span>
                             <span><strong>Reference:</strong> {{ $payment->reference }}</span>

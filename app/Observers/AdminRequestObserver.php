@@ -124,8 +124,8 @@ class AdminRequestObserver
     {
         $student = $payment->user?->fullname ?? 'A student';
         AdminAlertService::send(
-            'Enrollment proof awaiting review',
-            "{$student} uploaded enrollment payment proof for reference {$payment->reference}.",
+            'Contribution fee proof awaiting review',
+            "{$student} uploaded contribution fee proof for reference {$payment->reference}.",
             route('admin.enrollment.payments'),
             'enrollment_proof'
         );
