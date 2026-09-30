@@ -273,6 +273,108 @@ class SscElectionTest extends TestCase
         ]);
     }
 
+    public function test_announcing_results_keeps_officers_in_positions_nobody_won(): void
+    {
+        $secretary = $this->makeUser('Sec', 'officer', 'SSC Secretary');
+        $treasurer = $this->makeUser('Tres', 'treasurer', 'SSC Treasurer');
+
+        $candidacy = Candidacy::where('user_id', $this->candidateUser->id)->first();
+        $this->voteFor($candidacy, $this->student1);
+
+        $this->actingAs($this->admin)->post(route('admin.election.announce'))->assertSessionHas('success');
+
+        // The contested seat changes hands...
+        $this->assertEquals('student', $this->oldOfficer->refresh()->role);
+        $this->assertEquals('SSC President', $this->candidateUser->refresh()->position);
+
+        // ...while the seats no one ran for keep their current holders.
+        $secretary->refresh();
+        $this->assertEquals('officer', $secretary->role);
+        $this->assertEquals('SSC Secretary', $secretary->position);
+
+        $treasurer->refresh();
+        $this->assertEquals('treasurer', $treasurer->role);
+        $this->assertEquals('SSC Treasurer', $treasurer->position);
+    }
+
+    public function test_reelected_officer_keeps_their_position(): void
+    {
+        Candidacy::query()->delete();
+        $candidacy = Candidacy::create([
+            'user_id' => $this->oldOfficer->id,
+            'department' => 'BSIS',
+            'position' => 'SSC President',
+            'platform' => 'Four more years.',
+            'status' => 'approved',
+            'school_year' => '2026-2027',
+        ]);
+        $this->voteFor($candidacy, $this->student1);
+
+        $this->actingAs($this->admin)->post(route('admin.election.announce'))->assertSessionHas('success');
+
+        $this->oldOfficer->refresh();
+        $this->assertEquals('officer', $this->oldOfficer->role);
+        $this->assertEquals('SSC President', $this->oldOfficer->position);
+    }
+
+    public function test_each_contested_position_goes_to_its_own_winner(): void
+    {
+        $oldTreasurer = $this->makeUser('OldTres', 'treasurer', 'SSC Treasurer');
+        $secWinner = $this->makeUser('SecWin', 'student');
+        $tresWinner = $this->makeUser('TresWin', 'student');
+
+        $this->voteFor(Candidacy::where('user_id', $this->candidateUser->id)->first(), $this->student1);
+        foreach ([[$secWinner, 'SSC Secretary'], [$tresWinner, 'SSC Treasurer']] as [$user, $position]) {
+            $this->voteFor(Candidacy::create([
+                'user_id' => $user->id,
+                'department' => 'BSIS',
+                'position' => $position,
+                'platform' => 'Platform',
+                'status' => 'approved',
+                'school_year' => '2026-2027',
+            ]), $this->student1);
+        }
+
+        $this->actingAs($this->admin)->post(route('admin.election.announce'))->assertSessionHas('success');
+
+        $this->assertEquals('SSC President', $this->candidateUser->refresh()->position);
+        $this->assertEquals('SSC Secretary', $secWinner->refresh()->position);
+
+        $tresWinner->refresh();
+        $this->assertEquals('treasurer', $tresWinner->role);
+        $this->assertEquals('SSC Treasurer', $tresWinner->position);
+
+        $this->assertEquals('student', $oldTreasurer->refresh()->role);
+    }
+
+    private function makeUser(string $name, string $role, ?string $position = null): User
+    {
+        return User::create([
+            'first_name' => $name,
+            'last_name' => 'Test',
+            'fullname' => "{$name} Test",
+            'email' => strtolower($name) . '@mcclawis.edu.ph',
+            'password' => bcrypt('password'),
+            'role' => $role,
+            'position' => $position,
+            'status' => 'active',
+            'student_id' => strtoupper($name),
+            'year_level' => '3rd Year',
+            'department' => 'BSIS',
+            'age' => 20,
+        ]);
+    }
+
+    private function voteFor(Candidacy $candidacy, User $voter): void
+    {
+        Vote::create([
+            'user_id' => $voter->id,
+            'candidacy_id' => $candidacy->id,
+            'position' => $candidacy->position,
+            'school_year' => $candidacy->school_year,
+        ]);
+    }
+
     public function test_student_can_access_mobile_voting_when_open(): void
     {
         $this->activeSy->update([

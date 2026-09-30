@@ -48,6 +48,28 @@ class ProposalController extends Controller
         return redirect()->route('student.proposal.show', $proposal)->with('success', 'Comment added!');
     }
 
+    public function updateComment(Request $request, Proposal $proposal, ProposalComment $comment)
+    {
+        $this->authorizeStudentProposalAccess($proposal);
+        // Students may reword or remove their own comments, never anyone else's.
+        abort_unless((int) $comment->user_id === (int) Auth::id(), 403);
+
+        $request->validate(['comment' => 'required|string|min:1|max:2000']);
+        $comment->update(['comment' => $request->comment]);
+
+        return redirect()->back()->with('success', 'Comment updated.');
+    }
+
+    public function destroyComment(Proposal $proposal, ProposalComment $comment)
+    {
+        $this->authorizeStudentProposalAccess($proposal);
+        abort_unless((int) $comment->user_id === (int) Auth::id(), 403);
+
+        $comment->delete();
+
+        return redirect()->back()->with('success', 'Comment deleted.');
+    }
+
     public function print(Proposal $proposal)
     {
         $user = Auth::user();

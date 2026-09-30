@@ -14,7 +14,7 @@
 @forelse($announcements as $a)
 <div class="col-12 col-sm-6 col-xl-4">
     @include('partials.announcement-post-card', ['a' => $a, 'modal' => 'annModal' . $a->id])
-    @include('partials.announcement-modal', ['a' => $a, 'modal' => 'annModal' . $a->id, 'commentRoute' => route('student.announcements.comment', $a)])
+    @include('partials.announcement-modal', ['a' => $a, 'modal' => 'annModal' . $a->id, 'commentRoute' => route('student.announcements.comment', $a), 'ownCommentRoutes' => 'student.announcements.comments'])
 </div>
 @empty
 <div class="col-12">

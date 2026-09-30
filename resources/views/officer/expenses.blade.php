@@ -11,7 +11,7 @@
     <tbody>
     @forelse($expenses as $i => $ex)
     <tr>
-        <td style="color:#a0aec0;font-size:.8rem;">{{ $i+1 }}</td>
+        <td style="color:#a0aec0;font-size:.8rem;">{{ $expenses->firstItem() + $i }}</td>
         <td><div style="font-weight:700;">{{ $ex->expense_title }}</div><div style="font-size:.75rem;color:#718096;">{{ Str::limit($ex->description, 60) }}</div></td>
         <td><span class="badge bg-primary" style="font-size:.7rem;">{{ $ex->budget->title ?? 'N/A' }}</span></td>
         <td style="font-weight:700;color:var(--danger);">{!! \App\Helpers\SscHelper::formatCurrency($ex->amount) !!}</td>
@@ -36,6 +36,7 @@
     @endforelse
     </tbody>
 </table></div></div>
+{{ $expenses->withQueryString()->links('partials.pagination') }}
 
 <div class="modal fade" id="expenseModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg"><div class="modal-content" style="border-radius:var(--radius);border:none;">
     <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;"><i class="bi bi-receipt"></i> File New Expense</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

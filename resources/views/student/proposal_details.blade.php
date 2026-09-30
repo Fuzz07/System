@@ -41,7 +41,7 @@
                         <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0 {{ $c->user->role === 'student' ? 'bg-light text-muted' : 'bg-primary bg-opacity-10 text-primary' }}" style="width:48px;height:48px;font-weight:700;">
                             @if($c->user->role === 'student')<i class="bi bi-person-circle"></i>@else {{ strtoupper(substr($c->user->fullname, 0, 1)) }}@endif
                         </div>
-                        <div class="flex-fill">
+                        <div class="flex-fill" data-own-comment>
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <div>
                                     @if($c->user->role === 'student')<span class="fw-bold text-dark small"><i class="bi bi-person-fill-lock"></i> Anonymous Student</span>
@@ -49,7 +49,8 @@
                                 </div>
                                 <span class="text-muted small" style="font-size:0.7rem;">{{ $c->created_at?->diffForHumans() }}</span>
                             </div>
-                            <div class="p-3 bg-light rounded-4 small text-dark" style="line-height:1.6;">{!! nl2br(e($c->comment)) !!}</div>
+                            <div class="p-3 bg-light rounded-4 small text-dark" style="line-height:1.6;" data-comment-text>{!! nl2br(e($c->comment)) !!}</div>
+                            @include('partials.own-comment-actions', ['comment' => $c, 'parent' => $proposal, 'routes' => 'student.proposal.comments'])
                         </div>
                     </div>
                     @empty
@@ -68,11 +69,6 @@
                     <div class="d-flex align-items-center gap-3"><div class="avatar-sm bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center rounded-circle" style="width:40px;height:40px;font-weight:700;">{{ strtoupper(substr($proposal->officer->fullname ?? 'N', 0, 1)) }}</div><div class="fw-bold small">{{ $proposal->officer->fullname ?? 'N/A' }}</div></div>
                 </div>
                 <div class="mb-4"><label class="text-muted small text-uppercase fw-bold mb-1">Project ID</label><div class="fw-bold small text-dark">#SSC-PRP-{{ str_pad($proposal->id, 4, '0', STR_PAD_LEFT) }}</div></div>
-                <div class="mb-4">
-                    <a href="{{ route('proposals.print', $proposal) }}" target="_blank" class="btn btn-outline-secondary btn-sm w-100" style="border-radius:10px; font-weight: 600;">
-                        <i class="bi bi-printer"></i> Print Budget Proposal
-                    </a>
-                </div>
                 <div class="mb-0"><label class="text-muted small text-uppercase fw-bold mb-1">Transparency Pledge</label>
                     <p class="text-muted mb-0" style="font-size:0.75rem;line-height:1.6;">
                         @if($proposal->status === 'Approved') This project has been reviewed and approved by the SSC. All expenses will be published upon completion.

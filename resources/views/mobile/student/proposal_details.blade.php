@@ -94,14 +94,6 @@
     </div>
 </div>
 
-{{-- Print button --}}
-<div style="text-align:center;margin:6px 0 20px;">
-    <a href="{{ route('proposals.print', $proposal) }}" target="_blank"
-       class="m-btn m-btn-secondary m-btn-sm">
-        <i class="bi bi-printer"></i> Print Budget Proposal
-    </a>
-</div>
-
 {{-- Transparency Pledge --}}
 <div class="desc-section" style="background:rgba(var(--primary-rgb), 0.04);border:1px solid rgba(var(--primary-rgb), 0.1);text-align:center;">
     <i class="bi bi-shield-check" style="font-size:1.4rem;color:var(--primary);display:block;margin-bottom:6px;"></i>
@@ -131,7 +123,7 @@
                 {{ strtoupper(substr($c->user->fullname, 0, 1)) }}
             @endif
         </div>
-        <div class="comment-body">
+        <div class="comment-body" data-own-comment>
             <div class="comment-header">
                 <span class="comment-author">
                     @if($c->user->role === 'student')
@@ -143,7 +135,8 @@
                 </span>
                 <span class="comment-time">{{ $c->created_at?->diffForHumans() }}</span>
             </div>
-            <div class="comment-text">{!! nl2br(e($c->comment)) !!}</div>
+            <div class="comment-text" data-comment-text>{!! nl2br(e($c->comment)) !!}</div>
+            @include('partials.own-comment-actions', ['comment' => $c, 'parent' => $proposal, 'routes' => 'mobile.student.proposal.comments'])
         </div>
     </div>
     @empty

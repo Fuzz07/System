@@ -67,7 +67,7 @@
                             <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill mb-1">Awaiting Announcement</span>
                             <span class="small text-white text-opacity-75">8 hours voting period ended</span>
                         </div>
-                        <form method="POST" action="{{ route('admin.election.announce') }}" data-confirm="Are you sure you want to announce election results? This will auto-promote winners as active SSC Officers, update user credentials, and post the winners board announcement!">
+                        <form method="POST" action="{{ route('admin.election.announce') }}" data-confirm="Are you sure you want to announce election results? This will auto-promote winners as active SSC Officers, replacing the current officer in each position won (officers in positions without a winner stay), update user credentials, and post the winners board announcement!">
                             @csrf
                             <button type="submit" class="btn btn-warning fw-bold text-dark px-4 py-2" style="border-radius:10px; box-shadow:0 4px 12px rgba(245,158,11,0.3);">
                                 <i class="bi bi-trophy-fill me-1"></i> Announce Results & Promote Winners

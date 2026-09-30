@@ -111,14 +111,15 @@
                         @forelse($a->comments as $c)
                             <div class="ann-comment">
                                 <div class="ann-comment-avatar"><i class="bi bi-person-circle"></i></div>
-                                <div style="flex:1; min-width:0;">
+                                <div style="flex:1; min-width:0;" data-own-comment>
                                     <div class="ann-comment-head">
                                         <span class="ann-comment-author">
                                             <i class="bi bi-person-fill-lock"></i> Anonymous Student
                                         </span>
                                         <span class="ann-comment-time">{{ $c->created_at?->diffForHumans() }}</span>
                                     </div>
-                                    <div class="ann-comment-bubble">{!! nl2br(e($c->comment)) !!}</div>
+                                    <div class="ann-comment-bubble" data-comment-text>{!! nl2br(e($c->comment)) !!}</div>
+                                    @include('partials.own-comment-actions', ['comment' => $c, 'parent' => $a, 'routes' => 'mobile.student.announcements.comments'])
                                 </div>
                             </div>
                         @empty

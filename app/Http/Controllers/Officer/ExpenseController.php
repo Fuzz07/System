@@ -19,7 +19,7 @@ class ExpenseController extends Controller
         $expenses = Expense::with('budget')
             ->where('officer_id', Auth::id())
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(9);
         return view('officer.expenses', compact('budgets', 'expenses'));
     }
 

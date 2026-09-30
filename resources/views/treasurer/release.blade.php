@@ -83,6 +83,13 @@
     padding: 12px 0;
     border-bottom: 1px solid #f1f5f9;
   }
+
+  .release-field-error {
+    font-size: .74rem;
+    color: #dc2626;
+    font-weight: 600;
+    margin-top: 4px;
+  }
 </style>
 
 <div class="page-header mb-4">
@@ -222,42 +229,52 @@
           @csrf
           <input type="hidden" name="proposal_id" id="f-proposal-id"
             value="{{ isset($selectedProposal) ? $selectedProposal->id : '' }}">
+          @php
+            $releasable = isset($selectedProposal) ? round($selectedProposal->approved_budget - $selectedProposal->total_released, 2) : null;
+            $methodIcons = ['Cash' => '💵', 'Bank Transfer' => '🏦', 'Check' => '🎫', 'GCash' => '📱', 'Maya' => '📱', 'Other' => ''];
+          @endphp
 
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label-custom">Amount to Release (₱) <span style="color:red;">*</span></label>
               <input type="number" name="amount_released" id="f-amount" class="form-control-custom" step="0.01" min="0.01"
-                max="{{ isset($selectedProposal) ? ($selectedProposal->approved_budget - $selectedProposal->total_released) : '' }}"
+                max="{{ $releasable ?? '' }}" value="{{ old('amount_released') }}"
                 placeholder="0.00" required>
               <div style="font-size:.72rem; color:#94a3b8; margin-top:4px;">Max releasable: <span
-                  id="f-max-label">{{ isset($selectedProposal) ? \App\Helpers\SscHelper::formatCurrency($selectedProposal->approved_budget - $selectedProposal->total_released) : '—' }}</span>
+                  id="f-max-label">{{ $releasable !== null ? \App\Helpers\SscHelper::formatCurrency($releasable) : '—' }}</span>
               </div>
+              @error('amount_released')<div class="release-field-error">{{ $message }}</div>@enderror
             </div>
 
             <div class="col-md-6">
               <label class="form-label-custom">Release Method <span style="color:red;">*</span></label>
               <select name="release_method" id="f-method" class="form-control-custom" required>
-                <option value="Cash">💵 Cash</option>
-                <option value="Bank Transfer">🏦 Bank Transfer</option>
-                <option value="Check">🎫 Check</option>
-                <option value="GCash">📱 GCash</option>
-                <option value="Maya">📱 Maya</option>
-                <option value="Other">Other</option>
+                @foreach (\App\Http\Controllers\Treasurer\ReleaseController::RELEASE_METHODS as $method)
+                  <option value="{{ $method }}" @selected(old('release_method') === $method)>{{ trim(($methodIcons[$method] ?? '') . ' ' . $method) }}</option>
+                @endforeach
               </select>
+              @error('release_method')<div class="release-field-error">{{ $message }}</div>@enderror
             </div>
 
             <div class="col-md-6">
-              <label class="form-label-custom">Reference / Transaction No.</label>
-              <input type="text" name="reference_no" class="form-control-custom"
-                placeholder="e.g. GCash ref, check no.">
+              <label class="form-label-custom">Reference / Transaction No. <span style="color:red;">*</span></label>
+              <input type="text" name="reference_no" id="f-reference" class="form-control-custom"
+                value="{{ old('reference_no') }}" required minlength="4" maxlength="50"
+                pattern="[A-Za-z0-9][A-Za-z0-9\-\/ ]*"
+                title="At least 4 characters: letters, numbers, dashes, slashes and spaces only."
+                placeholder="e.g. voucher no., GCash ref, check no.">
+              <div style="font-size:.72rem; color:#94a3b8; margin-top:4px;">Required. Each release needs its own reference number.</div>
+              @error('reference_no')<div class="release-field-error">{{ $message }}</div>@enderror
             </div>
 
             <div class="col-md-6">
               <label class="form-label-custom">Release Status <span style="color:red;">*</span></label>
-              <select name="release_status" class="form-control-custom" required>
-                <option value="Released">✅ Released (Full / Final)</option>
-                <option value="Partial">🔄 Partial Release</option>
+              <select name="release_status" id="f-status" class="form-control-custom" required>
+                <option value="Released" @selected(old('release_status') === 'Released')>✅ Released (Full / Final)</option>
+                <option value="Partial" @selected(old('release_status') === 'Partial')>🔄 Partial Release</option>
               </select>
+              <div style="font-size:.72rem; color:#94a3b8; margin-top:4px;">Full / Final must release the whole remaining balance.</div>
+              @error('release_status')<div class="release-field-error">{{ $message }}</div>@enderror
             </div>
 
             <div class="col-12">
@@ -265,12 +282,14 @@
               <input type="file" name="receipt" class="form-control" accept="{{ \App\Support\UploadValidation::ACCEPT }}"
                 style="border-radius:10px; border:1.5px solid #e2e8f0; font-size:.85rem; padding:8px;">
               <div style="font-size:.72rem; color:#94a3b8; margin-top:4px;">Optional. PNG, JPG or JPEG only, up to 5MB.</div>
+              @error('receipt')<div class="release-field-error">{{ $message }}</div>@enderror
             </div>
 
             <div class="col-12">
               <label class="form-label-custom">Treasurer Notes</label>
-              <textarea name="notes" class="form-control-custom" rows="3"
-                placeholder="Enter disbursement notes, conditions, or acknowledgment details..."></textarea>
+              <textarea name="notes" class="form-control-custom" rows="3" maxlength="1000"
+                placeholder="Enter disbursement notes, conditions, or acknowledgment details...">{{ old('notes') }}</textarea>
+              @error('notes')<div class="release-field-error">{{ $message }}</div>@enderror
             </div>
 
             <div class="col-12 d-flex gap-2 justify-content-end pt-2">
@@ -368,7 +387,7 @@
       </div>
       <div class="modal-footer border-0 p-4 pt-0">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn-primary-custom" style="border-radius:12px; padding:10px 24px; background: linear-gradient(135deg, #d97706, #f59e0b); border: none;" onclick="submitReleaseForm()">
+        <button type="button" id="conf-submit-btn" class="btn-primary-custom" style="border-radius:12px; padding:10px 24px; background: linear-gradient(135deg, #d97706, #f59e0b); border: none;" onclick="submitReleaseForm()">
           <i class="bi bi-check-circle"></i> Confirm & Release
         </button>
       </div>
@@ -385,9 +404,13 @@
     document.getElementById('tab-history-btn').classList.toggle('active', t === 'history');
   }
 
+  // Remaining balance of the selected proposal, in pesos.
+  var currentRemaining = {{ $releasable ?? 0 }};
+
   // Select a proposal from the left list
   function selectProposal(id, title, approved, released) {
-    var remaining = approved - released;
+    var remaining = Math.round((approved - released) * 100) / 100;
+    currentRemaining = remaining;
     document.getElementById('f-proposal-id').value = id;
     document.getElementById('f-amount').value = '';
     document.getElementById('f-amount').max = remaining;
@@ -416,20 +439,42 @@
     document.querySelectorAll('.proposal-card-treasury').forEach(el => el.classList.remove('selected'));
   }
 
+  // Keep the status in step with the amount: the whole remaining balance is a
+  // full / final release, anything less is a partial one.
+  function syncReleaseStatus() {
+    var amt = parseFloat(document.getElementById('f-amount').value);
+    if (!(amt > 0)) return;
+    document.getElementById('f-status').value = Math.round(amt * 100) === Math.round(currentRemaining * 100) ? 'Released' : 'Partial';
+  }
+  document.getElementById('f-amount').addEventListener('input', syncReleaseStatus);
+
   function openReleaseConfirmation() {
+    var form = document.getElementById('releaseForm');
     var amt = parseFloat(document.getElementById('f-amount').value) || 0;
     var title = document.getElementById('summary-title').textContent.trim();
     var method = document.getElementById('f-method').value;
-    var status = document.querySelector('select[name="release_status"]').value;
-    var reference = document.querySelector('input[name="reference_no"]').value.trim();
+    var status = document.getElementById('f-status').value;
+    var reference = document.getElementById('f-reference').value.trim();
     var notes = document.querySelector('textarea[name="notes"]').value.trim();
+    var amtCents = Math.round(amt * 100);
+    var remainingCents = Math.round(currentRemaining * 100);
 
-    if (!title) {
+    if (!title || !document.getElementById('f-proposal-id').value) {
       SSCAlert.warning('Select a proposal before releasing budget.');
       return;
     }
-    if (amt <= 0) {
-      SSCAlert.warning('Please enter a valid amount to release.');
+    if (remainingCents <= 0) {
+      SSCAlert.warning('This project\'s approved budget has already been fully released.');
+      return;
+    }
+    // Browser checks: amount limits, required reference no. and its format, etc.
+    if (!form.reportValidity()) return;
+    if (status === 'Released' && amtCents < remainingCents) {
+      SSCAlert.warning('A full / final release must cover the whole remaining balance. Mark smaller amounts as a Partial Release.');
+      return;
+    }
+    if (status === 'Partial' && amtCents === remainingCents) {
+      SSCAlert.warning('This amount releases the whole remaining balance. Mark it as "Released (Full / Final)" instead of Partial.');
       return;
     }
 
@@ -437,14 +482,18 @@
     document.getElementById('conf-amount').textContent = '₱' + amt.toLocaleString('en-PH', { minimumFractionDigits: 2 });
     document.getElementById('conf-method').textContent = method;
     document.getElementById('conf-status').textContent = status === 'Released' ? 'Released (Full / Final)' : 'Partial Release';
-    document.getElementById('conf-reference').textContent = reference || 'Not provided';
+    document.getElementById('conf-reference').textContent = reference;
     document.getElementById('conf-notes').textContent = notes || 'No notes provided';
 
-    var confirmModal = new bootstrap.Modal(document.getElementById('releaseConfirmModal'));
+    var confirmModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('releaseConfirmModal'));
     confirmModal.show();
   }
 
   function submitReleaseForm() {
+    // Block a double click from recording the same release twice.
+    var btn = document.getElementById('conf-submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Releasing...';
     document.getElementById('releaseForm').submit();
   }
 </script>

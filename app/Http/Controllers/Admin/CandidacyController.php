@@ -188,9 +188,18 @@ class CandidacyController extends Controller
                 return $b->votes_count <=> $a->votes_count;
             });
         }
+        // Drop the reference, or the next loop over this array writes each
+        // position's candidates into the last one and its winner is lost.
+        unset($cands);
 
-        // De-promote current officers/treasurers back to students
+        $winners = collect($candidatesByPosition)->map(fn ($cands) => $cands[0]);
+
+        // Only the positions someone was just elected to change hands. Whoever
+        // holds one of them steps down unless they won it again; officers in
+        // every other position stay on until an election fills their seat.
         User::whereIn('role', ['officer', 'treasurer'])
+            ->whereIn('position', $winners->keys())
+            ->whereNotIn('id', $winners->pluck('user_id'))
             ->update([
                 'role' => 'student',
                 'position' => null,
@@ -198,12 +207,7 @@ class CandidacyController extends Controller
             ]);
 
         $winnersText = [];
-        foreach ($candidatesByPosition as $position => $cands) {
-            if (empty($cands)) {
-                continue;
-            }
-
-            $winner = $cands[0];
+        foreach ($winners as $position => $winner) {
             $winnerUser = $winner->user;
 
             $newRole = (strcasecmp($position, 'SSC Treasurer') === 0) ? 'treasurer' : 'officer';

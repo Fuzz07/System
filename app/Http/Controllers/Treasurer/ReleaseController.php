@@ -11,13 +11,20 @@ use App\Support\UploadValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ReleaseController extends Controller
 {
+    public const RELEASE_METHODS = ['Cash', 'Bank Transfer', 'Check', 'GCash', 'Maya', 'Other'];
+
+    /** Starts with a letter or digit; then letters, digits, dashes, slashes and spaces. */
+    public const REFERENCE_PATTERN = '/^[A-Za-z0-9][A-Za-z0-9\-\/ ]*$/';
+
     public function index(Request $request)
     {
         $filterSearch = trim($request->query('search', ''));
-        $selectedPid = (int)$request->query('proposal_id', 0);
+        // After a failed submit, reopen the form on the proposal being released.
+        $selectedPid = (int)$request->query('proposal_id', $request->old('proposal_id', 0));
 
         // Fetch all approved proposals with release summary
         $proposalsQuery = Proposal::where('status', 'Approved')
@@ -68,29 +75,49 @@ class ReleaseController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'proposal_id'    => 'required|exists:proposals,id',
-            'amount_released'=> 'required|numeric|min:0.01',
-            'release_method' => 'required|string|max:255',
-            'reference_no'   => 'nullable|string|max:255',
-            'release_status' => 'required|in:Released,Partial',
-            'notes'          => 'nullable|string',
-            'receipt'        => UploadValidation::optionalFile(),
+            'proposal_id'     => 'required|integer|exists:proposals,id',
+            'amount_released' => 'required|numeric|decimal:0,2|min:0.01',
+            'release_method'  => 'required|in:' . implode(',', self::RELEASE_METHODS),
+            'reference_no'    => ['required', 'string', 'min:4', 'max:50', 'regex:' . self::REFERENCE_PATTERN, 'unique:budget_releases,reference_no'],
+            'release_status'  => 'required|in:Released,Partial',
+            'notes'           => 'nullable|string|max:1000',
+            'receipt'         => UploadValidation::optionalFile(),
+        ], [
+            'amount_released.decimal' => 'The amount to release can have at most 2 decimal places.',
+            'release_method.in'       => 'Choose one of the listed release methods.',
+            'reference_no.required'   => 'Enter the reference / transaction number for this release (e.g. voucher no., GCash ref, check no.).',
+            'reference_no.min'        => 'The reference number must be at least 4 characters.',
+            'reference_no.max'        => 'The reference number may be at most 50 characters.',
+            'reference_no.regex'      => 'The reference number may only contain letters, numbers, dashes, slashes and spaces.',
+            'reference_no.unique'     => 'Reference number ":input" is already recorded on another release. Check that this release was not entered twice.',
         ]);
 
         $pid = (int)$request->proposal_id;
-        $proposal = Proposal::where('id', $pid)->where('status', 'Approved')->firstOrFail();
+        $proposal = Proposal::where('id', $pid)->where('status', 'Approved')->first();
+        if (!$proposal) {
+            throw ValidationException::withMessages(['proposal_id' => 'Only approved proposals can have their budget released.']);
+        }
 
-        // Calculate maximum releasable amount
+        // Compare in centavos so float rounding can't let an extra ₱0.01 through.
         $totalAlreadyReleased = (float)BudgetRelease::where('proposal_id', $pid)->sum('amount_released');
-        $approvedBudget = (float)$proposal->approved_budget;
-        $maxReleasable = $approvedBudget - $totalAlreadyReleased;
+        $remainingCents = (int)round((float)$proposal->approved_budget * 100) - (int)round($totalAlreadyReleased * 100);
+        $maxReleasable = $remainingCents / 100;
 
         $amtReleased = (float)$request->amount_released;
+        $amountCents = (int)round($amtReleased * 100);
 
-        if ($amtReleased > $maxReleasable + 0.01) {
-            return redirect()->back()
-                ->with('danger', "Cannot release " . SscHelper::formatCurrency($amtReleased) . ". Only " . SscHelper::formatCurrency($maxReleasable) . " remaining to release.")
-                ->withInput();
+        if ($remainingCents <= 0) {
+            throw ValidationException::withMessages(['amount_released' => "The approved budget for \"{$proposal->project_title}\" has already been fully released."]);
+        }
+        if ($amountCents > $remainingCents) {
+            throw ValidationException::withMessages(['amount_released' => 'Cannot release ' . SscHelper::formatCurrency($amtReleased) . '. Only ' . SscHelper::formatCurrency($maxReleasable) . ' remains to be released for this project.']);
+        }
+        // "Released" is the full / final disbursement; anything less is a partial one.
+        if ($request->release_status === 'Released' && $amountCents < $remainingCents) {
+            throw ValidationException::withMessages(['release_status' => 'A full / final release must cover the whole remaining balance of ' . SscHelper::formatCurrency($maxReleasable) . '. Mark smaller amounts as a Partial Release.']);
+        }
+        if ($request->release_status === 'Partial' && $amountCents === $remainingCents) {
+            throw ValidationException::withMessages(['release_status' => 'This amount releases the whole remaining balance. Mark it as "Released (Full / Final)" instead of Partial.']);
         }
 
         // Handle receipt upload

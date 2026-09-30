@@ -302,9 +302,13 @@ Route::group([], function () use ($baseDomain) {
         Route::get('/proposals', [Student\ProposalController::class, 'index'])->name('proposals');
         Route::get('/proposals/{proposal}', [Student\ProposalController::class, 'show'])->name('proposal.show');
         Route::post('/proposals/{proposal}/comment', [Student\ProposalController::class, 'comment'])->name('proposal.comment');
+        Route::put('/proposals/{proposal}/comments/{comment}', [Student\ProposalController::class, 'updateComment'])->scopeBindings()->name('proposal.comments.update');
+        Route::delete('/proposals/{proposal}/comments/{comment}', [Student\ProposalController::class, 'destroyComment'])->scopeBindings()->name('proposal.comments.destroy');
 
         Route::get('/announcements', [Student\AnnouncementController::class, 'index'])->name('announcements');
         Route::post('/announcements/{announcement}/comment', [Student\AnnouncementController::class, 'comment'])->name('announcements.comment');
+        Route::put('/announcements/{announcement}/comments/{comment}', [Student\AnnouncementController::class, 'updateComment'])->scopeBindings()->name('announcements.comments.update');
+        Route::delete('/announcements/{announcement}/comments/{comment}', [Student\AnnouncementController::class, 'destroyComment'])->scopeBindings()->name('announcements.comments.destroy');
 
         Route::get('/api/announcements', function () {
             $announcements = \App\Models\Announcement::with(['author', 'proposal'])
@@ -462,6 +466,8 @@ Route::group([], function () use ($baseDomain) {
             ]);
             return redirect()->route('mobile.student.proposal.show', $proposal)->with('success', 'Comment added.');
         })->name('proposal.comment');
+        Route::put('/proposals/{proposal}/comments/{comment}', [Student\ProposalController::class, 'updateComment'])->scopeBindings()->name('proposal.comments.update');
+        Route::delete('/proposals/{proposal}/comments/{comment}', [Student\ProposalController::class, 'destroyComment'])->scopeBindings()->name('proposal.comments.destroy');
 
         Route::get('/announcements', function (\Illuminate\Http\Request $request) {
             $category = $request->input('category');
@@ -485,6 +491,8 @@ Route::group([], function () use ($baseDomain) {
 
             return redirect()->route('mobile.student.announcements')->with('success', 'Comment added!');
         })->name('announcements.comment');
+        Route::put('/announcements/{announcement}/comments/{comment}', [Student\AnnouncementController::class, 'updateComment'])->scopeBindings()->name('announcements.comments.update');
+        Route::delete('/announcements/{announcement}/comments/{comment}', [Student\AnnouncementController::class, 'destroyComment'])->scopeBindings()->name('announcements.comments.destroy');
 
         Route::get('/feedback', function () {
             $feedbacks = \App\Models\Feedback::with('replier')

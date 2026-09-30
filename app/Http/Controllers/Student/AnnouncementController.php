@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\AnnouncementComment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -34,5 +35,25 @@ class AnnouncementController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Comment added!');
+    }
+
+    public function updateComment(Request $request, Announcement $announcement, AnnouncementComment $comment)
+    {
+        // Students may reword or remove their own comments, never anyone else's.
+        abort_unless((int) $comment->user_id === (int) Auth::id(), 403);
+
+        $request->validate(['comment' => 'required|string|min:1|max:2000']);
+        $comment->update(['comment' => $request->comment]);
+
+        return redirect()->back()->with('success', 'Comment updated.');
+    }
+
+    public function destroyComment(Announcement $announcement, AnnouncementComment $comment)
+    {
+        abort_unless((int) $comment->user_id === (int) Auth::id(), 403);
+
+        $comment->delete();
+
+        return redirect()->back()->with('success', 'Comment deleted.');
     }
 }
