@@ -30,11 +30,6 @@ return [
     'bank_account_name'   => env('SSC_BANK_ACCOUNT_NAME', 'MCC Supreme Student Council'),
     'bank_account_number' => env('SSC_BANK_ACCOUNT_NUMBER', '1234-5678-90'),
 
-    // Student registration eligibility whitelist.
-    // When enabled, only emails pre-approved in the eligible_students table
-    // may proceed through the OTP / registration flow.
-    'enforce_eligibility_whitelist' => env('ENFORCE_ELIGIBILITY_WHITELIST', false),
-
     // SSC executive officers, used for signatories on printed documents.
     'executive_officers' => [
         ['position' => 'President', 'name' => 'Villacarlos, Jireh Joy A.', 'party' => 'ABANTE PARTY', 'icon' => 'bi-award'],
