@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class AnnouncementComment extends Model
 {
     protected $table = 'announcement_comments';
-    public $timestamps = false;
+    // Stamped from PHP, not the column's CURRENT_TIMESTAMP default: that runs on
+    // the database clock, which in production is UTC while the app reads times
+    // as Asia/Manila, so a comment posted a moment ago showed as "8 hours ago".
+    public const UPDATED_AT = null;
     protected $fillable = ['announcement_id', 'user_id', 'comment'];
     protected $casts = ['created_at' => 'datetime'];
 

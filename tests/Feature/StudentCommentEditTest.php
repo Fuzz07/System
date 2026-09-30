@@ -132,6 +132,44 @@ class StudentCommentEditTest extends TestCase
         $this->assertDatabaseHas('proposal_comments', ['id' => $comment->id]);
     }
 
+    public function test_new_comments_are_stamped_on_the_app_clock(): void
+    {
+        // The test database stamps CURRENT_TIMESTAMP in UTC while the app runs
+        // on Asia/Manila, the same mismatch as a UTC production database.
+        $announcement = $this->announcement();
+        $proposal = $this->proposal();
+
+        $this->actingAs($this->student)
+            ->post(route('student.announcements.comment', $announcement), ['comment' => 'Just posted']);
+        $this->actingAs($this->student)
+            ->post(route('student.proposal.comment', $proposal), ['comment' => 'Just posted']);
+
+        foreach ([AnnouncementComment::first(), ProposalComment::first()] as $comment) {
+            $this->assertLessThan(60, abs($comment->created_at->diffInSeconds(now())));
+        }
+
+        $this->actingAs($this->student)
+            ->get(route('student.proposal.show', $proposal))
+            ->assertSee('seconds ago')
+            ->assertDontSee('hours ago');
+    }
+
+    public function test_migration_moves_existing_comments_onto_the_app_clock(): void
+    {
+        $announcement = $this->announcement();
+        // Stamped by the column default, the way comments were saved before.
+        $id = DB::table('announcement_comments')->insertGetId([
+            'announcement_id' => $announcement->id,
+            'user_id' => $this->student->id,
+            'comment' => 'Posted before the fix',
+        ]);
+        $this->assertGreaterThan(3600, abs(AnnouncementComment::find($id)->created_at->diffInSeconds(now())));
+
+        (require database_path('migrations/2026_10_01_000000_move_comment_times_onto_app_clock.php'))->up();
+
+        $this->assertLessThan(60, abs(AnnouncementComment::find($id)->created_at->diffInSeconds(now())));
+    }
+
     private function announcement(): Announcement
     {
         // Inserted directly so the model's "created" hook doesn't send pushes.
