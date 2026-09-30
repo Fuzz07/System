@@ -36,7 +36,14 @@
                             <td>{!! \App\Helpers\SscHelper::formatCurrency($p->requested_budget) !!}</td>
                             <td>{{ $p->approved_budget ? \App\Helpers\SscHelper::formatCurrency($p->approved_budget) : '—' }}
                             </td>
-                            <td>{!! \App\Helpers\SscHelper::statusBadge($p->status) !!}</td>
+                            <td>
+                                {!! \App\Helpers\SscHelper::statusBadge($p->status) !!}
+                                @if($p->status === 'Pending' && $p->resubmitted_at)
+                                    <div class="small text-muted mt-1" title="Resubmitted {{ $p->resubmitted_at->format('M d, Y h:i A') }}"><i class="bi bi-arrow-repeat"></i> Resubmitted</div>
+                                @elseif($p->status === 'Rejected')
+                                    <div class="small text-danger mt-1" style="max-width:220px;">{{ $p->admin_notes ? 'Reason: ' . Str::limit($p->admin_notes, 80) : 'No reason given.' }}</div>
+                                @endif
+                            </td>
                             <td>
                                 @if($p->status === 'Approved')
                                     <span
@@ -65,6 +72,10 @@
                                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
                                             data-bs-target="#editModal{{ $p->id }}"><i class="bi bi-pencil-square"></i>
                                             Edit</button>
+                                    @elseif($p->status === 'Rejected')
+                                        <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                                            data-bs-target="#editModal{{ $p->id }}"><i class="bi bi-arrow-repeat"></i>
+                                            Edit &amp; Resubmit</button>
                                     @endif
                                 </div>
                             </td>
@@ -168,28 +179,52 @@
         </div>
     @endforeach
 
-    {{-- Edit Modals --}}
-    @foreach($proposals->where('status', 'Pending') as $p)
+    {{-- Edit Modals: pending proposals, and rejected ones to revise and resubmit --}}
+    @foreach($proposals->filter->isEditableByOfficer() as $p)
+        @php
+            $resubmitting = $p->status === 'Rejected';
+            $fromThis = old('proposal_form') === 'edit_' . $p->id;
+        @endphp
         <div class="modal fade" id="editModal{{ $p->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content" style="border-radius:var(--radius);border:none;">
                     <div class="modal-header modal-header-custom">
-                        <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Edit Proposal</h5><button type="button"
-                            class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title">
+                            @if($resubmitting)<i class="bi bi-arrow-repeat"></i> Revise &amp; Resubmit Proposal
+                            @else<i class="bi bi-pencil-square"></i> Edit Proposal @endif
+                        </h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <form method="POST" action="{{ route('officer.proposals.update', $p) }}">@csrf @method('PUT')
+                        <input type="hidden" name="proposal_form" value="edit_{{ $p->id }}">
                         <div class="modal-body p-4">
+                            @if($resubmitting)
+                                <div class="alert alert-danger border-0 mb-4" style="border-radius:12px;">
+                                    <div class="fw-bold mb-1"><i class="bi bi-x-octagon"></i> This proposal was rejected{{ $p->approver ? ' by ' . $p->approver->fullname : '' }}.</div>
+                                    <div style="white-space:pre-wrap;">{{ $p->admin_notes ?: 'No reason was given. Review the proposal and revise it before resubmitting.' }}</div>
+                                </div>
+                            @endif
                             <div class="mb-3"><label class="form-label-custom">Project Title</label><input type="text"
-                                    name="project_title" class="form-control-custom" value="{{ $p->project_title }}" required>
+                                    name="project_title" class="form-control-custom" value="{{ $fromThis ? old('project_title') : $p->project_title }}" required>
                             </div>
                             <div class="mb-3"><label class="form-label-custom">Items</label><textarea name="description"
                                     class="form-control-custom" rows="5" required
-                                    style="resize:vertical;">{{ $p->description }}</textarea></div>
-                            @include('partials.proposal-expense-items', ['items' => $p->budgetItemList(), 'requestedBudget' => $p->requested_budget])
+                                    style="resize:vertical;">{{ $fromThis ? old('description') : $p->description }}</textarea></div>
+                            @include('partials.proposal-expense-items', [
+                                'items' => $fromThis ? array_values((array) old('budget_items', [])) : $p->budgetItemList(),
+                                'requestedBudget' => $fromThis ? old('requested_budget') : $p->requested_budget,
+                            ])
+                            @if($resubmitting)
+                                <div class="small text-muted"><i class="bi bi-info-circle"></i> Resubmitting sends this proposal back to the admin for a new review.</div>
+                            @endif
                         </div>
                         <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-outline-secondary"
-                                data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn-primary-custom"><i
-                                    class="bi bi-save"></i> Save Changes</button></div>
+                                data-bs-dismiss="modal">Cancel</button>
+                            @if($resubmitting)
+                                <button type="submit" class="btn-primary-custom"><i class="bi bi-send"></i> Resubmit for Approval</button>
+                            @else
+                                <button type="submit" class="btn-primary-custom"><i class="bi bi-save"></i> Save Changes</button>
+                            @endif
+                        </div>
                     </form>
                 </div>
             </div>
@@ -299,6 +334,10 @@
 
             @if($errors->any() && old('proposal_form') === 'create')
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('proposalModal')).show();
+            @elseif($errors->any() && str_starts_with((string) old('proposal_form'), 'edit_'))
+                // Reopen the edit/resubmit form that failed validation.
+                const editModal = document.getElementById(@json('editModal' . substr((string) old('proposal_form'), 5)));
+                if (editModal) bootstrap.Modal.getOrCreateInstance(editModal).show();
             @endif
     })();
     </script>

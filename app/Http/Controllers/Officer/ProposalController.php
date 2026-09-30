@@ -35,11 +35,26 @@ class ProposalController extends Controller
 
     public function update(Request $request, Proposal $proposal)
     {
-        if ((int) $proposal->officer_id !== (int) Auth::id() || $proposal->status !== 'Pending') {
+        if ((int) $proposal->officer_id !== (int) Auth::id() || !$proposal->isEditableByOfficer()) {
             abort(403, 'Cannot edit this proposal.');
         }
 
-        $proposal->update($this->validatedProposal($request));
+        $data = $this->validatedProposal($request);
+
+        // Saving a rejected proposal sends it back for approval. The admin's
+        // rejection note stays so the next review can see what was asked for.
+        if ($proposal->status === 'Rejected') {
+            $proposal->update($data + [
+                'status' => 'Pending',
+                'approved_by' => null,
+                'approved_budget' => null,
+                'resubmitted_at' => now(),
+            ]);
+            SscHelper::logActivity(Auth::id(), 'PROPOSAL_RESUBMIT', "Revised and resubmitted rejected proposal: {$proposal->project_title}");
+            return redirect()->route('officer.proposals')->with('success', 'Proposal revised and resubmitted for approval.');
+        }
+
+        $proposal->update($data);
         SscHelper::logActivity(Auth::id(), 'PROPOSAL_UPDATE', "Updated proposal: {$request->project_title}");
         return redirect()->route('officer.proposals')->with('success', 'Proposal updated successfully!');
     }

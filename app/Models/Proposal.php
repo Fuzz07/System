@@ -22,9 +22,16 @@ class Proposal extends Model
         'description', 'status', 'approved_by', 'admin_notes',
         'project_status', 'completion_proof', 'proposal_event_date',
         'participant_count', 'objectives', 'budget_items', 'project_image',
+        'resubmitted_at',
     ];
-    protected $casts = ['created_at' => 'datetime', 'requested_budget' => 'decimal:2', 'approved_budget' => 'decimal:2'];
+    protected $casts = ['created_at' => 'datetime', 'resubmitted_at' => 'datetime', 'requested_budget' => 'decimal:2', 'approved_budget' => 'decimal:2'];
     protected $attributes = ['project_status' => 'Ongoing'];
+
+    /** Officers may edit a proposal still awaiting review, or revise and resubmit a rejected one. */
+    public function isEditableByOfficer(): bool
+    {
+        return in_array($this->status, ['Pending', 'Rejected'], true);
+    }
 
     public function officer() { return $this->belongsTo(User::class, 'officer_id'); }
     public function approver() { return $this->belongsTo(User::class, 'approved_by'); }

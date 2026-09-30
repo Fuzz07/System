@@ -22,7 +22,12 @@
         <td style="font-size:.82rem;">{{ $p->officer->fullname ?? 'N/A' }}</td>
         <td>{!! \App\Helpers\SscHelper::formatCurrency($p->requested_budget) !!}</td>
         <td>{{ $p->approved_budget ? \App\Helpers\SscHelper::formatCurrency($p->approved_budget) : '—' }}</td>
-        <td>{!! \App\Helpers\SscHelper::statusBadge($p->status) !!}</td>
+        <td>
+            {!! \App\Helpers\SscHelper::statusBadge($p->status) !!}
+            @if($p->status === 'Pending' && $p->resubmitted_at)
+                <div class="mt-1"><span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25" style="font-size:.65rem;" title="Revised after rejection on {{ $p->resubmitted_at->format('M d, Y h:i A') }}"><i class="bi bi-arrow-repeat"></i> Resubmitted</span></div>
+            @endif
+        </td>
         <td><span class="badge bg-secondary" style="font-size:.72rem;">{{ $p->comments_count }}</span></td>
         <td>
             <div class="d-flex gap-2 align-items-center">
@@ -51,6 +56,14 @@
         <form method="POST" action="{{ route('admin.proposals.review', $p) }}">
             @csrf
             <div class="modal-body p-4">
+                @if($p->resubmitted_at)
+                    <div class="alert alert-warning border-0 mb-3" style="border-radius:12px; font-size:.85rem;">
+                        <div class="fw-bold mb-1"><i class="bi bi-arrow-repeat"></i> Revised and resubmitted {{ $p->resubmitted_at->diffForHumans() }} after being rejected.</div>
+                        @if($p->admin_notes)
+                            <div><span class="fw-semibold">Previous rejection note:</span> <span style="white-space:pre-wrap;">{{ $p->admin_notes }}</span></div>
+                        @endif
+                    </div>
+                @endif
                 <p style="font-size:.85rem;color:#718096;margin-bottom:16px;">{{ $p->description }}</p>
                 <div class="mb-3"><label class="form-label-custom">Estimated Expenses</label>@include('partials.proposal-expense-summary', ['proposal' => $p])</div>
                 <div class="mb-3" style="font-size:.85rem;">Requested Budget: <strong>{{ \App\Helpers\SscHelper::formatCurrency($p->requested_budget) }}</strong></div>

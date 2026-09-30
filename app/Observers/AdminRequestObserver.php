@@ -37,6 +37,19 @@ class AdminRequestObserver
         }
 
         if ($model instanceof Proposal
+            && $model->wasChanged('resubmitted_at')
+            && filled($model->resubmitted_at)) {
+            $officer = $model->officer?->fullname ?? 'An officer';
+            AdminAlertService::send(
+                'Proposal resubmitted for approval',
+                "{$officer} revised and resubmitted \"{$model->project_title}\" with a requested budget of PHP "
+                    . number_format((float) $model->requested_budget, 2) . '.',
+                route('admin.proposals', ['status' => 'Pending']),
+                'proposal_approval'
+            );
+        }
+
+        if ($model instanceof Proposal
             && $model->wasChanged('completion_proof')
             && filled($model->completion_proof)) {
             $officer = $model->officer?->fullname ?? 'An officer';
