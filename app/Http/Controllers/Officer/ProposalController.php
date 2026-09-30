@@ -21,7 +21,7 @@ class ProposalController extends Controller
             ->withCount('comments')
             ->where('officer_id', Auth::id())
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(8);
         return view('officer.proposals', compact('proposals'));
     }
 

@@ -28,7 +28,7 @@
                 <tbody>
                     @forelse($proposals as $i => $p)
                         <tr>
-                            <td style="color:#a0aec0;font-size:.8rem;">{{ $i + 1 }}</td>
+                            <td style="color:#a0aec0;font-size:.8rem;">{{ $proposals->firstItem() + $i }}</td>
                             <td>
                                 <div style="font-weight:700;color:var(--navy-900);">{{ $p->project_title }}</div>
                                 <div style="font-size:.75rem;color:#718096;">{{ Str::limit($p->description, 80) }}...</div>
@@ -91,6 +91,7 @@
                 </tbody>
             </table>
         </div>
+        {{ $proposals->links('partials.pagination') }}
     </div>
 
     {{-- Feedback Modals: what students said about each proposal. Students post
@@ -147,7 +148,7 @@
     @endforeach
 
     {{-- Complete Modals --}}
-    @foreach($proposals->where('status', 'Approved')->where('project_status', 'Ongoing') as $p)
+    @foreach($proposals->getCollection()->where('status', 'Approved')->where('project_status', 'Ongoing') as $p)
         <div class="modal fade" id="completeModal{{ $p->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content" style="border-radius:var(--radius);border:none;">
@@ -180,7 +181,7 @@
     @endforeach
 
     {{-- Edit Modals: pending proposals, and rejected ones to revise and resubmit --}}
-    @foreach($proposals->filter->isEditableByOfficer() as $p)
+    @foreach($proposals->getCollection()->filter->isEditableByOfficer() as $p)
         @php
             $resubmitting = $p->status === 'Rejected';
             $fromThis = old('proposal_form') === 'edit_' . $p->id;
@@ -206,7 +207,7 @@
                             <div class="mb-3"><label class="form-label-custom">Project Title</label><input type="text"
                                     name="project_title" class="form-control-custom" value="{{ $fromThis ? old('project_title') : $p->project_title }}" required>
                             </div>
-                            <div class="mb-3"><label class="form-label-custom">Items</label><textarea name="description"
+                            <div class="mb-3"><label class="form-label-custom">Description</label><textarea name="description"
                                     class="form-control-custom" rows="5" required
                                     style="resize:vertical;">{{ $fromThis ? old('description') : $p->description }}</textarea></div>
                             @include('partials.proposal-expense-items', [
@@ -247,7 +248,7 @@
                                     class="text-danger">*</span></label><input type="text" name="project_title"
                                 class="form-control-custom" placeholder="e.g. Inter-School Sports Fest 2026"
                                 value="{{ $fromCreate ? old('project_title') : '' }}" required></div>
-                        <div class="mb-3"><label class="form-label-custom">Items <span
+                        <div class="mb-3"><label class="form-label-custom">Description <span
                                     class="text-danger">*</span></label><textarea name="description"
                                 class="form-control-custom" rows="5" placeholder="Describe your project..." required
                                 style="resize:vertical;">{{ $fromCreate ? old('description') : '' }}</textarea></div>
