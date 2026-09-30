@@ -101,7 +101,7 @@
 
     <div class="page-header">
         <div>
-            <h1>sAdmin Dashboard</h1>
+            <h1>Admin Dashboard</h1>
             <p>System overview and financial summary</p>
         </div>
     </div>

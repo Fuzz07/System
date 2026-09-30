@@ -629,7 +629,7 @@
             <div class="modal-dialog modal-lg">
                 <div class="modal-content" style="border-radius:var(--radius);border:none;">
                     <div class="modal-header modal-header-custom">
-                        <h5 class="modal-title" style="font-weight:700;"><i class="bi bi-wallet2"></i> Create New Budget
+                        <h5 class="modal-title" style="font-weight:700;"><i class="bi bi-wallet2"></i> Add Funds
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
@@ -699,8 +699,7 @@
                         </div>
                         <div class="modal-footer border-0 pt-0">
                             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn-primary-custom"><i class="bi bi-check2"></i> Create
-                                Budget</button>
+                            <button type="submit" class="btn-primary-custom"><i class="bi bi-check2"></i> Add Funds</button>
                         </div>
                     </form>
                 </div>

@@ -113,7 +113,7 @@ class BudgetController extends Controller
 
         SscHelper::logActivity(Auth::id(), 'BUDGET_CREATE', "Created budget: {$validated['title']}");
 
-        return redirect()->route('admin.budgets')->with('success', 'Budget created successfully.');
+        return redirect()->route('admin.budgets')->with('success', 'Funds added successfully.');
     }
 
     public function approve(Budget $budget)

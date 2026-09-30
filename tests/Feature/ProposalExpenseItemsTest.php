@@ -145,12 +145,40 @@ class ProposalExpenseItemsTest extends TestCase
         $this->assertEquals(90000.00, (float) $legacy->approved_budget);
     }
 
-    public function test_forms_show_the_budget_limit(): void
+    public function test_a_single_unit_cost_may_not_exceed_100000(): void
     {
-        $this->withViewErrors([])->get(route('officer.proposals'))
+        $this->post(route('officer.proposals.store'), [
+            'project_title' => 'Stage Rental',
+            'description' => 'Stage for the concert.',
+            'budget_items' => [['description' => 'Stage', 'qty' => '1', 'unit_cost' => '150000']],
+        ])->assertSessionHasErrors(['budget_items.0.unit_cost' => 'A unit cost may be at most ₱100,000.00.']);
+    }
+
+    public function test_budget_inputs_are_checked_live_and_limited_to_six_digits(): void
+    {
+        $html = $this->withViewErrors([])->get(route('officer.proposals'))
             ->assertOk()
-            ->assertSee('max="100000"', false)
-            ->assertSee('Maximum ₱100,000.00 per proposal.');
+            ->assertSee('Up to 6 digits — maximum ₱100,000.00 per proposal.')
+            ->assertSee('window.SSCBudgetLimit', false)
+            ->getContent();
+
+        // The requested budget and every unit cost box (including the row template).
+        $this->assertMatchesRegularExpression('/name="requested_budget"[^>]*maxlength="9"[^>]*data-budget-limit/', $html);
+        $this->assertMatchesRegularExpression('/name="budget_items\[__INDEX__\]\[unit_cost\]"[^>]*maxlength="9"[^>]*data-budget-limit/', $html);
+
+        $admin = User::create(['fullname' => 'Admin', 'email' => 'admin@example.com', 'password' => 'password', 'role' => 'admin', 'status' => 'active']);
+        Proposal::create([
+            'officer_id' => $this->officer->id,
+            'project_title' => 'Pending Project',
+            'requested_budget' => 150000,
+            'description' => 'Filed before the cap.',
+        ]);
+
+        $this->actingAs($admin)->withViewErrors([])->get(route('admin.proposals'))
+            ->assertOk()
+            ->assertSee('value="100000.00"', false)
+            ->assertSee('window.SSCBudgetLimit', false)
+            ->assertSee('formnovalidate', false);
     }
 
     public function test_pending_proposal_expense_items_can_be_edited(): void

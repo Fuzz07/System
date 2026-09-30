@@ -64,12 +64,13 @@ class ProposalController extends Controller
             'budget_items'               => 'array|max:50',
             'budget_items.*.description' => 'required|string|max:255',
             'budget_items.*.qty'         => 'required|integer|min:1|max:100000',
-            'budget_items.*.unit_cost'   => 'required|numeric|min:0|max:10000000',
+            'budget_items.*.unit_cost'   => 'required|numeric|min:0|max:' . Proposal::MAX_BUDGET,
         ], [
             'requested_budget.max'                 => 'A proposal may request at most ' . Proposal::maxBudgetLabel() . '.',
             'budget_items.*.description.required' => 'Each expense item needs a description.',
             'budget_items.*.qty.required'          => 'Each expense item needs a quantity.',
             'budget_items.*.unit_cost.required'    => 'Each expense item needs a unit cost.',
+            'budget_items.*.unit_cost.max'         => 'A unit cost may be at most ' . Proposal::maxBudgetLabel() . '.',
         ]);
 
         $data = $request->only('project_title', 'description');

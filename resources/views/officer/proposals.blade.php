@@ -231,9 +231,10 @@
 @endsection
 
 @push('scripts')
+    @include('partials.budget-limit-script')
     <script>
         (function () {
-            const peso = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const peso =(n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             let nextIndex = 1000;
 
             function recalc(box) {
@@ -262,8 +263,12 @@
                 const over = hasRows && total > max;
                 box.querySelector('[data-expense-over-limit]').hidden = !over;
                 box.querySelectorAll('[data-expense-cost]').forEach((input) => {
+                    // Keep a cost's own error (e.g. over the limit by itself) ahead of the total's.
+                    if (window.SSCBudgetLimit && !window.SSCBudgetLimit.check(input)) return;
                     input.setCustomValidity(over ? 'The estimated expenses are over the ' + peso(max) + ' limit per proposal.' : '');
                 });
+                // Colour the calculated total red too while it is over the limit.
+                if (window.SSCBudgetLimit) window.SSCBudgetLimit.check(budget);
             }
 
             document.addEventListener('click', (e) => {

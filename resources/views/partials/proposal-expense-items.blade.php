@@ -29,8 +29,9 @@
 
     <div class="mb-3">
         <label class="form-label-custom">Requested Budget (₱) <span class="text-danger">*</span></label>
-        <input type="number" name="requested_budget" class="form-control-custom" value="{{ $requestedBudget }}" placeholder="0.00" min="1" max="{{ \App\Models\Proposal::MAX_BUDGET }}" step="0.01" required data-expense-budget data-expense-max="{{ \App\Models\Proposal::MAX_BUDGET }}">
-        <div style="font-size:.72rem;color:#a0aec0;margin-top:4px;">Maximum {{ \App\Models\Proposal::maxBudgetLabel() }} per proposal.</div>
+        <input type="text" name="requested_budget" class="form-control-custom" value="{{ $requestedBudget }}" placeholder="0.00" inputmode="decimal" autocomplete="off" maxlength="9" pattern="\d{1,6}(\.\d{1,2})?" required data-expense-budget data-expense-max="{{ \App\Models\Proposal::MAX_BUDGET }}" data-budget-limit data-budget-min="1">
+        <div class="invalid-feedback d-block" data-budget-limit-message hidden></div>
+        <div style="font-size:.72rem;color:#a0aec0;margin-top:4px;">Up to 6 digits — maximum {{ \App\Models\Proposal::maxBudgetLabel() }} per proposal.</div>
         <div style="font-size:.72rem;color:#a0aec0;margin-top:4px;" data-expense-budget-hint hidden>Calculated automatically from the estimated expenses.</div>
     </div>
 </div>

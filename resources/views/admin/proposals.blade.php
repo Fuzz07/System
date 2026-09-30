@@ -54,11 +54,12 @@
                 <p style="font-size:.85rem;color:#718096;margin-bottom:16px;">{{ $p->description }}</p>
                 <div class="mb-3"><label class="form-label-custom">Estimated Expenses</label>@include('partials.proposal-expense-summary', ['proposal' => $p])</div>
                 <div class="mb-3" style="font-size:.85rem;">Requested Budget: <strong>{{ \App\Helpers\SscHelper::formatCurrency($p->requested_budget) }}</strong></div>
-                <div class="mb-3"><label class="form-label-custom">Approved Budget (₱)</label><input type="number" name="approved_budget" class="form-control-custom" value="{{ min((float) $p->requested_budget, \App\Models\Proposal::MAX_BUDGET) }}" min="0" max="{{ \App\Models\Proposal::MAX_BUDGET }}" step="0.01"><div class="form-text">Maximum {{ \App\Models\Proposal::maxBudgetLabel() }} per proposal.</div></div>
+                <div class="mb-3"><label class="form-label-custom">Approved Budget (₱)</label><input type="text" name="approved_budget" class="form-control-custom" value="{{ number_format(min((float) $p->requested_budget, \App\Models\Proposal::MAX_BUDGET), 2, '.', '') }}" inputmode="decimal" autocomplete="off" maxlength="9" pattern="\d{1,6}(\.\d{1,2})?" data-budget-limit data-budget-min="0"><div class="invalid-feedback d-block" data-budget-limit-message hidden></div><div class="form-text">Up to 6 digits — maximum {{ \App\Models\Proposal::maxBudgetLabel() }} per proposal.</div></div>
                 <div class="mb-3"><label class="form-label-custom">Admin Notes</label><textarea name="admin_notes" class="form-control-custom" rows="3" style="resize:vertical;"></textarea></div>
             </div>
             <div class="modal-footer border-0 pt-0">
-                <button type="submit" name="action" value="reject" class="btn btn-outline-danger"><i class="bi bi-x-circle"></i> Reject</button>
+                {{-- formnovalidate: rejecting never needs a valid approved budget. --}}
+                <button type="submit" name="action" value="reject" class="btn btn-outline-danger" formnovalidate><i class="bi bi-x-circle"></i> Reject</button>
                 <button type="submit" name="action" value="approve" class="btn-primary-custom"><i class="bi bi-check2-circle"></i> Approve</button>
             </div>
         </form>
@@ -66,3 +67,7 @@
 </div>
 @endforeach
 @endsection
+
+@push('scripts')
+    @include('partials.budget-limit-script')
+@endpush
