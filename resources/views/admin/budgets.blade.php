@@ -642,7 +642,13 @@
                                     <label for="budgetTitle" class="form-label-custom">Budget Title <span
                                             class="text-danger">*</span></label>
                                     <input type="text" id="budgetTitle" name="title" value="{{ old('title') }}"
-                                        class="form-control-custom @error('title') is-invalid @enderror" required>
+                                        class="form-control-custom @error('title') is-invalid @enderror"
+                                        minlength="3" maxlength="{{ \App\Models\Budget::TITLE_MAX }}"
+                                        placeholder="e.g. Sports Development Fund"
+                                        data-reserved-prefix="{{ \App\Models\Budget::ENROLLMENT_TITLE_PREFIX }}"
+                                        aria-describedby="budgetTitleHelp" required>
+                                    <div id="budgetTitleHelp" class="form-text">3–{{ \App\Models\Budget::TITLE_MAX }}
+                                        characters: letters, numbers, spaces and . , &amp; ( ) ' / -</div>
                                     @error('title')
                                     <div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
@@ -670,9 +676,12 @@
                                         value="{{ old('allocated_amount') }}"
                                         class="form-control-custom @error('allocated_amount') is-invalid @enderror"
                                         inputmode="decimal" pattern="[1-9][0-9]*(\.[0-9]{1,2})?" placeholder="e.g. 15000.00"
+                                        maxlength="{{ strlen(\App\Models\Budget::MAX_ALLOCATION) + 3 }}"
+                                        data-max="{{ \App\Models\Budget::MAX_ALLOCATION }}"
+                                        data-max-label="{{ \App\Models\Budget::maxAllocationLabel() }}"
                                         aria-describedby="allocatedAmountHelp" required>
-                                    <div id="allocatedAmountHelp" class="form-text">The amount must begin with 1-9; leading
-                                        zeroes are not allowed.</div>
+                                    <div id="allocatedAmountHelp" class="form-text">Digits only, starting with 1–9, up to
+                                        two decimals, at most {{ \App\Models\Budget::maxAllocationLabel() }}.</div>
                                     @error('allocated_amount')
                                     <div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
@@ -694,7 +703,10 @@
                                     <label for="budgetNotes" class="form-label-custom">Notes</label>
                                     <textarea id="budgetNotes" name="notes"
                                         class="form-control-custom @error('notes') is-invalid @enderror" rows="3"
+                                        maxlength="{{ \App\Models\Budget::NOTES_MAX }}" aria-describedby="budgetNotesHelp"
                                         style="resize:vertical;">{{ old('notes') }}</textarea>
+                                    <div id="budgetNotesHelp" class="form-text">Optional, up to
+                                        {{ number_format(\App\Models\Budget::NOTES_MAX) }} characters.</div>
                                     @error('notes')
                                     <div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
@@ -714,15 +726,73 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Live versions of the server's Add Funds rules, so mistakes show
+            // while typing. The server still checks everything on submit.
+            const flag = function (input, message) {
+                input.setCustomValidity(message);
+                input.classList.toggle('is-invalid', message !== '');
+            };
+
+            const titleInput = document.getElementById('budgetTitle');
+
+            if (titleInput) {
+                const validateTitle = function () {
+                    const title = titleInput.value.trim().replace(/\s+/g, ' ');
+                    const reserved = titleInput.dataset.reservedPrefix;
+                    let message = '';
+
+                    if (title === '') {
+                        message = '';
+                    } else if (title.length < 3) {
+                        message = 'The budget title must be at least 3 characters.';
+                    } else if (!/^[\p{L}\p{N}][\p{L}\p{N} .,&()'\/-]*$/u.test(title) || !/\p{L}/u.test(title)) {
+                        message = "Start with a letter or number, include a letter, and use only letters, numbers, spaces and . , & ( ) ' / -";
+                    } else if (title.toLowerCase().startsWith(reserved.toLowerCase())) {
+                        message = '"' + reserved + '" is reserved for the fund that collects student contributions automatically.';
+                    }
+
+                    flag(titleInput, message);
+                };
+
+                titleInput.addEventListener('input', validateTitle);
+                validateTitle();
+            }
+
             const amountInput = document.getElementById('allocatedAmount');
 
             if (amountInput) {
-                const validateAmount = function () {
-                    const hasLeadingZero = /^0/.test(amountInput.value.trim());
-                    amountInput.setCustomValidity(hasLeadingZero ? 'The allocated amount cannot start with 0.' : '');
+                const max = parseFloat(amountInput.dataset.max);
+                const maxDigits = String(Math.trunc(max)).length;
+
+                // Keep only digits and one decimal point, with at most two decimals
+                // and no more whole digits than the limit has.
+                const sanitize = function (value) {
+                    const cleaned = value.replace(/[^\d.]/g, '');
+                    const dot = cleaned.indexOf('.');
+                    const whole = (dot === -1 ? cleaned : cleaned.slice(0, dot)).slice(0, maxDigits);
+                    return dot === -1 ? whole : whole + '.' + cleaned.slice(dot + 1).replace(/\./g, '').slice(0, 2);
                 };
 
-                amountInput.addEventListener('input', validateAmount);
+                const validateAmount = function () {
+                    const value = amountInput.value.trim();
+                    let message = '';
+
+                    if (/^0/.test(value)) {
+                        message = 'The allocated amount cannot start with 0.';
+                    } else if (value !== '' && !/^[1-9]\d*(\.\d{1,2})?$/.test(value)) {
+                        message = 'Enter an amount like 15000 or 15000.50.';
+                    } else if (value !== '' && parseFloat(value) > max) {
+                        message = 'The allocated amount may be at most ' + amountInput.dataset.maxLabel + '.';
+                    }
+
+                    flag(amountInput, message);
+                };
+
+                amountInput.addEventListener('input', function () {
+                    const clean = sanitize(amountInput.value);
+                    if (clean !== amountInput.value) amountInput.value = clean;
+                    validateAmount();
+                });
                 validateAmount();
             }
 

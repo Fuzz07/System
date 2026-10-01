@@ -81,10 +81,35 @@ class BudgetController extends Controller
 
     public function store(Request $request)
     {
+        // Runs of spaces in a title collapse to one, so "Sports  Fund" and
+        // "Sports Fund" are the same fund to the duplicate check below.
+        if (is_string($request->input('title'))) {
+            $request->merge(['title' => trim(preg_replace('/\s+/u', ' ', $request->input('title')))]);
+        }
+
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => [
+                'bail',
+                'required',
+                'string',
+                'min:3',
+                'max:' . Budget::TITLE_MAX,
+                'regex:/^[\pL\pN][\pL\pN .,&()\'\/-]*$/u',
+                'regex:/\pL/u',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    // Enrollment payments find the contribution fee fund by this
+                    // title, so a manual fund named like it would be credited too.
+                    if (str_starts_with(mb_strtolower($value), mb_strtolower(Budget::ENROLLMENT_TITLE_PREFIX))) {
+                        $fail('"' . Budget::ENROLLMENT_TITLE_PREFIX . '" is reserved for the fund that collects student contributions automatically.');
+                    }
+                },
+                Rule::unique('budgets', 'title')->where(fn ($query) => $query
+                    ->where('department', $request->input('department'))
+                    ->where('school_year', $request->input('school_year'))
+                    ->where('status', '!=', 'Rejected')),
+            ],
             'department' => ['required', Rule::in([Budget::ALL_DEPARTMENTS, ...Budget::DEPARTMENTS])],
-            'allocated_amount' => ['bail', 'required', 'regex:/^[1-9]\d*(?:\.\d{1,2})?$/', 'numeric', 'min:1'],
+            'allocated_amount' => ['bail', 'required', 'regex:/^[1-9]\d*(?:\.\d{1,2})?$/', 'numeric', 'min:1', 'max:' . Budget::MAX_ALLOCATION],
             'school_year' => [
                 'bail',
                 'required',
@@ -96,12 +121,20 @@ class BudgetController extends Controller
                         $fail('The school year must contain consecutive years, such as 2026-2027.');
                     }
                 },
+                Rule::in($this->schoolYearOptions()),
             ],
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string|max:' . Budget::NOTES_MAX,
         ], [
+            'title.min' => 'The budget title must be at least 3 characters.',
+            'title.max' => 'The budget title may be at most ' . Budget::TITLE_MAX . ' characters.',
+            'title.regex' => 'The budget title must start with a letter or number, contain at least one letter, and use only letters, numbers, spaces and . , & ( ) \' / -',
+            'title.unique' => 'A fund with this title already exists for this department and school year.',
             'department.in' => 'Please select All Departments or one of the five available departments.',
             'allocated_amount.regex' => 'The allocated amount must start with a digit from 1 to 9 and have no more than two decimal places.',
+            'allocated_amount.max' => 'The allocated amount may be at most ' . Budget::maxAllocationLabel() . '.',
             'school_year.regex' => 'Please select a valid school year.',
+            'school_year.in' => 'Please select one of the listed school years.',
+            'notes.max' => 'Notes may be at most ' . Budget::NOTES_MAX . ' characters.',
         ]);
 
         Budget::create([

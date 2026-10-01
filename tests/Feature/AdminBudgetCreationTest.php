@@ -218,6 +218,79 @@ class AdminBudgetCreationTest extends TestCase
         $this->assertDatabaseCount('budgets', 0);
     }
 
+    /**
+     * @dataProvider strictlyRejectedInput
+     */
+    public function test_add_funds_rejects_input_outside_the_strict_rules(string $field, array $overrides): void
+    {
+        $this->from(route('admin.budgets'))
+            ->post(route('admin.budgets.store'), $overrides + $this->validFunds())
+            ->assertRedirect(route('admin.budgets'))
+            ->assertSessionHasErrors($field);
+
+        $this->assertDatabaseCount('budgets', 0);
+    }
+
+    public static function strictlyRejectedInput(): array
+    {
+        return [
+            'title too short' => ['title', ['title' => 'AB']],
+            'title too long' => ['title', ['title' => str_repeat('A', Budget::TITLE_MAX + 1)]],
+            'title with symbols' => ['title', ['title' => 'Fund <script>']],
+            'title starting with punctuation' => ['title', ['title' => '-Sports Fund']],
+            'title of only digits' => ['title', ['title' => '2026']],
+            'reserved contribution fee title' => ['title', ['title' => 'contribution fees extra']],
+            'amount over the limit' => ['allocated_amount', ['allocated_amount' => (string) (Budget::MAX_ALLOCATION + 1)]],
+            'amount with commas' => ['allocated_amount', ['allocated_amount' => '15,000']],
+            'amount with three decimals' => ['allocated_amount', ['allocated_amount' => '15000.505']],
+            'amount below one' => ['allocated_amount', ['allocated_amount' => '0.50']],
+            'school year not offered' => ['school_year', ['school_year' => '2090-2091']],
+            'notes too long' => ['notes', ['notes' => str_repeat('a', Budget::NOTES_MAX + 1)]],
+        ];
+    }
+
+    public function test_add_funds_accepts_the_largest_allowed_amount_and_tidies_the_title(): void
+    {
+        $this->from(route('admin.budgets'))
+            ->post(route('admin.budgets.store'), [
+                'title' => "  Sports   Fund (Phase 2)  ",
+                'allocated_amount' => (string) Budget::MAX_ALLOCATION,
+            ] + $this->validFunds())
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('budgets', [
+            'title' => 'Sports Fund (Phase 2)',
+            'allocated_amount' => Budget::MAX_ALLOCATION,
+        ]);
+    }
+
+    public function test_a_fund_title_cannot_repeat_within_a_department_and_school_year(): void
+    {
+        $this->post(route('admin.budgets.store'), $this->validFunds())->assertSessionHasNoErrors();
+
+        $this->from(route('admin.budgets'))
+            ->post(route('admin.budgets.store'), ['title' => 'Technology  Fund'] + $this->validFunds())
+            ->assertSessionHasErrors(['title' => 'A fund with this title already exists for this department and school year.']);
+
+        // The same title is fine for another department. (The rejected attempt's
+        // errors are cleared first, or they would linger into this request.)
+        $this->flushSession();
+        $this->post(route('admin.budgets.store'), ['department' => 'BSED'] + $this->validFunds())
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('budgets', 2);
+    }
+
+    private function validFunds(): array
+    {
+        return [
+            'title' => 'Technology Fund',
+            'department' => 'BSIT',
+            'allocated_amount' => '15000',
+            'school_year' => now()->year . '-' . (now()->year + 1),
+        ];
+    }
+
     public function test_school_years_must_be_consecutive(): void
     {
         $response = $this->from(route('admin.budgets'))->post(route('admin.budgets.store'), [
