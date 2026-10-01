@@ -241,6 +241,8 @@ class AdminBudgetCreationTest extends TestCase
             'title of only digits' => ['title', ['title' => '2026']],
             'reserved contribution fee title' => ['title', ['title' => 'contribution fees extra']],
             'amount over the limit' => ['allocated_amount', ['allocated_amount' => (string) (Budget::MAX_ALLOCATION + 1)]],
+            'amount a centavo over the limit' => ['allocated_amount', ['allocated_amount' => Budget::MAX_ALLOCATION . '.01']],
+            'amount far over the limit' => ['allocated_amount', ['allocated_amount' => '10000000']],
             'amount with commas' => ['allocated_amount', ['allocated_amount' => '15,000']],
             'amount with three decimals' => ['allocated_amount', ['allocated_amount' => '15000.505']],
             'amount below one' => ['allocated_amount', ['allocated_amount' => '0.50']],
@@ -260,8 +262,18 @@ class AdminBudgetCreationTest extends TestCase
 
         $this->assertDatabaseHas('budgets', [
             'title' => 'Sports Fund (Phase 2)',
-            'allocated_amount' => Budget::MAX_ALLOCATION,
+            'allocated_amount' => 100000,
         ]);
+    }
+
+    public function test_amount_field_carries_the_limit_for_the_live_check(): void
+    {
+        $this->withViewErrors([])->get(route('admin.budgets'))
+            ->assertOk()
+            ->assertSee('data-max="100000"', false)
+            ->assertSee('data-max-label="₱100,000.00"', false)
+            ->assertSee('id="allocatedAmountLimit"', false)
+            ->assertSee('at most ₱100,000.00');
     }
 
     public function test_a_fund_title_cannot_repeat_within_a_department_and_school_year(): void

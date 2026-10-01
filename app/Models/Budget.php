@@ -24,7 +24,7 @@ class Budget extends Model
     public const UNASSIGNED_DEPARTMENT = 'Unassigned';
 
     /** The most a single fund may be created with, in pesos. */
-    public const MAX_ALLOCATION = 10000000;
+    public const MAX_ALLOCATION = 100000;
 
     /** Longest title a fund may be given. */
     public const TITLE_MAX = 100;
@@ -32,7 +32,7 @@ class Budget extends Model
     /** Longest note a fund may carry. */
     public const NOTES_MAX = 1000;
 
-    /** "₱10,000,000.00", for limit messages. */
+    /** "₱100,000.00", for limit messages. */
     public static function maxAllocationLabel(): string
     {
         return '₱' . number_format(self::MAX_ALLOCATION, 2);

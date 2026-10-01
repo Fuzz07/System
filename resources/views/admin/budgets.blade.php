@@ -682,6 +682,8 @@
                                         aria-describedby="allocatedAmountHelp" required>
                                     <div id="allocatedAmountHelp" class="form-text">Digits only, starting with 1–9, up to
                                         two decimals, at most {{ \App\Models\Budget::maxAllocationLabel() }}.</div>
+                                    <div id="allocatedAmountLimit" class="small text-danger fw-semibold mt-1"
+                                        aria-live="polite" hidden></div>
                                     @error('allocated_amount')
                                     <div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
@@ -762,15 +764,14 @@
 
             if (amountInput) {
                 const max = parseFloat(amountInput.dataset.max);
-                const maxDigits = String(Math.trunc(max)).length;
 
-                // Keep only digits and one decimal point, with at most two decimals
-                // and no more whole digits than the limit has.
+                // Keep only digits and one decimal point, with at most two decimals.
+                // Whole digits are not cut here, so an extra digit reaches the
+                // limit check below and is refused with a message, not dropped.
                 const sanitize = function (value) {
                     const cleaned = value.replace(/[^\d.]/g, '');
                     const dot = cleaned.indexOf('.');
-                    const whole = (dot === -1 ? cleaned : cleaned.slice(0, dot)).slice(0, maxDigits);
-                    return dot === -1 ? whole : whole + '.' + cleaned.slice(dot + 1).replace(/\./g, '').slice(0, 2);
+                    return dot === -1 ? cleaned : cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, '').slice(0, 2);
                 };
 
                 const validateAmount = function () {
@@ -788,9 +789,22 @@
                     flag(amountInput, message);
                 };
 
+                const limitNote = document.getElementById('allocatedAmountLimit');
+                let accepted = sanitize(amountInput.value);
+
+                // Typing, pasting or dropping in an amount over the limit is not
+                // taken: the field keeps its last accepted value and says why.
                 amountInput.addEventListener('input', function () {
                     const clean = sanitize(amountInput.value);
-                    if (clean !== amountInput.value) amountInput.value = clean;
+                    const overLimit = clean !== '' && parseFloat(clean) > max;
+
+                    if (!overLimit) accepted = clean;
+                    if (amountInput.value !== accepted) amountInput.value = accepted;
+
+                    limitNote.textContent = overLimit
+                        ? 'Amounts above ' + amountInput.dataset.maxLabel + ' are not accepted.'
+                        : '';
+                    limitNote.hidden = !overLimit;
                     validateAmount();
                 });
                 validateAmount();
