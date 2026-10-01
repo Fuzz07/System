@@ -15,7 +15,10 @@ use Illuminate\Validation\ValidationException;
 
 class ReleaseController extends Controller
 {
-    public const RELEASE_METHODS = ['Cash', 'Bank Transfer', 'Check', 'GCash', 'Maya', 'Other'];
+    /** Cash is handed over in person, so it has no reference / transaction number. */
+    public const CASH = 'Cash';
+
+    public const RELEASE_METHODS = [self::CASH, 'Bank Transfer', 'Check', 'GCash', 'Maya', 'Other'];
 
     /** Starts with a letter or digit; then letters, digits, dashes, slashes and spaces. */
     public const REFERENCE_PATTERN = '/^[A-Za-z0-9][A-Za-z0-9\-\/ ]*$/';
@@ -78,7 +81,7 @@ class ReleaseController extends Controller
             'proposal_id'     => 'required|integer|exists:proposals,id',
             'amount_released' => 'required|numeric|decimal:0,2|min:0.01',
             'release_method'  => 'required|in:' . implode(',', self::RELEASE_METHODS),
-            'reference_no'    => ['required', 'string', 'min:4', 'max:50', 'regex:' . self::REFERENCE_PATTERN, 'unique:budget_releases,reference_no'],
+            'reference_no'    => ['exclude_if:release_method,' . self::CASH, 'required', 'string', 'min:4', 'max:50', 'regex:' . self::REFERENCE_PATTERN, 'unique:budget_releases,reference_no'],
             'release_status'  => 'required|in:Released,Partial',
             'notes'           => 'nullable|string|max:1000',
             'receipt'         => UploadValidation::optionalFile(),
@@ -136,7 +139,7 @@ class ReleaseController extends Controller
             'released_by'     => Auth::id(),
             'amount_released' => $amtReleased,
             'release_method'  => $request->release_method,
-            'reference_no'    => $request->reference_no,
+            'reference_no'    => $request->release_method === self::CASH ? null : $request->reference_no,
             'receipt_file'    => $receiptFile,
             'notes'           => $request->notes,
             'release_status'  => $request->release_status,

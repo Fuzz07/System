@@ -90,6 +90,13 @@
     font-weight: 600;
     margin-top: 4px;
   }
+
+  /* The reference field reads "Not Applicable" and cannot be edited for a cash release. */
+  #f-reference:disabled {
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+  }
 </style>
 
 <div class="page-header mb-4">
@@ -232,6 +239,10 @@
           @php
             $releasable = isset($selectedProposal) ? round($selectedProposal->approved_budget - $selectedProposal->total_released, 2) : null;
             $methodIcons = ['Cash' => '💵', 'Bank Transfer' => '🏦', 'Check' => '🎫', 'GCash' => '📱', 'Maya' => '📱', 'Other' => ''];
+            // A cash release has no transaction number. With no method chosen yet,
+            // the first option (Cash) is the one selected.
+            $referenceNotApplicable = old('release_method', \App\Http\Controllers\Treasurer\ReleaseController::RELEASE_METHODS[0])
+              === \App\Http\Controllers\Treasurer\ReleaseController::CASH;
           @endphp
 
           <div class="row g-3">
@@ -257,13 +268,14 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label-custom">Reference / Transaction No. <span style="color:red;">*</span></label>
+              <label class="form-label-custom" for="f-reference">Reference / Transaction No. <span id="f-reference-required" style="color:red;" @if ($referenceNotApplicable) hidden @endif>*</span></label>
               <input type="text" name="reference_no" id="f-reference" class="form-control-custom"
-                value="{{ old('reference_no') }}" required minlength="4" maxlength="50"
+                value="{{ $referenceNotApplicable ? 'Not Applicable' : old('reference_no') }}" {{ $referenceNotApplicable ? 'disabled' : 'required' }} minlength="4" maxlength="50"
                 pattern="[A-Za-z0-9][A-Za-z0-9\-\/ ]*"
                 title="At least 4 characters: letters, numbers, dashes, slashes and spaces only."
                 placeholder="e.g. voucher no., GCash ref, check no.">
-              <div style="font-size:.72rem; color:#94a3b8; margin-top:4px;">Required. Each release needs its own reference number.</div>
+              <div id="f-reference-hint-required" style="font-size:.72rem; color:#94a3b8; margin-top:4px;" @if ($referenceNotApplicable) hidden @endif>Required. Each release needs its own reference number.</div>
+              <div id="f-reference-hint-cash" style="font-size:.72rem; color:#94a3b8; margin-top:4px;" @unless ($referenceNotApplicable) hidden @endunless>Cash releases have no transaction number.</div>
               @error('reference_no')<div class="release-field-error">{{ $message }}</div>@enderror
             </div>
 
@@ -447,6 +459,30 @@
     document.getElementById('f-status').value = Math.round(amt * 100) === Math.round(currentRemaining * 100) ? 'Released' : 'Partial';
   }
   document.getElementById('f-amount').addEventListener('input', syncReleaseStatus);
+
+  // Cash has no transaction number: the field reads "Not Applicable" and, being
+  // disabled, is left out of the submission. Every other method needs one.
+  // Whatever was typed comes back if the method is switched away from Cash.
+  var cashMethod = @json(\App\Http\Controllers\Treasurer\ReleaseController::CASH);
+  var referenceInput = document.getElementById('f-reference');
+  var typedReference = referenceInput.disabled ? '' : referenceInput.value;
+
+  function syncReferenceField() {
+    var notApplicable = document.getElementById('f-method').value === cashMethod;
+    if (notApplicable === referenceInput.disabled) return;
+
+    if (notApplicable) typedReference = referenceInput.value;
+    referenceInput.value = notApplicable ? 'Not Applicable' : typedReference;
+    referenceInput.disabled = notApplicable;
+    referenceInput.required = !notApplicable;
+    document.getElementById('f-reference-required').hidden = notApplicable;
+    document.getElementById('f-reference-hint-required').hidden = notApplicable;
+    document.getElementById('f-reference-hint-cash').hidden = !notApplicable;
+  }
+  document.getElementById('f-method').addEventListener('change', syncReferenceField);
+  // The browser can restore a different method on reload or Back.
+  window.addEventListener('pageshow', syncReferenceField);
+  syncReferenceField();
 
   function openReleaseConfirmation() {
     var form = document.getElementById('releaseForm');

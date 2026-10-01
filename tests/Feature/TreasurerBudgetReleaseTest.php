@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Treasurer\ReleaseController;
 use App\Models\BudgetRelease;
 use App\Models\Proposal;
 use App\Models\User;
@@ -53,6 +54,47 @@ class TreasurerBudgetReleaseTest extends TestCase
             ->assertSessionHasErrors('reference_no');
 
         $this->assertSame(0, BudgetRelease::count());
+    }
+
+    public function test_every_method_but_cash_needs_a_reference_number(): void
+    {
+        foreach (array_diff(ReleaseController::RELEASE_METHODS, [ReleaseController::CASH]) as $method) {
+            $this->post(route('treasurer.release.submit'), $this->payload(['release_method' => $method, 'reference_no' => '']))
+                ->assertSessionHasErrors('reference_no');
+        }
+
+        $this->assertSame(0, BudgetRelease::count());
+    }
+
+    public function test_a_cash_release_has_no_reference_number(): void
+    {
+        $this->post(route('treasurer.release.submit'), $this->payload([
+            'release_method' => 'Cash', 'reference_no' => '', 'amount_released' => '4000', 'release_status' => 'Partial',
+        ]))->assertSessionHasNoErrors();
+        // One sent anyway (from an outdated page, say) is not recorded, and a
+        // second cash release does not clash with the first.
+        $this->post(route('treasurer.release.submit'), $this->payload([
+            'release_method' => 'Cash', 'reference_no' => 'Not Applicable', 'amount_released' => '6000',
+        ]))->assertSessionHasNoErrors();
+
+        $this->assertSame(2, BudgetRelease::where('release_method', 'Cash')->whereNull('reference_no')->count());
+    }
+
+    public function test_the_form_shows_the_reference_as_not_applicable_only_for_cash(): void
+    {
+        // Cash is the first method, so a fresh form starts on it.
+        $this->get(route('treasurer.release', ['proposal_id' => $this->proposal->id]))
+            ->assertOk()
+            ->assertSee('value="Not Applicable" disabled', false);
+
+        // Reopened after a failed GCash release, the field is required and keeps what was typed.
+        $this->from(route('treasurer.release'))
+            ->post(route('treasurer.release.submit'), $this->payload(['reference_no' => 'GC1']))
+            ->assertSessionHasErrors('reference_no');
+        $this->get(route('treasurer.release'))
+            ->assertOk()
+            ->assertSee('value="GC1" required', false)
+            ->assertDontSee('value="Not Applicable"', false);
     }
 
     public function test_reference_numbers_must_be_well_formed_and_unique(): void
