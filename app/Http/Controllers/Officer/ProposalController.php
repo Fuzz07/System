@@ -20,6 +20,7 @@ class ProposalController extends Controller
                 'comments' => fn ($query) => $query->with('user')->orderByDesc('created_at'),
             ])
             ->withCount('comments')
+            ->withSum('releases', 'amount_released')
             ->where('officer_id', Auth::id())
             ->orderByDesc('created_at')
             ->paginate(8);
@@ -144,6 +145,10 @@ class ProposalController extends Controller
     {
         if ((int) $proposal->officer_id !== (int) Auth::id() || $proposal->status !== 'Approved' || $proposal->project_status !== 'Ongoing') {
             abort(403, 'Cannot complete this proposal.');
+        }
+
+        if (!$proposal->isBudgetFullyReleased()) {
+            return redirect()->route('officer.proposals')->with('danger', "Wait for the treasurer to release the full budget for \"{$proposal->project_title}\" before marking it completed.");
         }
 
         $request->validate([

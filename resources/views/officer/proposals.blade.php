@@ -48,6 +48,14 @@
                                 @if($p->status === 'Approved')
                                     <span
                                         class="badge {{ $p->project_status === 'Completed' ? 'bg-success' : 'bg-info' }} bg-opacity-10 {{ $p->project_status === 'Completed' ? 'text-success' : 'text-info' }} border">{{ $p->project_status }}</span>
+                                    @if($p->project_status === 'Ongoing')
+                                        {{-- Completing waits on the treasurer releasing the whole budget. --}}
+                                        <div class="small mt-1 {{ $p->isBudgetFullyReleased() ? 'text-success' : 'text-muted' }}" style="font-size:.72rem;white-space:nowrap;">
+                                            <i class="bi {{ $p->isBudgetFullyReleased() ? 'bi-cash-coin' : 'bi-hourglass-split' }}"></i>
+                                            {!! \App\Helpers\SscHelper::formatCurrency($p->releasedAmount()) !!} of
+                                            {!! \App\Helpers\SscHelper::formatCurrency((float) $p->approved_budget) !!} released
+                                        </div>
+                                    @endif
                                 @else <span class="text-muted small">N/A</span>
                                 @endif
                             </td>
@@ -55,10 +63,14 @@
                                 <div class="d-flex gap-2">
                                     <a href="{{ route('proposals.print', $p) }}" target="_blank"
                                         class="btn btn-sm btn-outline-secondary"><i class="bi bi-printer"></i> Print</a>
-                                    @if($p->status === 'Approved' && $p->project_status === 'Ongoing')
+                                    @if($p->status === 'Approved' && $p->project_status === 'Ongoing' && $p->isBudgetFullyReleased())
                                         <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal"
                                             data-bs-target="#completeModal{{ $p->id }}"><i class="bi bi-check2-circle"></i>
                                             Complete</button>
+                                    @elseif($p->status === 'Approved' && $p->project_status === 'Ongoing')
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border d-inline-flex align-items-center gap-1 px-2" style="font-size:.75rem;cursor:help;"
+                                            title="The treasurer has not released the full budget yet. You can mark the project completed and upload its liquidation once it is released.">
+                                            <i class="bi bi-hourglass-split"></i> Awaiting Release</span>
                                     @elseif($p->project_status === 'Completed')
                                         <span class="text-success small fw-bold px-2 py-1"><i class="bi bi-patch-check"></i>
                                             Liquidated</span>
@@ -159,7 +171,7 @@
     @endforeach
 
     {{-- Complete Modals --}}
-    @foreach($proposals->getCollection()->where('status', 'Approved')->where('project_status', 'Ongoing') as $p)
+    @foreach($proposals->getCollection()->where('project_status', 'Ongoing')->filter->isBudgetFullyReleased() as $p)
         <div class="modal fade" id="completeModal{{ $p->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content" style="border-radius:var(--radius);border:none;">

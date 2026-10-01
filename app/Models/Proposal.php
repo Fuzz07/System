@@ -36,6 +36,27 @@ class Proposal extends Model
     public function officer() { return $this->belongsTo(User::class, 'officer_id'); }
     public function approver() { return $this->belongsTo(User::class, 'approved_by'); }
     public function comments() { return $this->hasMany(ProposalComment::class); }
+    public function releases() { return $this->hasMany(BudgetRelease::class); }
+
+    /** Pesos the treasurer has released for this proposal so far. */
+    public function releasedAmount(): float
+    {
+        // Lists load the total up front with withSum('releases', 'amount_released').
+        return (float) (array_key_exists('releases_sum_amount_released', $this->attributes)
+            ? $this->attributes['releases_sum_amount_released']
+            : $this->releases()->sum('amount_released'));
+    }
+
+    /**
+     * Whether the treasurer has released the whole approved budget. Until then
+     * the officer cannot mark the project completed or file its liquidation:
+     * there is nothing to account for yet. Compared in centavos.
+     */
+    public function isBudgetFullyReleased(): bool
+    {
+        return $this->status === 'Approved'
+            && (int) round($this->releasedAmount() * 100) >= (int) round((float) $this->approved_budget * 100);
+    }
 
     /**
      * Estimated expense lines as [description, qty, unit_cost, total].

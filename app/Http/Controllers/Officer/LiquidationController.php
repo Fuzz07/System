@@ -10,22 +10,27 @@ use App\Support\UploadValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class LiquidationController extends Controller
 {
     public function index()
     {
-        $proposals = Proposal::where('officer_id', Auth::id())
+        // A project can be liquidated once the treasurer has released its whole
+        // budget; the rest are listed as waiting so the officer knows why.
+        [$proposals, $awaitingRelease] = Proposal::where('officer_id', Auth::id())
             ->where('status', 'Approved')
+            ->withSum('releases', 'amount_released')
             ->orderBy('project_title')
-            ->get();
+            ->get()
+            ->partition->isBudgetFullyReleased();
 
         $liquidations = Liquidation::with('proposal')
             ->where('officer_id', Auth::id())
             ->orderByDesc('created_at')
             ->get();
 
-        return view('officer.liquidation', compact('proposals', 'liquidations'));
+        return view('officer.liquidation', compact('proposals', 'awaitingRelease', 'liquidations'));
     }
 
     public function store(Request $request)
@@ -43,6 +48,12 @@ class LiquidationController extends Controller
             ->where('officer_id', Auth::id())
             ->where('status', 'Approved')
             ->firstOrFail();
+
+        if (!$proposal->isBudgetFullyReleased()) {
+            throw ValidationException::withMessages([
+                'proposal_id' => "The treasurer has not released the full budget for \"{$proposal->project_title}\" yet. You can upload its liquidation once it is released.",
+            ]);
+        }
 
         try {
             $filePath = SscHelper::uploadToCloudinary($request->file('liq_file'), 'liquidation');
