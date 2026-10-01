@@ -107,6 +107,26 @@ class AdminBudgetCreationTest extends TestCase
         $this->assertStringContainsString('sort=title_asc', $secondPage->viewData('budgetPage')->withQueryString()->url(1));
     }
 
+    public function test_budget_table_has_no_status_or_action_columns(): void
+    {
+        $budget = Budget::create([
+            'title' => 'Pending Fund',
+            'department' => 'BSIT',
+            'allocated_amount' => 1000,
+            'remaining_balance' => 1000,
+            'school_year' => '2026-2027',
+            'status' => 'Pending',
+        ]);
+
+        $this->withViewErrors([])->get(route('admin.budgets'))
+            ->assertOk()
+            ->assertSee('<th>Usage</th>', false)
+            ->assertDontSee('<th>Status</th>', false)
+            ->assertDontSee('Actions</th>', false)
+            ->assertDontSee('action="' . route('admin.budgets.approve', $budget) . '"', false)
+            ->assertDontSee('action="' . route('admin.budgets.destroy', $budget) . '"', false);
+    }
+
     public function test_budget_page_uses_contribution_fee_wording(): void
     {
         $this->withViewErrors([])->get(route('admin.budgets'))

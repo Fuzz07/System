@@ -549,8 +549,6 @@
                             <th>Allocated Amount</th>
                             <th>Remaining Balance</th>
                             <th>Usage</th>
-                            <th>Status</th>
-                            <th class="text-end pe-3">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -592,31 +590,10 @@
                                             style="font-size:.72rem;color:var(--slate-500);font-weight:700;">{{ $b->used_percent }}%</span>
                                     </div>
                                 </td>
-                                <td>{!! \App\Helpers\SscHelper::statusBadge($b->status) !!}</td>
-                                <td class="text-end pe-3">
-                                    <div class="d-flex gap-1 justify-content-end flex-wrap">
-                                        @if($b->status === 'Pending')
-                                            <form method="POST" action="{{ route('admin.budgets.approve', $b) }}" class="d-inline">
-                                                @csrf @method('PATCH')
-                                                <button class="btn btn-success btn-sm px-2 py-1" style="font-size:.72rem;"
-                                                    title="Approve Budget"><i class="bi bi-check2"></i></button>
-                                            </form>
-                                            <form method="POST" action="{{ route('admin.budgets.reject', $b) }}" class="d-inline">
-                                                @csrf @method('PATCH')
-                                                <button class="btn btn-outline-danger btn-sm px-2 py-1" style="font-size:.72rem;"
-                                                    title="Reject Budget"><i class="bi bi-x"></i></button>
-                                            </form>
-                                        @endif
-                                        <form method="POST" action="{{ route('admin.budgets.destroy', $b) }}" class="d-inline"
-                                            data-confirm="Delete this budget?">@csrf @method('DELETE')
-                                            
-                                        </form>
-                                    </div>
-                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">No budgets found matching the criteria.</td>
+                                <td colspan="6" class="text-center py-5 text-muted">No budgets found matching the criteria.</td>
                             </tr>
                         @endforelse
                     </tbody>

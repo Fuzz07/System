@@ -22,7 +22,7 @@
         <td style="font-size:.82rem;">{{ $ex->officer->fullname ?? 'N/A' }}</td>
         <td><span class="badge bg-primary" style="font-size:.7rem;">{{ $ex->budget->title ?? 'N/A' }}</span></td>
         <td style="font-weight:700;color:var(--danger);">{!! \App\Helpers\SscHelper::formatCurrency($ex->amount) !!}</td>
-        <td>@if($ex->receipt)<a href="{{ \App\Helpers\SscHelper::getUploadUrl($ex->receipt) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size:.72rem;"><i class="bi bi-file-earmark"></i> View</a>@else<span class="text-muted">—</span>@endif</td>
+        <td>@if($ex->receipt)<button type="button" class="btn btn-outline-primary btn-sm" style="font-size:.72rem;" data-bs-toggle="modal" data-bs-target="#receiptModal{{ $ex->id }}"><i class="bi bi-file-earmark"></i> View</button>@else<span class="text-muted">—</span>@endif</td>
         <td>{!! \App\Helpers\SscHelper::statusBadge($ex->status) !!}</td>
         <td>
             @if($ex->status === 'Pending')
@@ -37,6 +37,14 @@
 </table></div>
 {{ $expenses->withQueryString()->links('partials.pagination') }}
 </div>
+
+@foreach($expenses->getCollection()->filter->receipt as $ex)
+    @include('partials.expense-receipt-modal', [
+        'ex' => $ex,
+        'showPeople' => true,
+        'reviewModal' => $ex->status === 'Pending' ? 'reviewExpense' . $ex->id : null,
+    ])
+@endforeach
 
 @foreach($expenses->getCollection()->where('status', 'Pending') as $ex)
 <div class="modal fade" id="reviewExpense{{ $ex->id }}" tabindex="-1" aria-hidden="true">
