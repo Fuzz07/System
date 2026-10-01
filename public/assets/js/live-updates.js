@@ -26,7 +26,10 @@
             // A confirmation is waiting on the user: redrawing now could swap
             // out the form it belongs to.
             || document.body.classList.contains('ssc-dialog-open')
-            || document.querySelector('.modal.show, [data-ssc-live-pause]');
+            || document.querySelector('.modal.show, [data-ssc-live-pause]')
+            // A form is on its way to the server: redrawing would swap it for an
+            // unlocked copy that could be sent a second time (partials/submit-guard).
+            || document.querySelector('form[data-ssc-submitting]');
     }
 
     function syncAttributes(current, incoming) {
@@ -140,6 +143,8 @@
             var currentRegion = document.querySelector(selector);
 
             if (!incomingRegion || !currentRegion || incomingRegion.innerHTML === lastServerMarkup) return;
+            // Things may have changed while the request was out (a form sent, a dialog opened).
+            if (shouldPause()) return;
 
             lastServerMarkup = incomingRegion.innerHTML;
             morph(currentRegion, incomingRegion);

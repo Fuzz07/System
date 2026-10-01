@@ -922,6 +922,9 @@ function requestExportOtp() {
             if (statusMsg) {
                 statusMsg.innerHTML = data.message;
             }
+            // The export downloads a file, so the page stays put and its form
+            // stays locked after a submit; a new code means it may be sent again.
+            SSCSubmitGuard.release(document.querySelector('#exportOtpModal form'));
             const modal = new bootstrap.Modal(document.getElementById('exportOtpModal'));
             modal.show();
         } else {

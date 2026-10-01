@@ -81,10 +81,8 @@ document.addEventListener('DOMContentLoaded', function () {
         button.innerHTML = originalHtml;
     }
 
-    form.addEventListener('submit', function () {
-        window.setTimeout(resetCheckoutButton, 15000);
-    });
-
+    // No timed re-enable after submitting: on a slow connection the first
+    // request is usually still on its way, and a retry would open a second checkout.
     window.addEventListener('pageshow', resetCheckoutButton);
 });
 </script>

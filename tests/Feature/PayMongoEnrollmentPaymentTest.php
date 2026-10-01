@@ -90,7 +90,9 @@ class PayMongoEnrollmentPaymentTest extends TestCase
             ->get(route('student.enrollment.index'))
             ->assertOk()
             ->assertSee("window.addEventListener('pageshow', resetCheckoutButton)", false)
-            ->assertSee('window.setTimeout(resetCheckoutButton, 15000)', false);
+            // A slow checkout request must not be offered for a second click.
+            ->assertDontSee('window.setTimeout(resetCheckoutButton', false)
+            ->assertSee('window.SSCSubmitGuard', false);
     }
 
     public function test_signed_return_confirms_payment_without_double_crediting_budget(): void

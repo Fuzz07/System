@@ -229,9 +229,8 @@
                 form.dataset.submitting = 'true';
                 button.disabled = true;
                 button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Opening secure checkout?';
-
-                // If navigation is blocked or times out, let the student retry.
-                window.setTimeout(resetCheckoutButton, 15000);
+                // No timed re-enable: on a slow connection the first request is
+                // usually still on its way, and a retry would open a second checkout.
             });
 
             // Back-forward cache can otherwise restore a permanently disabled button.

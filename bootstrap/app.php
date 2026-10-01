@@ -81,6 +81,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HoneypotMiddleware::class,
             \App\Http\Middleware\BlockUserAgentMiddleware::class,
             \App\Http\Middleware\MaintenanceModeMiddleware::class,
+            \App\Http\Middleware\PreventDuplicateSubmissionMiddleware::class,
         ]);
 
         $middleware->alias([

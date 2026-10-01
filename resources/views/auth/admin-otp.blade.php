@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     @include('partials.security-guard')
+    @include('partials.submit-guard')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Device Verification — SSC Transparency System</title>
