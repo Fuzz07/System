@@ -5,8 +5,8 @@
     Pass $commentDestroyRoute (a route name taking [announcement, comment]) to
     add a remove button to each comment.
     Pass $editModal (an element id) to show an Edit button that opens it.
-    Pass $ownCommentRoutes (a route-name prefix, see own-comment-actions) to let
-    the viewer edit and delete the comments they wrote.
+    Pass $commentActionRoutes (a route-name prefix, see comment-actions) to let
+    the viewer reply to comments and edit and delete the ones they wrote.
 --}}
 @php $isLost = $a->category === \App\Models\Announcement::CATEGORY_LOST_ITEM; @endphp
 <div class="modal fade" id="{{ $modal }}" tabindex="-1" aria-labelledby="{{ $modal }}Title" aria-hidden="true">
@@ -47,12 +47,13 @@
 
             {{-- Students post anonymously, so their names stay hidden on staff pages too. --}}
             <div class="d-flex flex-column gap-3">
-                @forelse($a->comments as $c)
-                <div class="d-flex gap-3">
-                    <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0 bg-light text-muted" style="width:38px;height:38px;font-size:1.1rem;">
+                @forelse(\App\Support\CommentThread::of($a->comments) as $c)
+                {{-- Replies sit indented under the comment they answer. --}}
+                <div class="d-flex gap-3" @if($c->parent_id) style="margin-left:52px;" @endif>
+                    <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0 bg-light text-muted" style="width:{{ $c->parent_id ? 30 : 38 }}px;height:{{ $c->parent_id ? 30 : 38 }}px;font-size:1.1rem;">
                         <i class="bi bi-person-circle"></i>
                     </div>
-                    <div class="flex-fill" data-own-comment>
+                    <div class="flex-fill" data-comment>
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="fw-bold text-dark small"><i class="bi bi-person-fill-lock"></i> Anonymous Student</span>
                             <span class="d-inline-flex align-items-center gap-2">
@@ -67,8 +68,8 @@
                             </span>
                         </div>
                         <div class="p-3 bg-light rounded-4 small text-dark" style="line-height:1.6;" data-comment-text>{!! nl2br(e($c->comment)) !!}</div>
-                        @if(!empty($ownCommentRoutes))
-                        @include('partials.own-comment-actions', ['comment' => $c, 'parent' => $a, 'routes' => $ownCommentRoutes])
+                        @if(!empty($commentActionRoutes))
+                        @include('partials.comment-actions', ['comment' => $c, 'parent' => $a, 'routes' => $commentActionRoutes])
                         @endif
                     </div>
                 </div>

@@ -8,6 +8,7 @@ use App\Models\Proposal;
 use App\Support\UploadValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ProposalController extends Controller
@@ -57,6 +58,25 @@ class ProposalController extends Controller
         $proposal->update($data);
         SscHelper::logActivity(Auth::id(), 'PROPOSAL_UPDATE', "Updated proposal: {$request->project_title}");
         return redirect()->route('officer.proposals')->with('success', 'Proposal updated successfully!');
+    }
+
+    public function destroy(Proposal $proposal)
+    {
+        // Only proposals that were never approved, the same ones the officer may
+        // edit. An approved one carries budget releases, liquidations and
+        // announcements, which deleting it would take down with it.
+        if ((int) $proposal->officer_id !== (int) Auth::id() || !$proposal->isEditableByOfficer()) {
+            abort(403, 'Cannot delete this proposal.');
+        }
+
+        DB::transaction(function () use ($proposal) {
+            // proposal_comments has no foreign key to cascade the delete.
+            $proposal->comments()->delete();
+            $proposal->delete();
+        });
+
+        SscHelper::logActivity(Auth::id(), 'PROPOSAL_DELETE', "Deleted proposal: {$proposal->project_title}");
+        return redirect()->route('officer.proposals')->with('success', 'Proposal deleted.');
     }
 
     /**

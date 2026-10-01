@@ -48,6 +48,22 @@ class ProposalController extends Controller
         return redirect()->route('student.proposal.show', $proposal)->with('success', 'Comment added!');
     }
 
+    public function reply(Request $request, Proposal $proposal, ProposalComment $comment)
+    {
+        $this->authorizeStudentProposalAccess($proposal);
+
+        $request->validate(['comment' => 'required|string|min:1|max:2000']);
+        ProposalComment::create([
+            'proposal_id' => $proposal->id,
+            'user_id'     => Auth::id(),
+            'comment'     => $request->comment,
+            // Threads are one level deep: replying to a reply joins its thread.
+            'parent_id'   => $comment->parent_id ?? $comment->id,
+        ]);
+
+        return redirect()->back()->with('success', 'Reply posted!');
+    }
+
     public function updateComment(Request $request, Proposal $proposal, ProposalComment $comment)
     {
         $this->authorizeStudentProposalAccess($proposal);

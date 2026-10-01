@@ -148,6 +148,7 @@ Route::domain('officer.' . $baseDomain)->group(function () {
         Route::get('/proposals', [Officer\ProposalController::class, 'index'])->name('proposals');
         Route::post('/proposals', [Officer\ProposalController::class, 'store'])->name('proposals.store');
         Route::put('/proposals/{proposal}', [Officer\ProposalController::class, 'update'])->name('proposals.update');
+        Route::delete('/proposals/{proposal}', [Officer\ProposalController::class, 'destroy'])->name('proposals.destroy');
         Route::post('/proposals/{proposal}/complete', [Officer\ProposalController::class, 'complete'])->name('proposals.complete');
 
         Route::get('/expenses', [Officer\ExpenseController::class, 'index'])->name('expenses');
@@ -302,11 +303,13 @@ Route::group([], function () use ($baseDomain) {
         Route::get('/proposals', [Student\ProposalController::class, 'index'])->name('proposals');
         Route::get('/proposals/{proposal}', [Student\ProposalController::class, 'show'])->name('proposal.show');
         Route::post('/proposals/{proposal}/comment', [Student\ProposalController::class, 'comment'])->name('proposal.comment');
+        Route::post('/proposals/{proposal}/comments/{comment}/replies', [Student\ProposalController::class, 'reply'])->scopeBindings()->name('proposal.comments.reply');
         Route::put('/proposals/{proposal}/comments/{comment}', [Student\ProposalController::class, 'updateComment'])->scopeBindings()->name('proposal.comments.update');
         Route::delete('/proposals/{proposal}/comments/{comment}', [Student\ProposalController::class, 'destroyComment'])->scopeBindings()->name('proposal.comments.destroy');
 
         Route::get('/announcements', [Student\AnnouncementController::class, 'index'])->name('announcements');
         Route::post('/announcements/{announcement}/comment', [Student\AnnouncementController::class, 'comment'])->name('announcements.comment');
+        Route::post('/announcements/{announcement}/comments/{comment}/replies', [Student\AnnouncementController::class, 'reply'])->scopeBindings()->name('announcements.comments.reply');
         Route::put('/announcements/{announcement}/comments/{comment}', [Student\AnnouncementController::class, 'updateComment'])->scopeBindings()->name('announcements.comments.update');
         Route::delete('/announcements/{announcement}/comments/{comment}', [Student\AnnouncementController::class, 'destroyComment'])->scopeBindings()->name('announcements.comments.destroy');
 
@@ -466,6 +469,7 @@ Route::group([], function () use ($baseDomain) {
             ]);
             return redirect()->route('mobile.student.proposal.show', $proposal)->with('success', 'Comment added.');
         })->name('proposal.comment');
+        Route::post('/proposals/{proposal}/comments/{comment}/replies', [Student\ProposalController::class, 'reply'])->scopeBindings()->name('proposal.comments.reply');
         Route::put('/proposals/{proposal}/comments/{comment}', [Student\ProposalController::class, 'updateComment'])->scopeBindings()->name('proposal.comments.update');
         Route::delete('/proposals/{proposal}/comments/{comment}', [Student\ProposalController::class, 'destroyComment'])->scopeBindings()->name('proposal.comments.destroy');
 
@@ -491,6 +495,7 @@ Route::group([], function () use ($baseDomain) {
 
             return redirect()->route('mobile.student.announcements')->with('success', 'Comment added!');
         })->name('announcements.comment');
+        Route::post('/announcements/{announcement}/comments/{comment}/replies', [Student\AnnouncementController::class, 'reply'])->scopeBindings()->name('announcements.comments.reply');
         Route::put('/announcements/{announcement}/comments/{comment}', [Student\AnnouncementController::class, 'updateComment'])->scopeBindings()->name('announcements.comments.update');
         Route::delete('/announcements/{announcement}/comments/{comment}', [Student\AnnouncementController::class, 'destroyComment'])->scopeBindings()->name('announcements.comments.destroy');
 

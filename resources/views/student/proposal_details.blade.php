@@ -36,12 +36,13 @@
                 </form>
 
                 <div class="comment-list d-flex flex-column gap-4">
-                    @forelse($comments as $c)
-                    <div class="d-flex gap-3">
-                        <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0 {{ $c->user->role === 'student' ? 'bg-light text-muted' : 'bg-primary bg-opacity-10 text-primary' }}" style="width:48px;height:48px;font-weight:700;">
+                    @forelse(\App\Support\CommentThread::of($comments) as $c)
+                    {{-- Replies sit indented under the comment they answer. --}}
+                    <div class="d-flex gap-3" @if($c->parent_id) style="margin-left:62px;" @endif>
+                        <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0 {{ $c->user->role === 'student' ? 'bg-light text-muted' : 'bg-primary bg-opacity-10 text-primary' }}" style="width:{{ $c->parent_id ? 36 : 48 }}px;height:{{ $c->parent_id ? 36 : 48 }}px;font-weight:700;">
                             @if($c->user->role === 'student')<i class="bi bi-person-circle"></i>@else {{ strtoupper(substr($c->user->fullname, 0, 1)) }}@endif
                         </div>
-                        <div class="flex-fill" data-own-comment>
+                        <div class="flex-fill" data-comment>
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <div>
                                     @if($c->user->role === 'student')<span class="fw-bold text-dark small"><i class="bi bi-person-fill-lock"></i> Anonymous Student</span>
@@ -50,7 +51,7 @@
                                 <span class="text-muted small" style="font-size:0.7rem;">{{ $c->created_at?->diffForHumans() }}</span>
                             </div>
                             <div class="p-3 bg-light rounded-4 small text-dark" style="line-height:1.6;" data-comment-text>{!! nl2br(e($c->comment)) !!}</div>
-                            @include('partials.own-comment-actions', ['comment' => $c, 'parent' => $proposal, 'routes' => 'student.proposal.comments'])
+                            @include('partials.comment-actions',['comment' => $c, 'parent' => $proposal, 'routes' => 'student.proposal.comments'])
                         </div>
                     </div>
                     @empty

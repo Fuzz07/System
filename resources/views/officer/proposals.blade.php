@@ -77,6 +77,16 @@
                                             data-bs-target="#editModal{{ $p->id }}"><i class="bi bi-arrow-repeat"></i>
                                             Edit &amp; Resubmit</button>
                                     @endif
+                                    @if($p->isEditableByOfficer())
+                                        <form method="POST" action="{{ route('officer.proposals.destroy', $p) }}"
+                                            data-confirm="Delete this proposal permanently? Student feedback on it is deleted too."
+                                            class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"><i
+                                                    class="bi bi-trash"></i> Delete</button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -108,9 +118,10 @@
                     <div class="modal-body p-4">
                         <div class="fw-bold mb-3" style="color:var(--navy-900);">{{ $p->project_title }}</div>
                         <div class="d-flex flex-column gap-3">
-                            @forelse($p->comments as $c)
+                            @forelse(\App\Support\CommentThread::of($p->comments) as $c)
                                 @php $isStudent = !$c->user || $c->user->role === 'student'; @endphp
-                                <div class="d-flex gap-3">
+                                {{-- Replies sit indented under the comment they answer. --}}
+                                <div class="d-flex gap-3" @if($c->parent_id) style="margin-left:52px;" @endif>
                                     <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0 {{ $isStudent ? 'bg-light text-muted' : 'bg-primary bg-opacity-10 text-primary' }}"
                                         style="width:40px;height:40px;font-weight:700;">
                                         @if($isStudent)<i class="bi bi-person-circle"></i>@else

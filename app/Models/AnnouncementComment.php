@@ -11,7 +11,7 @@ class AnnouncementComment extends Model
     // the database clock, which in production is UTC while the app reads times
     // as Asia/Manila, so a comment posted a moment ago showed as "8 hours ago".
     public const UPDATED_AT = null;
-    protected $fillable = ['announcement_id', 'user_id', 'comment'];
+    protected $fillable = ['announcement_id', 'user_id', 'parent_id', 'comment'];
     protected $casts = ['created_at' => 'datetime'];
 
     protected static function booted()

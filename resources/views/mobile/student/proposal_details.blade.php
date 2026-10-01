@@ -114,8 +114,9 @@
 </div>
 
 <div class="comment-list" id="commentList">
-    @forelse($comments as $c)
-    <div class="comment-item">
+    @forelse(\App\Support\CommentThread::of($comments) as $c)
+    {{-- Replies sit indented under the comment they answer. --}}
+    <div class="comment-item" @if($c->parent_id) style="margin-left:36px;" @endif>
         <div class="comment-avatar {{ $c->user->role === 'student' ? 'student-av' : 'officer-av' }}">
             @if($c->user->role === 'student')
                 <i class="bi bi-person-fill"></i>
@@ -123,7 +124,7 @@
                 {{ strtoupper(substr($c->user->fullname, 0, 1)) }}
             @endif
         </div>
-        <div class="comment-body" data-own-comment>
+        <div class="comment-body" data-comment>
             <div class="comment-header">
                 <span class="comment-author">
                     @if($c->user->role === 'student')
@@ -136,7 +137,7 @@
                 <span class="comment-time">{{ $c->created_at?->diffForHumans() }}</span>
             </div>
             <div class="comment-text" data-comment-text>{!! nl2br(e($c->comment)) !!}</div>
-            @include('partials.own-comment-actions', ['comment' => $c, 'parent' => $proposal, 'routes' => 'mobile.student.proposal.comments'])
+            @include('partials.comment-actions',['comment' => $c, 'parent' => $proposal, 'routes' => 'mobile.student.proposal.comments'])
         </div>
     </div>
     @empty

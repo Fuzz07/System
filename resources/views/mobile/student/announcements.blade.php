@@ -108,10 +108,11 @@
                             </button>
                         </form>
 
-                        @forelse($a->comments as $c)
-                            <div class="ann-comment">
+                        @forelse(\App\Support\CommentThread::of($a->comments) as $c)
+                            {{-- Replies sit indented under the comment they answer. --}}
+                            <div class="ann-comment" @if($c->parent_id) style="margin-left:36px;" @endif>
                                 <div class="ann-comment-avatar"><i class="bi bi-person-circle"></i></div>
-                                <div style="flex:1; min-width:0;" data-own-comment>
+                                <div style="flex:1; min-width:0;" data-comment>
                                     <div class="ann-comment-head">
                                         <span class="ann-comment-author">
                                             <i class="bi bi-person-fill-lock"></i> Anonymous Student
@@ -119,7 +120,7 @@
                                         <span class="ann-comment-time">{{ $c->created_at?->diffForHumans() }}</span>
                                     </div>
                                     <div class="ann-comment-bubble" data-comment-text>{!! nl2br(e($c->comment)) !!}</div>
-                                    @include('partials.own-comment-actions', ['comment' => $c, 'parent' => $a, 'routes' => 'mobile.student.announcements.comments'])
+                                    @include('partials.comment-actions',['comment' => $c, 'parent' => $a, 'routes' => 'mobile.student.announcements.comments'])
                                 </div>
                             </div>
                         @empty

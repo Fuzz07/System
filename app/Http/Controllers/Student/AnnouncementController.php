@@ -37,6 +37,20 @@ class AnnouncementController extends Controller
         return redirect()->back()->with('success', 'Comment added!');
     }
 
+    public function reply(Request $request, Announcement $announcement, AnnouncementComment $comment)
+    {
+        $request->validate(['comment' => 'required|string|min:1|max:2000']);
+
+        $announcement->comments()->create([
+            'user_id' => Auth::id(),
+            'comment' => $request->comment,
+            // Threads are one level deep: replying to a reply joins its thread.
+            'parent_id' => $comment->parent_id ?? $comment->id,
+        ]);
+
+        return redirect()->back()->with('success', 'Reply posted!');
+    }
+
     public function updateComment(Request $request, Announcement $announcement, AnnouncementComment $comment)
     {
         // Students may reword or remove their own comments, never anyone else's.
