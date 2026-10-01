@@ -9,6 +9,8 @@ use App\Services\StudentPromotionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class SettingsController extends Controller
 {
@@ -132,6 +134,46 @@ class SettingsController extends Controller
         SscHelper::logActivity($user->id, 'ADMIN_SESSIONS_REVOKED', 'Revoked all other active admin device sessions.');
         
         return redirect()->route('admin.settings')->with('success', 'All other active device sessions have been successfully terminated.');
+    }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => [
+                'required',
+                'confirmed',
+                'different:current_password',
+                Password::min(10)->mixedCase()->numbers()->symbols(),
+            ],
+        ], [
+            'current_password.required' => 'Enter your current password.',
+            'current_password.current_password' => 'Your current password is incorrect.',
+            'password.required' => 'Enter a new password.',
+            'password.confirmed' => 'The new password and its confirmation do not match.',
+            'password.different' => 'Choose a new password that is different from your current one.',
+        ]);
+
+        $user = Auth::user();
+        $user->password = $request->password;
+        // Cycling the remember token stops "remember me" cookies on other
+        // browsers from signing back in with the old credentials.
+        $user->setRememberToken(Str::random(60));
+        $user->save();
+
+        // Whoever was signed in elsewhere with the old password is signed out;
+        // this browser stays in on a fresh session id.
+        if (\Illuminate\Support\Facades\Schema::hasTable('sessions')) {
+            DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->where('id', '!=', session()->getId())
+                ->delete();
+        }
+        $request->session()->regenerate();
+
+        SscHelper::logActivity($user->id, 'ADMIN_PASSWORD_CHANGE', 'Changed the admin account password and signed out other devices.');
+
+        return redirect()->route('admin.settings')->with('success', 'Your password has been changed. Any other devices signed in to this account have been logged out.');
     }
 
     public function registerCurrentDevice()

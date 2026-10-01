@@ -112,6 +112,8 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::post('/settings/candidacy/toggle', [Admin\SettingsController::class, 'toggleCandidacy'])->name('settings.candidacy.toggle');
         Route::post('/settings/reset-device', [Admin\SettingsController::class, 'resetDevice'])->name('settings.reset_device');
         Route::post('/settings/logout-others', [Admin\SettingsController::class, 'logoutOthers'])->name('settings.logout_others');
+        // Throttled: each attempt checks the current password.
+        Route::put('/settings/password', [Admin\SettingsController::class, 'changePassword'])->middleware('throttle:5,1')->name('settings.password');
         Route::delete('/settings/logout-device/{sessionId}', [Admin\SettingsController::class, 'logoutDevice'])->name('settings.logout_device');
         Route::post('/settings/register-current-device', [Admin\SettingsController::class, 'registerCurrentDevice'])->name('settings.register_current_device');
         Route::get('/candidacies', [Admin\CandidacyController::class, 'index'])->name('candidacies');

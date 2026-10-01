@@ -47,6 +47,28 @@
         background: #f1f5f9;
         border-color: #cbd5e1;
     }
+    /* New-password checklist: grey until a rule is met, then green. */
+    #passwordRules li {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-weight: 600;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+    #passwordRules li::before {
+        content: "\F28A"; /* bi-circle */
+        font-family: "bootstrap-icons";
+        margin-right: 5px;
+        font-size: 0.7rem;
+    }
+    #passwordRules li.met {
+        background: #dcfce7;
+        color: #15803d;
+    }
+    #passwordRules li.met::before {
+        content: "\F26A"; /* bi-check-circle-fill */
+    }
     .icon-box {
         width: 36px;
         height: 36px;
@@ -620,6 +642,76 @@
 </div>
 
 <!-- ========================================================================= -->
+<!-- SECTION 4: ACCOUNT SECURITY                                               -->
+<!-- ========================================================================= -->
+<div class="section-label">
+    <i class="bi bi-person-lock" style="color: #e34f26;"></i> Account Security
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Card 7: Change Password -->
+    <div class="col-12">
+        <div class="settings-card d-flex flex-column" style="border-top: 4px solid #e34f26;">
+            <div class="card-header-accent d-flex align-items-center gap-2">
+                <div class="icon-box" style="background: #fff1ec;">
+                    <i class="bi bi-key-fill" style="color: #e34f26;"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0" style="font-size: 1.02rem; font-weight: 700; color: #0f172a;">Change Password</h5>
+                    <div class="text-muted" style="font-size: 0.74rem;">Update the password for {{ Auth::user()->email }}. Other devices signed in to this account will be logged out.</div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ route('admin.settings.password') }}" id="changePasswordForm"
+                    data-confirm-title="Change your password?" data-confirm-ok="Change Password" data-confirm-tone="warning"
+                    data-confirm="Every other device signed in to this account will be logged out. This browser stays signed in.">
+                    @csrf
+                    @method('PUT')
+                    {{-- Lets password managers file the new password under the right account. --}}
+                    <input type="email" name="account_email" value="{{ Auth::user()->email }}" autocomplete="username" readonly hidden>
+
+                    <div class="row g-3">
+                        @foreach([
+                            ['current_password', 'Current Password', 'current-password'],
+                            ['password', 'New Password', 'new-password'],
+                            ['password_confirmation', 'Confirm New Password', 'new-password'],
+                        ] as [$field, $label, $autocomplete])
+                        <div class="col-md-4">
+                            <label for="{{ $field }}" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: #334155;">{{ $label }} <span class="text-danger">*</span></label>
+                            <div class="input-group has-validation">
+                                <input type="password" id="{{ $field }}" name="{{ $field }}" autocomplete="{{ $autocomplete }}" required
+                                    maxlength="128" class="form-control @error($field) is-invalid @enderror" style="font-size: 0.88rem;">
+                                <button type="button" class="btn btn-outline-secondary" data-toggle-password="{{ $field }}" aria-label="Show {{ strtolower($label) }}" style="font-size: 0.85rem;">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                @error($field)
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mt-3">
+                        <ul id="passwordRules" class="list-unstyled d-flex flex-wrap gap-2 mb-0" style="font-size: 0.76rem;" aria-live="polite">
+                            <li data-rule="length">At least 10 characters</li>
+                            <li data-rule="upper">An uppercase letter</li>
+                            <li data-rule="lower">A lowercase letter</li>
+                            <li data-rule="number">A number</li>
+                            <li data-rule="symbol">A symbol</li>
+                            <li data-rule="match">Passwords match</li>
+                        </ul>
+                        <button type="submit" class="btn btn-sm fw-bold px-3 py-2 text-white" style="background: #e34f26; border-radius: 8px; font-size: 0.82rem;">
+                            <i class="bi bi-key me-1"></i> Change Password
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
 <!-- MODALS                                                                    -->
 <!-- ========================================================================= -->
 
@@ -844,5 +936,59 @@ function requestExportOtp() {
         SSCAlert.error('Error connecting to server. Please try again.', 'Connection error');
     });
 }
+</script>
+<script>
+// Change Password: show/hide toggles and a live checklist of the same rules
+// the server applies. The form will not submit until every rule is met.
+(function () {
+    const form = document.getElementById('changePasswordForm');
+    if (!form) return;
+
+    const current = document.getElementById('current_password');
+    const password = document.getElementById('password');
+    const confirmation = document.getElementById('password_confirmation');
+    const rules = {
+        // Same character classes as Laravel's Password rule, so the two agree.
+        length: value => [...value].length >= 10,
+        upper: value => /\p{Lu}/u.test(value),
+        lower: value => /\p{Ll}/u.test(value),
+        number: value => /\p{N}/u.test(value),
+        symbol: value => /[\p{Z}\p{S}\p{P}]/u.test(value),
+        match: value => value !== '' && value === confirmation.value,
+    };
+
+    function check() {
+        const value = password.value;
+        let allMet = true;
+
+        Object.entries(rules).forEach(function ([name, test]) {
+            const met = test(value);
+            form.querySelector('[data-rule="' + name + '"]').classList.toggle('met', met);
+            if (name !== 'match') allMet = allMet && met;
+        });
+
+        let message = '';
+        if (value !== '' && !allMet) {
+            message = 'Use at least 10 characters with an uppercase and a lowercase letter, a number and a symbol.';
+        } else if (value !== '' && value === current.value) {
+            message = 'Choose a new password that is different from your current one.';
+        }
+        password.setCustomValidity(message);
+        confirmation.setCustomValidity(confirmation.value !== '' && confirmation.value !== value ? 'The passwords do not match.' : '');
+    }
+
+    [current, password, confirmation].forEach(input => input.addEventListener('input', check));
+    check();
+
+    form.querySelectorAll('[data-toggle-password]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const input = document.getElementById(button.dataset.togglePassword);
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            button.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+            button.setAttribute('aria-label', (show ? 'Hide ' : 'Show ') + button.getAttribute('aria-label').replace(/^(Show|Hide) /, ''));
+        });
+    });
+})();
 </script>
 @endsection
