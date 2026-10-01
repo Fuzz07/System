@@ -64,6 +64,25 @@ class AdminBudgetCreationTest extends TestCase
         $this->assertDatabaseCount('budgets', 1);
     }
 
+    public function test_funds_the_admin_adds_are_approved_without_a_separate_step(): void
+    {
+        $this->post(route('admin.budgets.store'), [
+            'title' => 'Sports Fund',
+            'department' => 'BSIT',
+            'allocated_amount' => '5000',
+            'school_year' => '2026-2027',
+        ])->assertRedirect(route('admin.budgets'));
+
+        $budget = Budget::where('title', 'Sports Fund')->firstOrFail();
+        $this->assertSame('Approved', $budget->status);
+        $this->assertSame(auth()->id(), (int) $budget->approved_by);
+
+        $this->withViewErrors([])->get(route('admin.budgets'))
+            ->assertOk()
+            ->assertDontSee('action="' . route('admin.budgets.approve', $budget) . '"', false)
+            ->assertDontSee('action="' . route('admin.budgets.reject', $budget) . '"', false);
+    }
+
     public function test_budget_page_uses_contribution_fee_wording(): void
     {
         $this->withViewErrors([])->get(route('admin.budgets'))

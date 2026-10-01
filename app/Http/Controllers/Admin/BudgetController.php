@@ -109,6 +109,11 @@ class BudgetController extends Controller
             'school_year' => $validated['school_year'],
             'created_by' => Auth::id(),
             'notes' => $validated['notes'] ?? null,
+            // The admin is the only one who approves budgets, so funds they add
+            // themselves are approved as they are added. Approve and Reject stay
+            // for budgets that arrive pending from elsewhere.
+            'status' => 'Approved',
+            'approved_by' => Auth::id(),
         ]);
 
         SscHelper::logActivity(Auth::id(), 'BUDGET_CREATE', "Created budget: {$validated['title']}");
