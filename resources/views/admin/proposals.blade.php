@@ -28,10 +28,14 @@
                 <div class="mt-1"><span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25" style="font-size:.65rem;" title="Revised after rejection on {{ $p->resubmitted_at->format('M d, Y h:i A') }}"><i class="bi bi-arrow-repeat"></i> Resubmitted</span></div>
             @endif
         </td>
-        <td><span class="badge bg-secondary" style="font-size:.72rem;">{{ $p->comments_count }}</span></td>
+        <td><button type="button" class="btn btn-sm {{ $p->comments_count ? 'btn-outline-info' : 'btn-outline-secondary' }}" style="font-size:.72rem;"
+            data-bs-toggle="modal" data-bs-target="#feedbackModal{{ $p->id }}" title="View comments"
+            aria-label="View {{ $p->comments_count }} {{ Str::plural('comment', $p->comments_count) }} on {{ $p->project_title }}"><i class="bi bi-chat-text"></i> {{ $p->comments_count }}</button></td>
         <td>
             <div class="d-flex gap-2 align-items-center">
+                @if($p->status !== 'Rejected')
                 <a href="{{ route('proposals.print', $p) }}" target="_blank" class="btn btn-sm btn-outline-secondary" style="font-size:.72rem;"><i class="bi bi-printer"></i> Print</a>
+                @endif
                 @if($p->status === 'Pending')
                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reviewModal{{ $p->id }}" style="font-size:.72rem;"><i class="bi bi-pencil-square"></i> Review</button>
                 @else
@@ -78,6 +82,11 @@
         </form>
     </div></div>
 </div>
+@endforeach
+
+{{-- Comments Modals: what students and officers said about each proposal. --}}
+@foreach($proposals as $p)
+    @include('partials.proposal-comments-modal', ['p' => $p])
 @endforeach
 @endsection
 

@@ -25,19 +25,26 @@ class DashboardController extends Controller
         $pendingStudents   = User::where('role', 'student')->notArchived()->where('status', 'inactive')->count();
         $totalUsers        = User::count();
 
-        // Budget distribution chart
+        // Budget distribution chart, and the breakdown its pop-up lists
         $budgets = Budget::where('status', 'Approved')
-            ->select('title', 'allocated_amount')
+            ->select('title', 'department', 'school_year', 'allocated_amount', 'remaining_balance')
             ->orderByDesc('allocated_amount')
             ->get();
 
-        // Monthly expense trend
+        // Monthly expense trend: the latest 12 months with approved expenses,
+        // oldest first. Taking the first 12 in ascending order, as this used
+        // to, would have frozen the chart on the system's first year.
+        $monthOf = DB::getDriverName() === 'sqlite'
+            ? "strftime('%Y-%m', created_at)" // the test database
+            : "DATE_FORMAT(created_at, '%Y-%m')";
         $monthlyExpenses = Expense::where('status', 'Approved')
-            ->select(DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"), DB::raw('SUM(amount) as total'))
+            ->select(DB::raw("{$monthOf} as month"), DB::raw('SUM(amount) as total'))
             ->groupBy('month')
-            ->orderBy('month')
+            ->orderByDesc('month')
             ->limit(12)
-            ->get();
+            ->get()
+            ->reverse()
+            ->values();
 
         // Recent expenses
         $recentExpenses = Expense::with(['officer', 'budget'])

@@ -16,7 +16,13 @@ class ProposalController extends Controller
         $search = $request->input('search', '');
         $status = $request->input('status', '');
 
-        $query = Proposal::with(['officer', 'approver'])->withCount('comments');
+        $query = Proposal::with([
+                'officer',
+                'approver',
+                // Read in the comments pop-up each row opens.
+                'comments' => fn ($query) => $query->with('user')->orderByDesc('created_at'),
+            ])
+            ->withCount('comments');
         if ($search) {
             $query->where('project_title', 'like', "%$search%");
         }

@@ -413,25 +413,26 @@ function createPieChart(canvasId, labels, data) {
         const ctx = chart.ctx;
         const meta = chart.getDatasetMeta(0);
         if (!meta.data.length) return;
-        const x = meta.data[0].x;
-        const y = meta.data[0].y;
-
-        ctx.restore();
-
-        ctx.font = 'bold 1.15rem Inter, sans-serif';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#0f172a';
+        const { x, y, innerRadius } = meta.data[0];
         const text = '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const textWidth = ctx.measureText(text).width;
-        ctx.fillText(text, x - (textWidth / 2), y - 6);
-
-        ctx.font = '600 0.75rem Inter, sans-serif';
-        ctx.fillStyle = '#64748b';
-        const subText = 'TOTAL BUDGET';
-        const subTextWidth = ctx.measureText(subText).width;
-        ctx.fillText(subText, x - (subTextWidth / 2), y + 14);
 
         ctx.save();
+        // Fit the total inside the ring's hole: shrink it on a small chart,
+        // and leave the hole empty when even small text would spill onto the ring.
+        ctx.font = 'bold 18px Inter, sans-serif';
+        const scale = Math.min(1, (innerRadius * 2 - 16) / ctx.measureText(text).width);
+        if (scale * 18 >= 9) {
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = 'bold ' + (18 * scale) + 'px Inter, sans-serif';
+          ctx.fillStyle = '#0f172a';
+          ctx.fillText(text, x, y - 6 * scale);
+
+          ctx.font = '600 ' + (12 * scale) + 'px Inter, sans-serif';
+          ctx.fillStyle = '#64748b';
+          ctx.fillText('TOTAL BUDGET', x, y + 14 * scale);
+        }
+        ctx.restore();
       }
     }]
   });

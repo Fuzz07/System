@@ -97,6 +97,90 @@
             flex: 1;
             overflow-y: auto;
         }
+
+        /* Charts open full size in a pop-up when clicked. */
+        .chart-clickable {
+            cursor: zoom-in;
+            transition: background 0.15s ease;
+        }
+
+        .chart-clickable:hover {
+            background: var(--slate-50, #f8fafc);
+        }
+
+        .chart-expand-btn {
+            width: 32px;
+            height: 32px;
+            display: inline-grid;
+            place-items: center;
+            color: var(--slate-500, #64748b);
+            background: var(--slate-50, #f8fafc);
+            border: 1px solid var(--slate-200, #e2e8f0);
+            border-radius: 8px;
+            transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .chart-expand-btn:hover,
+        .chart-expand-btn:focus-visible {
+            color: var(--primary, #e34f26);
+            background: #fff1ec;
+            border-color: #fbc8b5;
+        }
+
+        .chart-modal-canvas {
+            position: relative;
+            height: 360px;
+        }
+
+        .chart-stat {
+            background: var(--slate-50, #f8fafc);
+            border: 1px solid var(--slate-200, #e2e8f0);
+            border-radius: 12px;
+            padding: 10px 12px;
+            height: 100%;
+        }
+
+        .chart-stat .chart-stat-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--slate-500, #64748b);
+        }
+
+        .chart-stat .chart-stat-value {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--slate-900, #0f172a);
+        }
+
+        .chart-swatch {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+
+        .chart-breakdown {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .chart-breakdown table {
+            font-size: 0.82rem;
+        }
+
+        .chart-breakdown thead th {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--slate-500, #64748b);
+        }
     </style>
 
     <div class="page-header">
@@ -200,10 +284,16 @@
     <div class="row g-3" style="flex: 1; min-height: 0;">
         {{-- Left Column: Charts --}}
         <div class="col-lg-5 col-xl-4 d-flex flex-column" style="gap: 12px;">
+            {{-- Clicking either chart opens it full size with its numbers beside it. --}}
             <div class="card" style="flex: 1; display: flex; flex-direction: column;">
-                <div class="card-header-custom"><span class="card-title">Budget Distribution</span></div>
-                <div class="card-body-custom d-flex align-items-center justify-content-center"
-                    style="flex: 1; position: relative;">
+                <div class="card-header-custom">
+                    <span class="card-title">Budget Distribution</span>
+                    <button type="button" class="chart-expand-btn" data-bs-toggle="modal" data-bs-target="#budgetChartModal"
+                        title="Expand" aria-label="Expand the budget distribution chart"><i class="bi bi-arrows-angle-expand"></i></button>
+                </div>
+                <div class="card-body-custom d-flex align-items-center justify-content-center chart-clickable"
+                    style="flex: 1; position: relative;" data-bs-toggle="modal" data-bs-target="#budgetChartModal"
+                    title="Click to see the full breakdown">
                     <div
                         style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 10px;">
                         <canvas id="budgetPieChart" style="width:100%; height:100%; max-height: 320px;"></canvas>
@@ -211,9 +301,14 @@
                 </div>
             </div>
             <div class="card" style="flex: 1; display: flex; flex-direction: column;">
-                <div class="card-header-custom"><span class="card-title">Monthly Expense Trend</span></div>
-                <div class="card-body-custom d-flex align-items-center justify-content-center"
-                    style="flex: 1; position: relative;">
+                <div class="card-header-custom">
+                    <span class="card-title">Monthly Expense Trend</span>
+                    <button type="button" class="chart-expand-btn" data-bs-toggle="modal" data-bs-target="#expenseChartModal"
+                        title="Expand" aria-label="Expand the monthly expense trend chart"><i class="bi bi-arrows-angle-expand"></i></button>
+                </div>
+                <div class="card-body-custom d-flex align-items-center justify-content-center chart-clickable"
+                    style="flex: 1; position: relative;" data-bs-toggle="modal" data-bs-target="#expenseChartModal"
+                    title="Click to see the full breakdown">
                     <div
                         style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 10px;">
                         <canvas id="expenseBarChart"></canvas>
@@ -296,19 +391,185 @@
             </div>
         </div>
     </div>
+
+    {{-- Chart pop-ups: each chart full size, with the numbers behind it. --}}
+    @php
+        $budgetAllocated = (float) $budgets->sum('allocated_amount');
+        $budgetRemaining = (float) $budgets->sum('remaining_balance');
+        $monthLabels = $monthlyExpenses
+            ->map(fn ($m) => \Illuminate\Support\Carbon::parse($m->month . '-01')->format('M Y'))
+            ->values();
+        $monthTotal = (float) $monthlyExpenses->sum('total');
+        $peakMonthIndex = $monthlyExpenses->search(fn ($m) => (float) $m->total === (float) $monthlyExpenses->max('total'));
+    @endphp
+
+    <div class="modal fade" id="budgetChartModal" tabindex="-1" aria-labelledby="budgetChartModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius:var(--radius);border:none;overflow:hidden;">
+                <div class="modal-header modal-header-custom">
+                    <div>
+                        <h5 class="modal-title" id="budgetChartModalTitle" style="font-weight:700;"><i class="bi bi-pie-chart-fill"></i> Budget Distribution</h5>
+                        <div class="small" style="color: rgba(255,255,255,.7);">How the approved budget is allocated across funds</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    @if($budgets->isEmpty())
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-pie-chart" style="font-size:2rem;opacity:.4;"></i>
+                            <div class="mt-2">No approved budgets yet.</div>
+                        </div>
+                    @else
+                        <div class="row g-4 align-items-start">
+                            <div class="col-lg-6">
+                                <div class="chart-modal-canvas"><canvas id="budgetPieChartLarge" role="img" aria-label="Budget distribution chart"></canvas></div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-4"><div class="chart-stat"><div class="chart-stat-label">Allocated</div><div class="chart-stat-value">{!! \App\Helpers\SscHelper::formatCurrency($budgetAllocated) !!}</div></div></div>
+                                    <div class="col-4"><div class="chart-stat"><div class="chart-stat-label">Remaining</div><div class="chart-stat-value text-success">{!! \App\Helpers\SscHelper::formatCurrency($budgetRemaining) !!}</div></div></div>
+                                    <div class="col-4"><div class="chart-stat"><div class="chart-stat-label">Funds</div><div class="chart-stat-value">{{ $budgets->count() }}</div></div></div>
+                                </div>
+                                <div class="chart-breakdown">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead><tr><th>Fund</th><th class="text-end">Allocated</th><th class="text-end">Share</th></tr></thead>
+                                        <tbody>
+                                            @foreach($budgets as $i => $b)
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-start">
+                                                            <span class="chart-swatch mt-1" data-chart-swatch="budget" data-index="{{ $i }}"></span>
+                                                            <div>
+                                                                <div class="fw-semibold text-dark">{{ $b->title }}</div>
+                                                                <div class="text-muted" style="font-size:.72rem;">{{ $b->department }} &middot; SY {{ $b->school_year ?? 'N/A' }} &middot; {!! \App\Helpers\SscHelper::formatCurrency((float) $b->remaining_balance) !!} left</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-end fw-semibold">{!! \App\Helpers\SscHelper::formatCurrency((float) $b->allocated_amount) !!}</td>
+                                                    <td class="text-end text-muted">{{ $budgetAllocated > 0 ? number_format((float) $b->allocated_amount / $budgetAllocated * 100, 1) : '0.0' }}%</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <a href="{{ route('admin.budgets') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-wallet2"></i> Open Budget Management</a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="expenseChartModal" tabindex="-1" aria-labelledby="expenseChartModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius:var(--radius);border:none;overflow:hidden;">
+                <div class="modal-header modal-header-custom">
+                    <div>
+                        <h5 class="modal-title" id="expenseChartModalTitle" style="font-weight:700;"><i class="bi bi-bar-chart-fill"></i> Monthly Expense Trend</h5>
+                        <div class="small" style="color: rgba(255,255,255,.7);">Approved expenses per month, latest {{ $monthlyExpenses->count() === 1 ? 'month' : $monthlyExpenses->count() . ' months' }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    @if($monthlyExpenses->isEmpty())
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-bar-chart" style="font-size:2rem;opacity:.4;"></i>
+                            <div class="mt-2">No approved expenses yet.</div>
+                        </div>
+                    @else
+                        <div class="row g-4 align-items-start">
+                            <div class="col-lg-7">
+                                <div class="chart-modal-canvas"><canvas id="expenseBarChartLarge" role="img" aria-label="Monthly expense trend chart"></canvas></div>
+                            </div>
+                            <div class="col-lg-5">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-4"><div class="chart-stat"><div class="chart-stat-label">Total</div><div class="chart-stat-value text-danger">{!! \App\Helpers\SscHelper::formatCurrency($monthTotal) !!}</div></div></div>
+                                    <div class="col-4"><div class="chart-stat"><div class="chart-stat-label">Monthly Avg</div><div class="chart-stat-value">{!! \App\Helpers\SscHelper::formatCurrency($monthTotal / max(1, $monthlyExpenses->count())) !!}</div></div></div>
+                                    <div class="col-4"><div class="chart-stat"><div class="chart-stat-label">Highest</div><div class="chart-stat-value">{{ $monthLabels[$peakMonthIndex] ?? '—' }}</div></div></div>
+                                </div>
+                                <div class="chart-breakdown">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead><tr><th>Month</th><th class="text-end">Approved</th><th class="text-end">vs Previous</th></tr></thead>
+                                        <tbody>
+                                            @foreach($monthlyExpenses as $i => $m)
+                                                @php
+                                                    $previous = $i > 0 ? (float) $monthlyExpenses[$i - 1]->total : null;
+                                                    $change = $previous ? ((float) $m->total - $previous) / $previous * 100 : null;
+                                                @endphp
+                                                <tr>
+                                                    <td><div class="d-flex align-items-center"><span class="chart-swatch" data-chart-swatch="month" data-index="{{ $i }}"></span><span class="fw-semibold text-dark">{{ $monthLabels[$i] }}</span></div></td>
+                                                    <td class="text-end fw-semibold">{!! \App\Helpers\SscHelper::formatCurrency((float) $m->total) !!}</td>
+                                                    <td class="text-end text-muted">
+                                                        @if($change === null)
+                                                            —
+                                                        @else
+                                                            <i class="bi {{ $change >= 0 ? 'bi-arrow-up-right' : 'bi-arrow-down-right' }}"></i> {{ number_format(abs($change), 1) }}%
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <a href="{{ route('admin.expenses') }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-receipt-cutoff"></i> Open Expenses</a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            createPieChart('budgetPieChart',
-                {!! json_encode($budgets->pluck('title')) !!},
-                {!! json_encode($budgets->pluck('allocated_amount')->map(fn($v) => (float) $v)) !!}
-            );
-            createBarChart('expenseBarChart',
-                {!! json_encode($monthlyExpenses->pluck('month')) !!},
-                {!! json_encode($monthlyExpenses->pluck('total')->map(fn($v) => (float) $v)) !!}
-            );
+            const budgetLabels = @json($budgets->pluck('title'));
+            const budgetData = @json($budgets->pluck('allocated_amount')->map(fn ($v) => (float) $v));
+            const monthLabels = @json($monthLabels);
+            const monthData = @json($monthlyExpenses->pluck('total')->map(fn ($v) => (float) $v));
+
+            // Clicking a small chart opens its pop-up, so a click on the
+            // doughnut's legend should not also hide a slice behind it.
+            const budgetChart = createPieChart('budgetPieChart', budgetLabels, budgetData);
+            if (budgetChart) {
+                budgetChart.options.plugins.legend.onClick = null;
+                budgetChart.update('none');
+            }
+            createBarChart('expenseBarChart', monthLabels, monthData);
+
+            // The full-size charts are drawn the first time their pop-up opens:
+            // a chart drawn inside a hidden pop-up has no size to fill.
+            const drawOnShow = function (modalId, draw) {
+                const modal = document.getElementById(modalId);
+                if (!modal) return;
+                let drawn = false;
+                modal.addEventListener('shown.bs.modal', function () {
+                    if (drawn) return;
+                    drawn = true;
+                    draw();
+                });
+            };
+            drawOnShow('budgetChartModal', () => createPieChart('budgetPieChartLarge', budgetLabels, budgetData));
+            drawOnShow('expenseChartModal', () => createBarChart('expenseBarChartLarge', monthLabels, monthData));
+
+            // Colour each table row's swatch like its slice or bar. Repainted
+            // after a live refresh, which resets the inline colours.
+            const paintSwatches = function () {
+                const paint = (kind, colors) => document.querySelectorAll('[data-chart-swatch="' + kind + '"]')
+                    .forEach(swatch => { swatch.style.background = colors[swatch.dataset.index] || '#cbd5e1'; });
+                paint('budget', generateChartColors(budgetData.length));
+                paint('month', ordinalRampColors(monthData.length));
+            };
+            paintSwatches();
+            document.addEventListener('ssc:content-updated', paintSwatches);
         });
     </script>
 @endpush
