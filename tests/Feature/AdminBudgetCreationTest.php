@@ -83,6 +83,30 @@ class AdminBudgetCreationTest extends TestCase
             ->assertDontSee('action="' . route('admin.budgets.reject', $budget) . '"', false);
     }
 
+    public function test_budget_table_shows_ten_per_page_while_the_report_keeps_all(): void
+    {
+        foreach (range(1, 12) as $n) {
+            Budget::create([
+                'title' => sprintf('Fund %02d', $n),
+                'department' => 'BSIT',
+                'allocated_amount' => 1000,
+                'remaining_balance' => 1000,
+                'school_year' => '2026-2027',
+                'status' => 'Approved',
+                'created_by' => auth()->id(),
+            ]);
+        }
+
+        $firstPage = $this->withViewErrors([])->get(route('admin.budgets', ['sort' => 'title_asc']))->assertOk();
+        $this->assertCount(10, $firstPage->viewData('budgetPage')->items());
+        $this->assertCount(12, $firstPage->viewData('budgets'));
+        $firstPage->assertSee('of <strong>12</strong> records', false);
+
+        $secondPage = $this->withViewErrors([])->get(route('admin.budgets', ['sort' => 'title_asc', 'page' => 2]))->assertOk();
+        $this->assertSame(['Fund 11', 'Fund 12'], collect($secondPage->viewData('budgetPage')->items())->pluck('title')->all());
+        $this->assertStringContainsString('sort=title_asc', $secondPage->viewData('budgetPage')->withQueryString()->url(1));
+    }
+
     public function test_budget_page_uses_contribution_fee_wording(): void
     {
         $this->withViewErrors([])->get(route('admin.budgets'))

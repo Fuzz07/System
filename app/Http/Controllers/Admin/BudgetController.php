@@ -49,6 +49,8 @@ class BudgetController extends Controller
                 ->orderBy('title', 'asc');
         }
 
+        // The table pages through the budgets; the print report needs them all.
+        $budgetPage = (clone $query)->paginate(10);
         $budgets = $query->get();
 
         $totalAllocated = Budget::where('status', 'Approved')->sum('allocated_amount');
@@ -62,6 +64,7 @@ class BudgetController extends Controller
             ?: now()->year.'-'.(now()->year + 1);
 
         return view('admin.budgets', compact(
+            'budgetPage',
             'budgets',
             'search',
             'filter',

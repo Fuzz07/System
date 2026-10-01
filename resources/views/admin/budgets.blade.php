@@ -554,7 +554,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($budgets as $b)
+                        @forelse($budgetPage as $b)
                             @php
                                 $isEnrollmentFee = ($b->title === \App\Models\Budget::ENROLLMENT_TITLE_PREFIX);
                             @endphp
@@ -623,6 +623,7 @@
                 </table>
             </div>
         </div>
+        {{ $budgetPage->withQueryString()->links('partials.pagination') }}
 
         {{-- Budget Modal --}}
         <div class="modal fade" id="budgetModal" tabindex="-1" aria-hidden="true">
