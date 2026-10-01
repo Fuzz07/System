@@ -30,7 +30,7 @@
                             <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill mb-1">Nomination Phase</span>
                             <span class="small text-white text-opacity-75">Filing is {{ $activeSy->candidacy_open ? 'OPEN' : 'CLOSED' }}</span>
                         </div>
-                        <form method="POST" action="{{ route('admin.election.open') }}" data-confirm="Are you sure you want to open the election? This starts an 8-hour voting period and notifies all eligible students!">
+                        <form method="POST" action="{{ route('admin.election.open') }}" data-confirm-title="Open the election?" data-confirm-ok="Open Voting" data-confirm-tone="primary" data-confirm="This starts an 8-hour voting period and notifies all eligible students.">
                             @csrf
                             <button type="submit" class="btn btn-light fw-bold text-primary px-4 py-2" style="border-radius:10px; background: #ffffff; color: #4f46e5 !important; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.15);">
                                 <i class="bi bi-play-circle-fill me-1"></i> Open Voting (Start 8-Hours)
@@ -44,9 +44,9 @@
                         </div>
                         <div class="p-3 bg-white bg-opacity-10 rounded-3 text-center min-w-150 me-2" style="border:1px solid rgba(255,255,255,0.1);">
                             <div class="small text-white text-opacity-70 text-uppercase fw-semibold" style="font-size:0.7rem; letter-spacing:1px;">Time Remaining</div>
-                            <div class="h4 fw-bold text-warning mb-0" id="voting-countdown" style="font-variant-numeric: tabular-nums;">--:--:--</div>
+                            <div class="h4 fw-bold text-warning mb-0" id="voting-countdown" style="font-variant-numeric: tabular-nums;" data-ssc-live-preserve>--:--:--</div>
                         </div>
-                        <form method="POST" action="{{ route('admin.election.close') }}" data-confirm="Are you sure you want to manually close the voting period immediately?">
+                        <form method="POST" action="{{ route('admin.election.close') }}" data-confirm-title="Close voting now?" data-confirm-ok="Close Voting" data-confirm-tone="danger" data-confirm="Students will no longer be able to cast votes. You can announce the results afterwards.">
                             @csrf
                             <button type="submit" class="btn btn-danger fw-bold text-white px-3 py-2" style="border-radius:10px; border:none; box-shadow:0 4px 12px rgba(220,38,38,0.3);">
                                 <i class="bi bi-stop-fill"></i> Close Voting
@@ -67,7 +67,7 @@
                             <span class="badge bg-warning text-dark px-3 py-1.5 rounded-pill mb-1">Awaiting Announcement</span>
                             <span class="small text-white text-opacity-75">8 hours voting period ended</span>
                         </div>
-                        <form method="POST" action="{{ route('admin.election.announce') }}" data-confirm="Are you sure you want to announce election results? This will auto-promote winners as active SSC Officers, replacing the current officer in each position won (officers in positions without a winner stay), update user credentials, and post the winners board announcement!">
+                        <form method="POST" action="{{ route('admin.election.announce') }}" data-confirm-title="Announce the results?" data-confirm-ok="Announce Results" data-confirm-tone="warning" data-confirm="Winners become active SSC officers, replacing the current officer in each position they won (officers in positions without a winner stay), and the winners are posted on the announcement board.">
                             @csrf
                             <button type="submit" class="btn btn-warning fw-bold text-dark px-4 py-2" style="border-radius:10px; box-shadow:0 4px 12px rgba(245,158,11,0.3);">
                                 <i class="bi bi-trophy-fill me-1"></i> Announce Results & Promote Winners
@@ -84,17 +84,21 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const endTime = new Date("{{ $activeSy->voting_ends_at->toIso8601String() }}").getTime();
-        
+        let timer = null;
+
         function updateCountdown() {
             const now = new Date().getTime();
             const distance = endTime - now;
-            
+
             if (distance < 0) {
+                // Voting stays open until the admin closes it, so the page is
+                // left as it is. It used to reload here, every second once time
+                // ran out, which threw away the Close Voting confirmation before
+                // it could be answered.
                 document.getElementById("voting-countdown").innerHTML = "00:00:00";
                 document.getElementById("voting-countdown").classList.remove("text-warning");
                 document.getElementById("voting-countdown").classList.add("text-danger");
-                // Optional: reload page once when timer hits 0 to refresh the panel state
-                setTimeout(() => { location.reload(); }, 2000);
+                clearInterval(timer);
                 return;
             }
             
@@ -106,8 +110,8 @@
             document.getElementById("voting-countdown").innerHTML = pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
         }
         
+        timer = setInterval(updateCountdown, 1000);
         updateCountdown();
-        setInterval(updateCountdown, 1000);
     });
 </script>
 <style>

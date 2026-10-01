@@ -290,7 +290,7 @@
             }
         })();
     </script>
-    <script src="{{ asset('assets/js/main.js') }}?v=1.0.4"></script>
+    <script src="{{ asset('assets/js/main.js') }}?v={{ @filemtime(public_path('assets/js/main.js')) ?: 1 }}"></script>
     <script src="{{ asset('assets/js/live-updates.js') }}?v={{ @filemtime(public_path('assets/js/live-updates.js')) ?: 1 }}"></script>
 </body>
 

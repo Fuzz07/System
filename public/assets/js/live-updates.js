@@ -23,6 +23,9 @@
             || formIsDirty
             || isEditable(document.activeElement)
             || document.body.classList.contains('modal-open')
+            // A confirmation is waiting on the user: redrawing now could swap
+            // out the form it belongs to.
+            || document.body.classList.contains('ssc-dialog-open')
             || document.querySelector('.modal.show, [data-ssc-live-pause]');
     }
 

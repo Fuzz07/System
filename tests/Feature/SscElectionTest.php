@@ -273,6 +273,27 @@ class SscElectionTest extends TestCase
         ]);
     }
 
+    public function test_panel_does_not_reload_itself_once_voting_time_runs_out(): void
+    {
+        // Voting stays open past its 8 hours until the admin closes it. The
+        // countdown used to reload the page every second from then on, which
+        // threw away the Close Voting confirmation before it could be answered.
+        $this->activeSy->update([
+            'candidacy_open' => false,
+            'voting_open' => true,
+            'voting_starts_at' => now()->subHours(9),
+            'voting_ends_at' => now()->subHour(),
+        ]);
+
+        $this->actingAs($this->admin)
+            ->withViewErrors([])
+            ->get(route('admin.candidacies'))
+            ->assertOk()
+            ->assertSee('Close Voting')
+            ->assertSee('data-confirm-title="Close voting now?"', false)
+            ->assertDontSee('location.reload', false);
+    }
+
     public function test_announcing_results_keeps_officers_in_positions_nobody_won(): void
     {
         $secretary = $this->makeUser('Sec', 'officer', 'SSC Secretary');

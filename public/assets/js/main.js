@@ -18,13 +18,25 @@
     error: 'Something went wrong'
   };
 
+  // Each dialog takes a tone, which sets its colour, icon and default title.
+  // Alerts take theirs from their type; confirmations default to primary.
+  const tones = {
+    primary: { icon: 'bi-question-circle-fill', title: 'Please confirm' },
+    danger: { icon: 'bi-exclamation-triangle-fill', title: 'Are you sure?' },
+    warning: { icon: 'bi-exclamation-circle-fill', title: 'Please confirm' },
+    success: { icon: 'bi-check-circle-fill', title: 'Success' },
+    info: { icon: 'bi-info-circle-fill', title: 'Notice' }
+  };
+  const alertTones = { info: 'info', success: 'success', warning: 'warning', error: 'danger' };
+
   function createDialog() {
     const overlay = document.createElement('div');
     overlay.className = 'ssc-dialog-overlay';
     overlay.setAttribute('aria-hidden', 'true');
     overlay.innerHTML = `
       <section class="ssc-dialog" role="dialog" aria-modal="true" aria-labelledby="ssc-dialog-title" aria-describedby="ssc-dialog-message" tabindex="-1">
-        <h2 class="ssc-dialog-title" id="ssc-dialog-title">SSC System says</h2>
+        <div class="ssc-dialog-icon" aria-hidden="true"><i class="bi"></i></div>
+        <h2 class="ssc-dialog-title" id="ssc-dialog-title"></h2>
         <p class="ssc-dialog-message" id="ssc-dialog-message"></p>
         <div class="ssc-dialog-actions">
           <button class="ssc-dialog-button ssc-dialog-cancel" type="button">Cancel</button>
@@ -35,6 +47,10 @@
     document.body.appendChild(overlay);
     overlay.querySelector('.ssc-dialog-confirm').addEventListener('click', () => closeDialog(true));
     overlay.querySelector('.ssc-dialog-cancel').addEventListener('click', () => closeDialog(false));
+    // Clicking the dimmed backdrop counts as Cancel (or OK on a plain alert).
+    overlay.addEventListener('click', function (event) {
+      if (event.target === overlay && activeDialog) closeDialog(activeDialog.kind !== 'confirm');
+    });
     return overlay;
   }
 
@@ -50,9 +66,13 @@
     const dialog = overlay.querySelector('.ssc-dialog');
     const isConfirm = activeDialog.kind === 'confirm';
 
+    const tone = tones[activeDialog.tone] ? activeDialog.tone : (isConfirm ? 'primary' : alertTones[activeDialog.type] || 'info');
+
     previousFocus = document.activeElement;
     dialog.dataset.type = activeDialog.type || 'info';
-    overlay.querySelector('.ssc-dialog-title').textContent = activeDialog.title || (isConfirm ? 'SSC System says' : alertTypes[activeDialog.type] || 'Notice');
+    dialog.dataset.tone = tone;
+    overlay.querySelector('.ssc-dialog-icon i').className = 'bi ' + tones[tone].icon;
+    overlay.querySelector('.ssc-dialog-title').textContent = activeDialog.title || (isConfirm ? tones[tone].title : alertTypes[activeDialog.type] || 'Notice');
     overlay.querySelector('.ssc-dialog-message').textContent = activeDialog.message;
     overlay.querySelector('.ssc-dialog-confirm').textContent = activeDialog.confirmText || 'OK';
     overlay.querySelector('.ssc-dialog-cancel').textContent = activeDialog.cancelText || 'Cancel';
@@ -62,7 +82,8 @@
 
     requestAnimationFrame(function () {
       overlay.classList.add('show');
-      overlay.querySelector(isConfirm ? '.ssc-dialog-confirm' : '.ssc-dialog-confirm').focus();
+      // On a destructive confirmation, Enter should not be one key away from it.
+      overlay.querySelector(isConfirm && tone === 'danger' ? '.ssc-dialog-cancel' : '.ssc-dialog-confirm').focus();
     });
   }
 
@@ -90,6 +111,7 @@
         message: String(message ?? ''),
         title: settings.title,
         type: settings.type || 'info',
+        tone: settings.tone,
         kind: settings.kind || 'alert',
         confirmText: settings.confirmText,
         cancelText: settings.cancelText,
@@ -211,7 +233,20 @@ document.addEventListener('DOMContentLoaded', function () {
     if (form.dataset.sscConfirmPending === 'true') return;
     form.dataset.sscConfirmPending = 'true';
 
-    const approved = await window.SSCConfirm(form.dataset.confirm || 'Are you sure?');
+    // A form may set data-confirm-title, data-confirm-ok and data-confirm-tone
+    // (primary, danger or warning). Without them, deletes and other undoing
+    // actions read as danger, and a delete's button says Delete.
+    const method = (form.querySelector('input[name="_method"]')?.value || form.method || '').toUpperCase();
+    const isDelete = method === 'DELETE';
+    const looksDestructive = isDelete
+      || /\b(delete|remove|reject|close|cancel|terminate|log out|reset|skip)\b/i.test(form.dataset.confirm || '');
+    const tone = form.dataset.confirmTone || (looksDestructive ? 'danger' : 'primary');
+
+    const approved = await window.SSCConfirm(form.dataset.confirm || 'Are you sure?', {
+      tone: tone,
+      title: form.dataset.confirmTitle,
+      confirmText: form.dataset.confirmOk || (isDelete ? 'Delete' : tone === 'danger' ? 'Yes, continue' : 'Confirm')
+    });
     delete form.dataset.sscConfirmPending;
 
     if (approved) {
