@@ -102,7 +102,15 @@ class ProposalController extends Controller
 
         $sscExecutiveOfficers = config('ssc.executive_officers', []);
 
-        return view('student.print', compact('proposal', 'sscExecutiveOfficers'));
+        // The print page normally opens in a new tab, where browser history has
+        // no previous entry. Give its back button a real portal-specific URL.
+        $backUrl = match ($user->role) {
+            'admin' => route('admin.proposals'),
+            'officer', 'treasurer' => route('officer.proposals'),
+            default => route('student.proposal.show', $proposal),
+        };
+
+        return view('student.print', compact('proposal', 'sscExecutiveOfficers', 'backUrl'));
     }
 
     private function authorizeStudentProposalAccess(Proposal $proposal): void

@@ -1,22 +1,22 @@
 @php
-    function proposalDocumentNumber(int $id): string {
+    $proposalDocumentNumber = function (int $id): string {
         return 'BP' . str_pad((string)$id, 3, '0', STR_PAD_LEFT);
-    }
+    };
 
-    function proposalDocumentDate($date): string {
+    $proposalDocumentDate = function ($date): string {
         if (!$date) {
             return date('F j, Y');
         }
         return \Illuminate\Support\Carbon::parse($date)->format('F j, Y');
-    }
+    };
 
-    function proposalDocumentTitle(string $projectTitle): string {
+    $proposalDocumentTitle = function (string $projectTitle): string {
         $title = trim($projectTitle);
         $title = preg_replace('/^budget\s+proposal\s+for\s+/i', '', $title);
         return 'BUDGET PROPOSAL FOR ' . strtoupper($title);
-    }
+    };
 
-    function proposalDocumentObjectives($source): array {
+    $proposalDocumentObjectives = function ($source): array {
         $source = trim($source ?? '');
         $lines = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $source))));
 
@@ -36,34 +36,34 @@
         }
 
         return array_slice($lines, 0, 8);
-    }
+    };
 
-    function sscSignatureName(string $rosterName): string {
+    $sscSignatureName = function (string $rosterName): string {
         $nameParts = explode(',', $rosterName, 2);
         if (count($nameParts) === 2) {
             return strtoupper(trim($nameParts[1]) . ' ' . trim($nameParts[0]));
         }
         return strtoupper(trim($rosterName));
-    }
+    };
 
-    function sscOfficerNameByPosition(array $executiveOfficers, string $position): string {
+    $sscOfficerNameByPosition = function (array $executiveOfficers, string $position): string {
         foreach ($executiveOfficers as $officer) {
             if (strcasecmp($officer['position'], $position) === 0) {
                 return $officer['name'];
             }
         }
         return '';
-    }
+    };
 
-    $objectives = proposalDocumentObjectives($proposal->objectives ?? $proposal->description);
+    $objectives = $proposalDocumentObjectives($proposal->objectives ?? $proposal->description);
     $budgetItems = $proposal->budgetItemList();
     $itemTotal = $proposal->budgetItemTotal();
     $requestedBudget = (float)$proposal->requested_budget;
     $eventDate = trim($proposal->proposal_event_date ?? '') ?: 'To be announced';
     $participants = !empty($proposal->participant_count) ? (int)$proposal->participant_count : null;
 
-    $treasurerName = sscSignatureName(sscOfficerNameByPosition($sscExecutiveOfficers, 'Treasurer'));
-    $presidentName = sscSignatureName(sscOfficerNameByPosition($sscExecutiveOfficers, 'President'));
+    $treasurerName = $sscSignatureName($sscOfficerNameByPosition($sscExecutiveOfficers, 'Treasurer'));
+    $presidentName = $sscSignatureName($sscOfficerNameByPosition($sscExecutiveOfficers, 'President'));
     $adviserName = config('ssc.adviser');
 @endphp
 <!DOCTYPE html>
@@ -71,7 +71,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ proposalDocumentTitle($proposal->project_title) }} | SSC Transparency System</title>
+  <title>{{ $proposalDocumentTitle($proposal->project_title) }} | SSC Transparency System</title>
   <link rel="icon" type="image/png" href="{{ asset('assets/images/ssc_logo.png') }}">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <style>
@@ -373,7 +373,7 @@
 </head>
 <body>
   <div class="proposal-print-toolbar">
-    <a href="javascript:history.back()"><i class="bi bi-arrow-left"></i> Back to Detail</a>
+    <a href="{{ $backUrl }}" onclick="if (window.opener && !window.opener.closed) { window.close(); return false; }"><i class="bi bi-arrow-left"></i> Back to Detail</a>
     <button type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print Proposal</button>
   </div>
 
@@ -392,12 +392,12 @@
       <img src="{{ asset('assets/images/ssc_logo.png') }}" alt="SSC Logo" class="proposal-seal ssc">
     </header>
 
-    <h1 class="proposal-title">{{ proposalDocumentTitle($proposal->project_title) }}</h1>
+    <h1 class="proposal-title">{{ $proposalDocumentTitle($proposal->project_title) }}</h1>
 
     <div class="proposal-dates">
-      <div>Today's Date: {{ proposalDocumentDate($proposal->created_at) }}</div>
+      <div>Today's Date: {{ $proposalDocumentDate($proposal->created_at) }}</div>
       <div>
-        <strong>No. {{ proposalDocumentNumber($proposal->id) }}</strong><br>
+        <strong>No. {{ $proposalDocumentNumber($proposal->id) }}</strong><br>
         Date of Event: {{ $eventDate }}
       </div>
     </div>

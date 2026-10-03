@@ -22,7 +22,7 @@
                     <div class="mt-2 small">Requested Budget: <strong>{{ \App\Helpers\SscHelper::formatCurrency($proposal->requested_budget) }}</strong></div>
                 </div>
                 @if($proposal->admin_notes)<div class="p-4 rounded-4 mb-4" style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);"><h6 class="fw-bold text-warning-emphasis mb-2"><i class="bi bi-info-circle-fill"></i> Council Notes</h6><div class="text-dark small opacity-75">{{ $proposal->admin_notes }}</div></div>@endif
-                @if($proposal->project_status === 'Completed' && $proposal->completion_proof)<div class="p-4 rounded-4 bg-light border d-flex justify-content-between align-items-center mb-5"><div><h6 class="fw-bold text-success mb-1"><i class="bi bi-patch-check-fill"></i> Project Liquidated</h6><div class="text-muted small">Official receipt available.</div></div><a href="{{ \App\Helpers\SscHelper::getUploadUrl($proposal->completion_proof) }}" target="_blank" class="btn btn-sm btn-success px-4" style="border-radius:10px;"><i class="bi bi-receipt"></i> View Receipt</a></div>@endif
+                @if($proposal->project_status === 'Completed' && $proposal->completion_proof)<div class="p-4 rounded-4 bg-light border d-flex justify-content-between align-items-center mb-5"><div><h6 class="fw-bold text-success mb-1"><i class="bi bi-patch-check-fill"></i> Project Liquidated</h6><div class="text-muted small">Official receipt available.</div></div><button type="button" class="btn btn-sm btn-success px-4" style="border-radius:10px;" data-bs-toggle="modal" data-bs-target="#proposalReceiptModal{{ $proposal->id }}"><i class="bi bi-receipt"></i> View Receipt</button></div>@endif
             </div>
         </div>
 
@@ -80,4 +80,8 @@
         </div>
     </div>
 </div>
+
+@if($proposal->project_status === 'Completed' && $proposal->completion_proof)
+    @include('partials.proposal-receipt-modal', ['proposal' => $proposal])
+@endif
 @endsection

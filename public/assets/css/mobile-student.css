@@ -1113,15 +1113,149 @@ body {
   border-radius: 10px;
   font-size: 0.78rem;
   font-weight: 600;
+  font-family: inherit;
   text-decoration: none;
   white-space: nowrap;
   flex-shrink: 0;
+  border: 0;
+  cursor: pointer;
   transition: var(--transition);
 }
 
 .proof-btn:hover {
   background: #059669;
   color: #fff;
+}
+
+/* Project receipt preview */
+body.project-receipt-open {
+  overflow: hidden;
+}
+
+.project-receipt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.72);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.project-receipt-overlay[hidden] {
+  display: none;
+}
+
+.project-receipt-dialog {
+  width: min(100%, 560px);
+  max-height: calc(100dvh - 36px);
+  overflow: hidden;
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.38);
+}
+
+.project-receipt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.project-receipt-header h2 {
+  margin: 2px 0 0;
+  color: var(--slate-900);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.project-receipt-eyebrow {
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.project-receipt-close {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  color: var(--slate-600);
+  background: var(--slate-100);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.project-receipt-body {
+  display: grid;
+  place-items: center;
+  min-height: 220px;
+  max-height: calc(100dvh - 190px);
+  padding: 14px;
+  overflow: auto;
+  background: var(--slate-100);
+}
+
+.project-receipt-body img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100dvh - 220px);
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: 12px;
+}
+
+.project-receipt-error {
+  color: var(--slate-500);
+  text-align: center;
+  font-size: 0.82rem;
+}
+
+.project-receipt-error i {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 2rem;
+}
+
+.project-receipt-error p {
+  margin: 0;
+}
+
+.project-receipt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px 16px;
+}
+
+.project-receipt-actions a,
+.project-receipt-actions button {
+  padding: 10px 14px;
+  color: var(--slate-700);
+  background: #fff;
+  border: 1px solid var(--slate-200);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.project-receipt-actions .project-receipt-open {
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 /* ── Buttons ── */

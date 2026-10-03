@@ -54,9 +54,9 @@
         <div class="proof-label"><i class="bi bi-patch-check-fill"></i> Project Liquidated</div>
         <div class="proof-sub">Official receipt available for transparency.</div>
     </div>
-    <a href="{{ \App\Helpers\SscHelper::getUploadUrl($proposal->completion_proof) }}" target="_blank" class="proof-btn">
+    <button type="button" class="proof-btn" data-receipt-modal-open="proposalReceiptModal{{ $proposal->id }}">
         <i class="bi bi-receipt"></i> Receipt
-    </a>
+    </button>
 </div>
 @endif
 
@@ -153,6 +153,9 @@
 
 {{-- Comment Input Bar --}}
 @push('modals')
+@if($proposal->project_status === 'Completed' && $proposal->completion_proof)
+    @include('partials.proposal-receipt-modal', ['proposal' => $proposal, 'mobile' => true])
+@endif
 <div class="comment-input-wrap" id="commentInputWrap">
     <form method="POST" action="{{ route('mobile.student.proposal.comment', $proposal) }}"
           id="commentForm" style="display:flex;gap:10px;align-items:flex-end;width:100%;">
