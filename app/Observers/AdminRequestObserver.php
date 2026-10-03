@@ -128,7 +128,7 @@ class AdminRequestObserver
         AdminAlertService::send(
             'New liquidation report',
             "{$officer} uploaded the liquidation report \"{$liquidation->title}\".",
-            route('admin.proposals'),
+            route('admin.liquidations', ['status' => 'Pending']),
             'liquidation_report'
         );
     }

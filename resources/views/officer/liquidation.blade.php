@@ -30,15 +30,34 @@
         <td style="font-weight:700;">{{ $liq->title }}</td>
         <td>{{ $liq->proposal->project_title ?? '—' }}</td>
         <td style="font-size:.8rem;color:#718096;">{{ Str::limit($liq->notes, 80) }}</td>
-        <td>{!! \App\Helpers\SscHelper::statusBadge($liq->status) !!}</td>
+        <td>
+            {!! \App\Helpers\SscHelper::statusBadge($liq->status) !!}
+            @if($liq->review_notes)<div class="small text-danger mt-1">{{ $liq->review_notes }}</div>@endif
+        </td>
         <td style="font-size:.78rem;white-space:nowrap;">{{ $liq->created_at?->format('M d, Y') }}</td>
-        <td><a href="{{ \App\Helpers\SscHelper::getUploadUrl($liq->file_path) }}" target="_blank" class="btn btn-outline-primary btn-sm" style="font-size:.72rem;"><i class="bi bi-download"></i> View</a></td>
+        <td><button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#liqPreviewModal{{ $liq->id }}" style="font-size:.72rem;"><i class="bi bi-eye"></i> View</button></td>
     </tr>
     @empty
     <tr><td colspan="7" class="text-center py-5 text-muted">No liquidation reports yet.</td></tr>
     @endforelse
     </tbody>
 </table></div></div>
+
+@foreach($liquidations as $liq)
+<div class="modal fade" id="liqPreviewModal{{ $liq->id }}" tabindex="-1" aria-labelledby="liqPreviewModalLabel{{ $liq->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content" style="border-radius:var(--radius);border:none;">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title" id="liqPreviewModalLabel{{ $liq->id }}" style="font-weight:700;">{{ $liq->title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-3">
+                <img src="{{ \App\Helpers\SscHelper::getUploadUrl($liq->file_path) }}" alt="{{ $liq->title }}" style="max-width:100%;max-height:75vh;object-fit:contain;">
+            </div>
+        </div>
+    </div>
+</div>
+@endforeach
 
 <div class="modal fade" id="liqModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content" style="border-radius:var(--radius);border:none;">
     <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;"><i class="bi bi-folder-check"></i> Upload Liquidation Report</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

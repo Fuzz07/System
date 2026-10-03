@@ -46,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
                 'pendingProposals' => Proposal::where('status', 'Pending')->count(),
                 'pendingExpenses'  => Expense::where('status', 'Pending')->count(),
                 'pendingFeedback'  => Feedback::where('status', 'Pending')->count(),
+                'pendingLiquidations' => Liquidation::where('status', 'Pending')->count(),
                 'pendingStudents'  => User::where('role', 'student')->notArchived()->where('status', 'inactive')->count(),
             ]);
         });

@@ -154,6 +154,13 @@ class ReleaseController extends Controller
             "Released {$formattedAmt} for Proposal ID {$pid} via {$request->release_method}"
         );
 
+        \App\Services\AdminAlertService::send(
+            'Budget released by treasurer',
+            "{$formattedAmt} was released for \"{$proposal->project_title}\" by " . Auth::user()->fullname . '.',
+            route('admin.proposals'),
+            'budget_release'
+        );
+
         return redirect()->route('treasurer.release')->with('success', "Budget of {$formattedAmt} released successfully for \"{$proposal->project_title}\".");
     }
 

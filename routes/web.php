@@ -71,6 +71,8 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
 
         Route::get('/proposals', [Admin\ProposalController::class, 'index'])->name('proposals');
         Route::post('/proposals/{proposal}/review', [Admin\ProposalController::class, 'review'])->name('proposals.review');
+        Route::get('/liquidations', [Admin\LiquidationController::class, 'index'])->name('liquidations');
+        Route::post('/liquidations/{liquidation}/review', [Admin\LiquidationController::class, 'review'])->name('liquidations.review');
 
         Route::get('/expenses', [Admin\ExpenseController::class, 'index'])->name('expenses');
         Route::post('/expenses/{expense}/review', [Admin\ExpenseController::class, 'review'])->name('expenses.review');

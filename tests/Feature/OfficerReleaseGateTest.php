@@ -103,6 +103,15 @@ class OfficerReleaseGateTest extends TestCase
             ->post(route('officer.liquidation.store'), $this->liquidation($released))
             ->assertSessionHasNoErrors();
         $this->assertDatabaseHas('liquidations', ['proposal_id' => $released->id]);
+
+        $report = \App\Models\Liquidation::where('proposal_id', $released->id)->firstOrFail();
+        $this->actingAs($this->officer)
+            ->get(route('officer.liquidation'))
+            ->assertOk()
+            ->assertSee('data-bs-target="#liqPreviewModal' . $report->id . '"', false)
+            ->assertSee('id="liqPreviewModal' . $report->id . '"', false)
+            ->assertSee('alt="Liquidation for Clean-up Drive"', false)
+            ->assertDontSee('target="_blank" class="btn btn-outline-primary btn-sm"', false);
     }
 
     private function approvedProposal(string $title = 'Campus Project'): Proposal

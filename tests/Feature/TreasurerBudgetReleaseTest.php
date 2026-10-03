@@ -7,6 +7,8 @@ use App\Models\BudgetRelease;
 use App\Models\Proposal;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\AdminAlertNotification;
 use Tests\TestCase;
 
 class TreasurerBudgetReleaseTest extends TestCase
@@ -44,6 +46,26 @@ class TreasurerBudgetReleaseTest extends TestCase
             'release_status' => 'Released',
             'released_by' => $this->treasurer->id,
         ]);
+    }
+
+    public function test_successful_budget_release_notifies_active_admins(): void
+    {
+        Notification::fake();
+        $admin = $this->user('admin', 'Council Administrator');
+
+        $this->post(route('treasurer.release.submit'), $this->payload())
+            ->assertRedirect(route('treasurer.release'))
+            ->assertSessionHasNoErrors();
+
+        Notification::assertSentTo(
+            $admin,
+            AdminAlertNotification::class,
+            fn (AdminAlertNotification $notification): bool => $notification->type === 'budget_release'
+                && $notification->title === 'Budget released by treasurer'
+                && str_contains($notification->message, 'Sports Fest')
+                && str_contains($notification->message, 'Florane Maru')
+                && $notification->url === route('admin.proposals')
+        );
     }
 
     public function test_a_release_needs_a_reference_number(): void

@@ -19,6 +19,10 @@
     <span class="nav-icon"><i class="bi bi-receipt"></i></span> Expenses
     @if(($pendingExpenses ?? 0) > 0)<span class="badge-count">{{ $pendingExpenses }}</span>@endif
 </a>
+<a href="{{ route('admin.liquidations') }}" class="nav-link {{ request()->routeIs('admin.liquidations*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-folder-check"></i></span> Liquidation Reports
+    @if(($pendingLiquidations ?? 0) > 0)<span class="badge-count">{{ $pendingLiquidations }}</span>@endif
+</a>
 
 <div class="nav-section-label">Management</div>
 <a href="{{ route('admin.announcements') }}" class="nav-link {{ request()->routeIs('admin.announcements') ? 'active' : '' }}">
