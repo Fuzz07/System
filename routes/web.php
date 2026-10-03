@@ -17,6 +17,8 @@ if (!function_exists('registerEnrollmentPaymentRoutes')) {
     function registerEnrollmentPaymentRoutes() {
         Route::get('/enrollment-payments', [Admin\EnrollmentPaymentController::class, 'index'])->name('enrollment.payments');
         Route::post('/enrollment-payments/students', [Admin\EnrollmentPaymentController::class, 'storeStudent'])->name('enrollment.payments.students.store');
+        Route::post('/enrollment-payments/students/import', [Admin\EnrollmentPaymentController::class, 'importStudents'])->name('enrollment.payments.students.import');
+        Route::get('/enrollment-payments/students/import/template', [Admin\EnrollmentPaymentController::class, 'importTemplate'])->name('enrollment.payments.students.template');
         Route::post('/enrollment-payments/{payment}/mark-paid', [Admin\EnrollmentPaymentController::class, 'markPaid'])->name('enrollment.payments.mark_paid');
         Route::post('/enrollment-payments/{student}/walk-in', [Admin\EnrollmentPaymentController::class, 'markPaidWalkIn'])->name('enrollment.payments.walk_in');
         Route::post('/enrollment-payments/{payment}/approve-proof', [Admin\EnrollmentPaymentController::class, 'approveProof'])->name('enrollment.payments.proof.approve');
@@ -213,6 +215,9 @@ Route::domain('treasurer.' . $baseDomain)->group(function () {
         Route::get('/reports', [App\Http\Controllers\Treasurer\ReleaseController::class, 'reports'])->name('reports');
         Route::get('/announcements', [App\Http\Controllers\Treasurer\ReleaseController::class, 'announcements'])->name('announcements');
 
+        Route::get('/expenses', [Admin\ExpenseController::class, 'index'])->name('expenses');
+        Route::post('/expenses/{expense}/review', [Admin\ExpenseController::class, 'review'])->name('expenses.review');
+
         registerEnrollmentPaymentRoutes();
 
         Route::get('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'index'])->name('cashbook');
@@ -240,7 +245,12 @@ Route::group([], function () use ($baseDomain) {
             return redirect()->route('login.student');
         }
 
-        return view('welcome');
+        // Keep the public transparency figure aligned with the staff
+        // dashboards: only approved allocations are considered managed funds.
+        $managedBudget = (float) \App\Models\Budget::where('status', 'Approved')
+            ->sum('allocated_amount');
+
+        return view('welcome', compact('managedBudget'));
     })->name('home');
 
     Route::post('/chatbot/chat', [Student\ChatbotController::class, 'chat'])

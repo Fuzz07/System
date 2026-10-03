@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Helpers\SscHelper;
 use App\Models\Budget;
 use App\Models\BudgetRelease;
+use App\Models\Expense;
 use App\Models\Proposal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,10 @@ class DashboardController extends Controller
 
         // Total allocated budget
         $totalBudget = Budget::where('status', 'Approved')->sum('allocated_amount');
+
+        // Only approved expenses reduce the budget available for use.
+        $totalExpenses = Expense::where('status', 'Approved')->sum('amount');
+        $remainingBudget = $totalBudget - $totalExpenses;
 
         // Total released amount
         $totalReleased = BudgetRelease::whereIn('release_status', ['Released', 'Partial'])->sum('amount_released');
@@ -61,6 +66,8 @@ class DashboardController extends Controller
         return view('treasurer.dashboard', compact(
             'sy',
             'totalBudget',
+            'totalExpenses',
+            'remainingBudget',
             'totalReleased',
             'pendingRelease',
             'releasedCount',

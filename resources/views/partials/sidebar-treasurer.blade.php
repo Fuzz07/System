@@ -14,6 +14,9 @@
 <a href="{{ route('treasurer.cashbook') }}" class="nav-link {{ request()->routeIs('treasurer.cashbook*') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-journal-bookmark"></i></span> Cash Book
 </a>
+<a href="{{ route('treasurer.expenses') }}" class="nav-link {{ request()->routeIs('treasurer.expenses*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-receipt-cutoff"></i></span> Manage Expenses
+</a>
 <a href="{{ route('treasurer.reports') }}" class="nav-link {{ request()->routeIs('treasurer.reports') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-bar-chart-line"></i></span> Release Reports
 </a>

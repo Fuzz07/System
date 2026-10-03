@@ -61,7 +61,7 @@
 
 <!-- Stat Cards -->
 <div class="row g-3 mb-3">
-  <div class="col-sm-6 col-lg-3">
+  <div class="col-sm-6 col-md-4 col-xl-2">
     <div class="stat-card">
       <div class="stat-icon" style="background: rgba(13, 43, 92, 0.1); color: #0d2b5c;"><i class="bi bi-wallet2"></i></div>
       <div class="stat-info">
@@ -71,7 +71,27 @@
       </div>
     </div>
   </div>
-  <div class="col-sm-6 col-lg-3">
+  <div class="col-sm-6 col-md-4 col-xl-2">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: #dc2626;"><i class="bi bi-receipt-cutoff"></i></div>
+      <div class="stat-info">
+        <div class="label">Total Expenses</div>
+        <div class="value" data-count="{{ $totalExpenses }}" data-currency="1">â‚±0.00</div>
+        <div class="sub" style="font-size: 0.65rem; color: #64748b;">Approved expenses</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-4 col-xl-2">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #059669;"><i class="bi bi-piggy-bank"></i></div>
+      <div class="stat-info">
+        <div class="label">Remaining Budget</div>
+        <div class="value" data-count="{{ $remainingBudget }}" data-currency="1">â‚±0.00</div>
+        <div class="sub" style="font-size: 0.65rem; color: #64748b;">After approved expenses</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-4 col-xl-2">
     <div class="stat-card">
       <div class="stat-icon" style="background: rgba(217, 119, 6, 0.1); color: #d97706;"><i class="bi bi-cash-coin"></i></div>
       <div class="stat-info">
@@ -81,7 +101,7 @@
       </div>
     </div>
   </div>
-  <div class="col-sm-6 col-lg-3">
+  <div class="col-sm-6 col-md-4 col-xl-2">
     <div class="stat-card">
       <div class="stat-icon" style="background: rgba(0, 168, 120, 0.1); color: #00a878;"><i class="bi bi-hourglass-split"></i></div>
       <div class="stat-info">
@@ -91,7 +111,7 @@
       </div>
     </div>
   </div>
-  <div class="col-sm-6 col-lg-3">
+  <div class="col-sm-6 col-md-4 col-xl-2">
     <div class="stat-card">
       <div class="stat-icon" style="background: rgba(5, 150, 105, 0.1); color: #059669;"><i class="bi bi-check2-all"></i></div>
       <div class="stat-info">

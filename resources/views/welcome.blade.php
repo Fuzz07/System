@@ -1209,6 +1209,19 @@
         $activeSyObj = \App\Models\SchoolYear::where('is_active', 1)->first();
         $activeSyLabel = $activeSyObj?->label ?? 'Current';
         $currentOfficers = \App\Models\User::activeOfficers()->get();
+
+        // Keep the stat compact at any budget size without overstating it:
+        // 340,950 becomes 340.9k+, while 1,250,000 becomes 1.2m+.
+        $managedBudget = max(0, (float) ($managedBudget ?? 0));
+        $managedBudgetDivisor = $managedBudget >= 1_000_000 ? 1_000_000 : ($managedBudget >= 1_000 ? 1_000 : 1);
+        $managedBudgetSuffix = $managedBudget >= 1_000_000 ? 'm+' : ($managedBudget >= 1_000 ? 'k+' : '');
+        $managedBudgetScaled = $managedBudgetDivisor > 1
+            ? floor(($managedBudget / $managedBudgetDivisor) * 10) / 10
+            : floor($managedBudget);
+        $managedBudgetDisplay = number_format(
+            $managedBudgetScaled,
+            $managedBudgetDivisor > 1 && floor($managedBudgetScaled) !== $managedBudgetScaled ? 1 : 0
+        );
     @endphp
 
     <!-- ─── NAVBAR ─── -->
@@ -1431,7 +1444,8 @@
     <section class="stats-section">
         <div class="stats-inner">
             <div class="stat-item fade-up">
-                <div class="stat-number">₱340<span>k+</span></div>
+                <div class="stat-number" data-managed-budget="{{ $managedBudget }}"
+                    title="Exact approved budget managed: ₱{{ number_format($managedBudget, 2) }}">₱{{ $managedBudgetDisplay }}<span>{{ $managedBudgetSuffix }}</span></div>
                 <div class="stat-label">Budget Managed</div>
             </div>
             <div class="stat-item fade-up" style="transition-delay: 0.1s">

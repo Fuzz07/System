@@ -162,6 +162,40 @@ class TreasurerBudgetReleaseTest extends TestCase
             ->assertSee('Enter the reference / transaction number for this release');
     }
 
+    public function test_release_report_paginates_project_summary_by_seven(): void
+    {
+        for ($number = 2; $number <= 9; $number++) {
+            Proposal::create([
+                'officer_id' => $this->proposal->officer_id,
+                'project_title' => "Approved Project {$number}",
+                'requested_budget' => 1000,
+                'approved_budget' => 1000,
+                'description' => 'Approved project for pagination.',
+                'status' => 'Approved',
+            ]);
+        }
+
+        $this->get(route('treasurer.reports'))
+            ->assertOk()
+            ->assertViewHas('proposalSummary', function ($projects) {
+                return $projects instanceof \Illuminate\Pagination\LengthAwarePaginator
+                    && $projects->perPage() === 7
+                    && $projects->count() === 7
+                    && $projects->total() === 9;
+            })
+            ->assertSee('Showing')
+            ->assertSee('of <strong>9</strong> records', false)
+            ->assertSee('projects=2', false);
+
+        $this->get(route('treasurer.reports', ['projects' => 2]))
+            ->assertOk()
+            ->assertViewHas('proposalSummary', function ($projects) {
+                return $projects->currentPage() === 2
+                    && $projects->count() === 2
+                    && $projects->total() === 9;
+            });
+    }
+
     private function payload(array $overrides = []): array
     {
         return array_merge([

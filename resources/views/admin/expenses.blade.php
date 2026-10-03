@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('sidebar-nav') @include('partials.sidebar-admin') @endsection
+@section('sidebar-nav') @include($expenseSidebar) @endsection
 
 @section('content')
 <div class="page-header"><div><h1>Expenses</h1><p>Review and approve officer expense reports</p></div></div>
@@ -8,7 +8,7 @@
     <form method="GET" class="row g-2 align-items-end">
         <div class="col-md-5"><input type="text" name="search" class="form-control-custom" placeholder="Search expenses..." value="{{ $search }}"></div>
         <div class="col-md-3"><select name="status" class="form-select-custom"><option value="">All Statuses</option>@foreach(['Pending','Approved','Rejected'] as $s)<option value="{{ $s }}" {{ $status === $s ? 'selected' : '' }}>{{ $s }}</option>@endforeach</select></div>
-        <div class="col-md-4 d-flex gap-2"><button type="submit" class="btn-primary-custom flex-fill justify-content-center"><i class="bi bi-search"></i></button>@if($search || $status)<a href="{{ route('admin.expenses') }}" class="btn btn-outline-secondary">Reset</a>@endif</div>
+        <div class="col-md-4 d-flex gap-2"><button type="submit" class="btn-primary-custom flex-fill justify-content-center"><i class="bi bi-search"></i></button>@if($search || $status)<a href="{{ route($expenseIndexRoute) }}" class="btn btn-outline-secondary">Reset</a>@endif</div>
     </form>
 </div></div>
 
@@ -50,10 +50,10 @@
 <div class="modal fade" id="reviewExpense{{ $ex->id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog"><div class="modal-content" style="border-radius:var(--radius);border:none;">
         <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;">{{ $ex->expense_title }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <form method="POST" action="{{ route('admin.expenses.review', $ex) }}">@csrf
+        <form method="POST" action="{{ route($expenseReviewRoute, $ex) }}">@csrf
             <div class="modal-body p-4">
                 <p class="text-muted small">Amount: <strong style="color:var(--danger);">{!! \App\Helpers\SscHelper::formatCurrency($ex->amount) !!}</strong></p>
-                <div class="mb-3"><label class="form-label-custom">Admin Notes</label><textarea name="admin_notes" class="form-control-custom" rows="3" style="resize:vertical;"></textarea></div>
+                <div class="mb-3"><label class="form-label-custom">Review Notes</label><textarea name="admin_notes" class="form-control-custom" rows="3" style="resize:vertical;"></textarea></div>
             </div>
             <div class="modal-footer border-0 pt-0">
                 <button type="submit" name="action" value="reject" class="btn btn-outline-danger"><i class="bi bi-x"></i> Reject</button>

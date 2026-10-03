@@ -26,11 +26,27 @@ class ExpenseController extends Controller
         }
         $expenses = $query->orderByDesc('created_at')->paginate(8);
 
-        return view('admin.expenses', compact('expenses', 'search', 'status'));
+        // Admin and Treasurer share the review workflow, but each page must
+        // keep its own portal navigation and route URLs.
+        $isTreasurer = $request->routeIs('treasurer.*');
+        $expenseSidebar = $isTreasurer ? 'partials.sidebar-treasurer' : 'partials.sidebar-admin';
+        $expenseIndexRoute = $isTreasurer ? 'treasurer.expenses' : 'admin.expenses';
+        $expenseReviewRoute = $isTreasurer ? 'treasurer.expenses.review' : 'admin.expenses.review';
+
+        return view('admin.expenses', compact(
+            'expenses',
+            'search',
+            'status',
+            'expenseSidebar',
+            'expenseIndexRoute',
+            'expenseReviewRoute'
+        ));
     }
 
     public function review(Request $request, Expense $expense)
     {
+        $expenseIndexRoute = $request->routeIs('treasurer.*') ? 'treasurer.expenses' : 'admin.expenses';
+
         if ($expense->status !== 'Pending') {
             abort(403, 'This expense has already been reviewed.');
         }
@@ -75,9 +91,11 @@ class ExpenseController extends Controller
         });
 
         if ($errorMessage) {
-            return redirect()->route('admin.expenses')->with('danger', $errorMessage);
+            return redirect()->route($expenseIndexRoute)->with('danger', $errorMessage);
         }
 
-        return redirect()->route('admin.expenses')->with('success', "Expense {$action}d successfully.");
+        $reviewResult = $action === 'approve' ? 'approved' : 'rejected';
+
+        return redirect()->route($expenseIndexRoute)->with('success', "Expense {$reviewResult} successfully.");
     }
 }

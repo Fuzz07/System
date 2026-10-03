@@ -103,6 +103,7 @@
           </tbody>
         </table>
       </div>
+      {{ $proposalSummary->links('partials.pagination') }}
     </div>
   </div>
 

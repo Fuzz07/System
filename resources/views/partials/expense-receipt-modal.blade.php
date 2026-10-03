@@ -58,7 +58,7 @@
                             <dd style="white-space:pre-line;">{{ $ex->description }}</dd>
                             @endif
                             @if($ex->admin_notes)
-                            <dt class="text-muted small text-uppercase" style="letter-spacing:.04em;">Admin Notes</dt>
+                            <dt class="text-muted small text-uppercase" style="letter-spacing:.04em;">Review Notes</dt>
                             <dd class="mb-0" style="white-space:pre-line;">{{ $ex->admin_notes }}</dd>
                             @endif
                         </dl>

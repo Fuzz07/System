@@ -188,7 +188,8 @@ class ReleaseController extends Controller
                     ->whereColumn('proposal_id', 'proposals.id');
             }, 'release_count')
             ->orderByDesc('total_released')
-            ->get();
+            ->orderByDesc('created_at')
+            ->paginate(7, ['*'], 'projects');
 
         return view('treasurer.reports', compact(
             'sy',
