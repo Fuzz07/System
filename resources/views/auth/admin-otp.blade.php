@@ -53,6 +53,19 @@
         </form>
 
         <div class="text-center mt-4">
+            @if(str_starts_with(request()->getHost(), 'admin.'))
+                <form method="POST" action="{{ route('admin.login.otp.resend') }}" class="d-inline-block">
+            @else
+                <form method="POST" action="{{ route('admin.login.otp.resend.main') }}" class="d-inline-block">
+            @endif
+                @csrf
+                <button type="submit" class="btn btn-link p-0 text-primary fw-semibold" style="font-size:.82rem;text-decoration:none;">
+                    <i class="bi bi-arrow-repeat"></i> Resend code
+                </button>
+            </form>
+        </div>
+
+        <div class="text-center mt-3">
             <a href="{{ route('login', ['portal' => 'admin']) }}" class="text-muted" style="font-size:.82rem;text-decoration:none;">
                 <i class="bi bi-arrow-left"></i> Back to Login
             </a>

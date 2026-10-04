@@ -48,6 +48,7 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
 
     Route::get('/login/otp', [AuthController::class, 'showAdminOtp'])->name('admin.login.otp');
     Route::post('/login/otp', [AuthController::class, 'verifyAdminOtp'])->name('admin.login.otp.submit');
+    Route::post('/login/otp/resend', [AuthController::class, 'resendAdminOtp'])->name('admin.login.otp.resend')->middleware('throttle:6,1');
 
     Route::get('/login/approval-waiting/{approvalId}', [AuthController::class, 'showApprovalWaiting'])->name('admin.login.approval_waiting');
     Route::get('/login/approval-check/{approvalId}', [AuthController::class, 'checkApprovalStatus'])->name('admin.login.approval_check');
@@ -278,7 +279,8 @@ Route::group([], function () use ($baseDomain) {
 
     Route::get('/login/admin/otp', [AuthController::class, 'showAdminOtp'])->name('admin.login.otp.main');
     Route::post('/login/admin/otp', [AuthController::class, 'verifyAdminOtp'])->name('admin.login.otp.submit.main');
-    
+    Route::post('/login/admin/otp/resend', [AuthController::class, 'resendAdminOtp'])->name('admin.login.otp.resend.main')->middleware('throttle:6,1');
+
     Route::get('/login/admin/approval-waiting/{approvalId}', [AuthController::class, 'showApprovalWaiting'])->name('admin.login.approval_waiting.main');
     Route::get('/login/admin/approval-check/{approvalId}', [AuthController::class, 'checkApprovalStatus'])->name('admin.login.approval_check.main');
     Route::get('/login/admin/approval-complete/{approvalId}', [AuthController::class, 'completeApprovalLogin'])->name('admin.login.approval_complete.main');

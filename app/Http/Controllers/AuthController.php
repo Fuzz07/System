@@ -238,6 +238,7 @@ class AuthController extends Controller
                 'admin_login_user_id' => $user->id,
                 'admin_login_otp' => $otp,
                 'admin_login_otp_expires_at' => now()->addMinutes(3),
+                'admin_login_otp_last_sent_at' => now(),
                 'admin_login_latitude' => $lat,
                 'admin_login_longitude' => $lng,
             ]);
@@ -808,12 +809,66 @@ class AuthController extends Controller
     {
         $expiresAt = session('admin_login_otp_expires_at');
         if (!session()->has('admin_login_otp') || !session()->has('admin_login_user_id') || ($expiresAt && now()->greaterThan($expiresAt))) {
-            session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_user_id', 'admin_login_latitude', 'admin_login_longitude']);
+            session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_otp_last_sent_at', 'admin_login_user_id', 'admin_login_latitude', 'admin_login_longitude']);
             return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'The verification code has expired. Please log in again.']);
         }
 
         $expiresTimestamp = $expiresAt ? $expiresAt->timestamp : now()->addMinutes(3)->timestamp;
         return view('auth.admin-otp', compact('expiresTimestamp'));
+    }
+
+    public function resendAdminOtp(Request $request)
+    {
+        $userId = session('admin_login_user_id');
+        if (!$userId) {
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'Your verification session is no longer active. Please log in again.']);
+        }
+
+        $lastSentAt = session('admin_login_otp_last_sent_at');
+        if ($lastSentAt && now()->diffInSeconds($lastSentAt) < 30) {
+            $wait = 30 - now()->diffInSeconds($lastSentAt);
+            return back()->withErrors(['otp' => "Please wait {$wait} second(s) before requesting another code."]);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_otp_last_sent_at', 'admin_login_user_id']);
+            return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'User not found.']);
+        }
+
+        $otp = (string) random_int(100000, 999999);
+        session([
+            'admin_login_otp' => $otp,
+            'admin_login_otp_expires_at' => now()->addMinutes(3),
+            'admin_login_otp_last_sent_at' => now(),
+        ]);
+
+        try {
+            Mail::send([], [], function ($message) use ($user, $otp) {
+                $message->to($user->email)
+                    ->subject('Your Admin Login Verification Code')
+                    ->html("
+                        <div style='font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0; border-radius: 8px;'>
+                            <h2 style='color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;'>SSC Admin Portal Verification</h2>
+                            <p style='color: #334155; font-size: 16px;'>You recently requested a new secure verification code for the SSC Admin Portal. Please use the following 6-digit code to complete your login:</p>
+                            <div style='background: #f1f5f9; padding: 15px; border-radius: 6px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e3a8a; margin: 20px 0;'>{$otp}</div>
+                            <p style='color: #64748b; font-size: 14px;'>This code is valid for 3 minutes. If you did not request this login attempt, please change your password immediately.</p>
+                        </div>
+                    ");
+            });
+        } catch (\Exception $e) {
+            Log::error('Admin OTP resend email failed to send', ['error' => $e->getMessage()]);
+            return back()->withErrors(['otp' => 'We could not resend the verification code right now. Please try again in a moment.']);
+        }
+
+        $host = $request->getHost();
+        if (str_starts_with($host, 'admin.')) {
+            $otpRoute = route('admin.login.otp');
+        } else {
+            $otpRoute = route('admin.login.otp.main');
+        }
+
+        return redirect()->to($otpRoute)->with('success', 'A new 6-digit verification code has been sent to your email address.');
     }
 
     public function verifyAdminOtp(Request $request)
@@ -829,7 +884,7 @@ class AuthController extends Controller
         $userId = session('admin_login_user_id');
 
         if (!$sessionOtp || !$userId || now()->greaterThan($expiresAt)) {
-            session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_user_id']);
+            session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_otp_last_sent_at', 'admin_login_user_id']);
             return redirect()->route('login', ['portal' => 'admin'])->withErrors(['email' => 'The verification code has expired. Please log in again.']);
         }
 
@@ -876,7 +931,7 @@ class AuthController extends Controller
         SscHelper::logActivity($user->id, 'LOGIN', $logDetails);
 
         // Clear Admin Login session
-        session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_user_id', 'admin_login_latitude', 'admin_login_longitude']);
+        session()->forget(['admin_login_otp', 'admin_login_otp_expires_at', 'admin_login_otp_last_sent_at', 'admin_login_user_id', 'admin_login_latitude', 'admin_login_longitude']);
 
         return redirect()->route('admin.dashboard')->with('success', 'Successfully authenticated and device registered.');
     }
@@ -956,6 +1011,7 @@ class AuthController extends Controller
             'admin_login_user_id' => $user->id,
             'admin_login_otp' => $otp,
             'admin_login_otp_expires_at' => now()->addMinutes(3),
+            'admin_login_otp_last_sent_at' => now(),
             'admin_login_latitude' => $requestData['latitude'],
             'admin_login_longitude' => $requestData['longitude'],
         ]);
