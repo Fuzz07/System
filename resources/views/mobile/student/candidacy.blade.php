@@ -58,7 +58,7 @@
                     @endif
                 </div>
             </div>
-        @elseif(!$activeSy->candidacy_open)
+        @elseif(!$activeSy->candidacy_open || $activeSy->voting_open)
             {{-- Closed Screen --}}
             <div class="m-card" style="text-align: center; padding: 40px 20px;">
                 <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.7;">🔒</div>

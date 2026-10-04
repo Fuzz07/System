@@ -383,7 +383,7 @@ Route::group([], function () use ($baseDomain) {
             ]);
 
             $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();
-            if (!$activeSy || !$activeSy->candidacy_open) {
+            if (!$activeSy || !$activeSy->candidacy_open || $activeSy->voting_open) {
                 return back()->with('danger', 'Candidacy filing is currently closed.');
             }
             $exists = $student->candidacies()->where('school_year', $activeSy->label)->exists();
@@ -576,7 +576,7 @@ Route::group([], function () use ($baseDomain) {
             ]);
 
             $activeSy = \App\Models\SchoolYear::where('is_active', 1)->first();
-            if (!$activeSy || !$activeSy->candidacy_open) {
+            if (!$activeSy || !$activeSy->candidacy_open || $activeSy->voting_open) {
                 return redirect()->route('mobile.student.candidacy')->with('danger', 'Candidacy filing is currently closed.');
             }
             $exists = $student->candidacies()->where('school_year', $activeSy->label)->exists();

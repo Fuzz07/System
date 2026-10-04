@@ -416,24 +416,30 @@
                                     <h6 class="mb-0" style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">Officer Candidacy Filing</h6>
                                     <div style="font-size: 0.78rem;" class="text-muted mt-1">
                                         Current Status: 
-                                        @if($activeSy->candidacy_open)
-                                            <span class="badge bg-success px-2 py-1">OPEN</span>
-                                        @else
+                                        @if($activeSy->voting_open || !$activeSy->candidacy_open)
                                             <span class="badge bg-danger px-2 py-1">CLOSED</span>
+                                        @else
+                                            <span class="badge bg-success px-2 py-1">OPEN</span>
                                         @endif
                                     </div>
                                 </div>
-                                <form method="POST" action="{{ route('admin.settings.candidacy.toggle') }}">
-                                    @csrf
-                                    <button type="submit" class="btn {{ $activeSy->candidacy_open ? 'btn-danger' : 'btn-success' }} btn-sm" style="font-weight: 700; font-size: 0.8rem; padding: 8px 16px; border-radius: 8px;">
-                                        <i class="bi {{ $activeSy->candidacy_open ? 'bi-lock-fill' : 'bi-unlock-fill' }} me-1"></i>
-                                        {{ $activeSy->candidacy_open ? 'Close Filing' : 'Open Filing' }}
+                                @if($activeSy->voting_open)
+                                    <button type="button" class="btn btn-secondary btn-sm" disabled style="font-weight: 700; font-size: 0.8rem; padding: 8px 16px; border-radius: 8px;">
+                                        <i class="bi bi-lock-fill me-1"></i> Locked During Voting
                                     </button>
-                                </form>
+                                @else
+                                    <form method="POST" action="{{ route('admin.settings.candidacy.toggle') }}">
+                                        @csrf
+                                        <button type="submit" class="btn {{ $activeSy->candidacy_open ? 'btn-danger' : 'btn-success' }} btn-sm" style="font-weight: 700; font-size: 0.8rem; padding: 8px 16px; border-radius: 8px;">
+                                            <i class="bi {{ $activeSy->candidacy_open ? 'bi-lock-fill' : 'bi-unlock-fill' }} me-1"></i>
+                                            {{ $activeSy->candidacy_open ? 'Close Filing' : 'Open Filing' }}
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                         <p class="text-muted mb-0" style="font-size: 0.8rem; line-height: 1.5;">
-                            <i class="bi bi-info-circle text-primary me-1"></i> Opening filing enables students to submit candidacy applications for representative roles. Changing status automatically broadcasts an announcement.
+                            <i class="bi bi-info-circle text-primary me-1"></i> Opening filing enables students to submit candidacy applications for representative roles. Filing closes automatically when voting starts.
                         </p>
                     @else
                         <div class="alert alert-warning mb-0" style="font-size: 0.82rem; border-radius: 8px;">

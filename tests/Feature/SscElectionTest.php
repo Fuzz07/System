@@ -139,6 +139,48 @@ class SscElectionTest extends TestCase
         ]);
     }
 
+    public function test_candidacy_filing_is_disabled_during_voting(): void
+    {
+        $this->activeSy->update([
+            'candidacy_open' => true,
+            'voting_open' => true,
+            'voting_starts_at' => now()->subHour(),
+            'voting_ends_at' => now()->addHours(7),
+        ]);
+
+        $this->actingAs($this->student1)
+            ->get(route('student.candidacy'))
+            ->assertOk()
+            ->assertSee('Filing is Currently Closed')
+            ->assertDontSee('Submit Candidacy Application');
+
+        $this->get(route('mobile.student.candidacy'))
+            ->assertOk()
+            ->assertSee('Filing Closed')
+            ->assertDontSee('Submit Application');
+
+        $filing = [
+            'position' => 'SSC President',
+            'platform' => 'A platform statement with enough characters.',
+        ];
+
+        $this->post(route('student.candidacy.store'), $filing)
+            ->assertSessionHas('danger', 'Candidacy filing is currently closed.');
+        $this->post(route('mobile.student.candidacy.store'), $filing)
+            ->assertSessionHas('danger', 'Candidacy filing is currently closed.');
+
+        $this->assertDatabaseMissing('candidacies', ['user_id' => $this->student1->id]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.settings'))
+            ->assertOk()
+            ->assertSee('Locked During Voting');
+
+        $this->post(route('admin.settings.candidacy.toggle'))
+            ->assertSessionHas('warning', 'Candidacy filing is automatically closed while voting is in progress.');
+        $this->assertFalse($this->activeSy->fresh()->candidacy_open);
+    }
+
     public function test_student_can_start_and_cast_vote_securely_within_one_minute(): void
     {
         // 1. Open voting

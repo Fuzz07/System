@@ -64,7 +64,7 @@
                         </div>
                     </div>
                 </div>
-            @elseif(!$activeSy->candidacy_open)
+            @elseif(!$activeSy->candidacy_open || $activeSy->voting_open)
                 {{-- Candidacy Filing Closed Card --}}
                 <div class="card border-0 shadow-sm text-center p-5" style="border-radius:24px;">
                     <div style="font-size:4rem; margin-bottom:20px; opacity:0.6;">🔒</div>

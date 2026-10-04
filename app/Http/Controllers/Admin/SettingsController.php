@@ -281,6 +281,14 @@ class SettingsController extends Controller
             return redirect()->route('admin.settings')->with('danger', 'No active school year set.');
         }
 
+        if ($activeSy->voting_open) {
+            if ($activeSy->candidacy_open) {
+                $activeSy->update(['candidacy_open' => false]);
+            }
+
+            return redirect()->route('admin.settings')->with('warning', 'Candidacy filing is automatically closed while voting is in progress.');
+        }
+
         $newStatus = !$activeSy->candidacy_open;
         $activeSy->update(['candidacy_open' => $newStatus]);
 
