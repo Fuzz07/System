@@ -82,6 +82,49 @@ class PayMongoEnrollmentPaymentTest extends TestCase
         });
     }
 
+    public function test_desktop_web_checkout_returns_the_secure_url_for_webview_navigation(): void
+    {
+        Http::fake([
+            'https://api.paymongo.com/v2/checkout_sessions' => Http::response([
+                'data' => [
+                    'id' => 'cs_desktop_checkout',
+                    'type' => 'checkout_session',
+                    'attributes' => [
+                        'checkout_url' => 'https://checkout.paymongo.com/cs_desktop_checkout',
+                        'status' => 'active',
+                    ],
+                ],
+            ]),
+        ]);
+
+        $student = $this->student('desktop.checkout@example.com');
+
+        $this->actingAs($student)
+            ->postJson(route('student.enrollment.paymongo.checkout'))
+            ->assertOk()
+            ->assertExactJson([
+                'checkout_url' => 'https://checkout.paymongo.com/cs_desktop_checkout',
+            ]);
+    }
+
+    public function test_desktop_web_checkout_returns_a_recoverable_error_when_paymongo_fails(): void
+    {
+        Http::fake([
+            'https://api.paymongo.com/v2/checkout_sessions' => Http::response([
+                'errors' => [['detail' => 'Provider unavailable']],
+            ], 503),
+        ]);
+
+        $student = $this->student('desktop.failure@example.com');
+
+        $this->actingAs($student)
+            ->postJson(route('student.enrollment.paymongo.checkout'))
+            ->assertStatus(502)
+            ->assertJson([
+                'message' => 'We could not open secure checkout right now. No charge was made. Please try again.',
+            ]);
+    }
+
     public function test_web_checkout_page_recovers_its_button_after_browser_back_navigation(): void
     {
         $student = $this->student('browser.back@example.com');
@@ -89,9 +132,12 @@ class PayMongoEnrollmentPaymentTest extends TestCase
         $this->actingAs($student)
             ->get(route('student.enrollment.index'))
             ->assertOk()
+            ->assertSee("window.open('about:blank', '_blank')", false)
+            ->assertSee("'Accept': 'application/json'", false)
+            ->assertSee('paymongo-checkout-error', false)
             ->assertSee("window.addEventListener('pageshow', resetCheckoutButton)", false)
             // A slow checkout request must not be offered for a second click.
-            ->assertDontSee('window.setTimeout(resetCheckoutButton', false)
+            ->assertDontSee('Opening secure checkout?', false)
             ->assertSee('window.SSCSubmitGuard', false);
     }
 

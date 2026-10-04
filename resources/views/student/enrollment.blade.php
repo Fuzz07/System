@@ -6,7 +6,7 @@
     $methodLabels = [
         'gcash' => 'Manual GCash',
         'instapay' => 'InstaPay transfer',
-        'paymongo' => 'PayMongo' . ($payment?->paymongo_payment_method ? ' ? ' . strtoupper(str_replace('_', ' ', $payment->paymongo_payment_method)) : ''),
+        'paymongo' => 'PayMongo' . ($payment?->paymongo_payment_method ? ' - ' . strtoupper(str_replace('_', ' ', $payment->paymongo_payment_method)) : ''),
         'walk_in' => 'Walk-in payment',
     ];
     $paymentMethodLabel = $payment ? ($methodLabels[$payment->method] ?? ucfirst($payment->method)) : null;
@@ -92,7 +92,7 @@
                         <div class="small mt-3 d-flex flex-wrap gap-3">
                             <span><strong>Method:</strong> {{ $paymentMethodLabel }}</span>
                             <span><strong>Reference:</strong> {{ $payment->reference }}</span>
-                            @if($payment->paid_at)<span><strong>Paid:</strong> {{ $payment->paid_at->format('M d, Y ? h:i A') }}</span>@endif
+                            @if($payment->paid_at)<span><strong>Paid:</strong> {{ $payment->paid_at->format('M d, Y \a\t h:i A') }}</span>@endif
                         </div>
                     </div>
                 </div>
@@ -101,7 +101,7 @@
             @if($payment)
                 <div class="status-panel status-pending mb-3">
                     <i class="bi bi-clock-history fs-5"></i>
-                    <div><strong>Payment pending</strong><div class="small mt-1">{{ $paymentMethodLabel }} ? Reference {{ $payment->reference }}</div></div>
+                    <div><strong>Payment pending</strong><div class="small mt-1">{{ $paymentMethodLabel }} - Reference {{ $payment->reference }}</div></div>
                 </div>
             @endif
 
@@ -119,6 +119,7 @@
                         </div>
                     </div>
                     <div class="text-lg-end flex-shrink-0">
+                        <div id="paymongo-checkout-error" class="alert alert-danger py-2 px-3 small text-start" role="alert" hidden></div>
                         <form method="POST" action="{{ route('student.enrollment.paymongo.checkout') }}" class="paymongo-form">
                             @csrf
                             <button type="submit" class="paymongo-button" {{ $paymongoEnabled ? '' : 'disabled' }}>
@@ -221,16 +222,70 @@
             }
 
             form.addEventListener('submit', function (event) {
+                event.preventDefault();
                 if (form.dataset.submitting === 'true') {
-                    event.preventDefault();
                     return;
                 }
 
                 form.dataset.submitting = 'true';
                 button.disabled = true;
-                button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Opening secure checkout?';
-                // No timed re-enable: on a slow connection the first request is
-                // usually still on its way, and a retry would open a second checkout.
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Opening secure checkout...';
+
+                const errorBox = document.getElementById('paymongo-checkout-error');
+                if (errorBox) {
+                    errorBox.hidden = true;
+                    errorBox.textContent = '';
+                }
+
+                // Open synchronously within the click gesture so WebViews do not
+                // block PayMongo as a popup after the checkout request completes.
+                const checkoutWindow = window.open('about:blank', '_blank');
+                if (checkoutWindow) {
+                    checkoutWindow.document.title = 'Secure checkout';
+                    checkoutWindow.document.body.textContent = 'Opening secure checkout...';
+                }
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(async function (response) {
+                        const result = await response.json();
+                        if (!response.ok) {
+                            throw new Error(result.message || 'Secure checkout could not be opened.');
+                        }
+
+                        if (result.paid) {
+                            if (checkoutWindow) checkoutWindow.close();
+                            window.location.reload();
+                            return;
+                        }
+
+                        if (!result.checkout_url) {
+                            throw new Error('Secure checkout did not return a valid link. Please try again.');
+                        }
+
+                        if (checkoutWindow && !checkoutWindow.closed) {
+                            checkoutWindow.opener = null;
+                            checkoutWindow.location.replace(result.checkout_url);
+                            resetCheckoutButton();
+                        } else {
+                            window.location.assign(result.checkout_url);
+                        }
+                    })
+                    .catch(function (error) {
+                        if (checkoutWindow && !checkoutWindow.closed) checkoutWindow.close();
+                        if (errorBox) {
+                            errorBox.textContent = error.message || 'We could not open secure checkout. Please try again.';
+                            errorBox.hidden = false;
+                        }
+                        resetCheckoutButton();
+                    });
             });
 
             // Back-forward cache can otherwise restore a permanently disabled button.

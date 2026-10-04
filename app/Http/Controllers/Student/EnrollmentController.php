@@ -100,8 +100,14 @@ class EnrollmentController extends Controller
         $redirectRoute = $this->indexRoute($request);
 
         if (! $this->payMongo->isConfigured()) {
+            $message = 'Online payment is temporarily unavailable. Please use a manual payment option or contact the SSC office.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 503);
+            }
+
             return redirect()->route($redirectRoute)
-                ->with('error', 'Online payment is temporarily unavailable. Please use a manual payment option or contact the SSC office.');
+                ->with('error', $message);
         }
 
         $student = Auth::user();
@@ -110,6 +116,13 @@ class EnrollmentController extends Controller
         $amountInCentavos = (int) round($amount * 100);
 
         if ($payment?->status === 'paid') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Your contribution fee is already paid.',
+                    'paid' => true,
+                ]);
+            }
+
             return redirect()->route($redirectRoute)->with('info', 'Your contribution fee is already paid.');
         }
 
@@ -131,6 +144,10 @@ class EnrollmentController extends Controller
 
                     $checkoutUrl = data_get($session, 'attributes.checkout_url');
                     if (data_get($session, 'attributes.status') === 'active' && $this->isPayMongoCheckoutUrl($checkoutUrl)) {
+                        if ($request->expectsJson()) {
+                            return response()->json(['checkout_url' => $checkoutUrl]);
+                        }
+
                         return redirect()->away($checkoutUrl);
                     }
                 }
@@ -201,6 +218,10 @@ class EnrollmentController extends Controller
                 'paymongo_checkout_session_id' => $session['id'],
             ]);
 
+            if ($request->expectsJson()) {
+                return response()->json(['checkout_url' => $checkoutUrl]);
+            }
+
             return redirect()->away($checkoutUrl);
         } catch (Throwable $exception) {
             Log::error('Unable to start PayMongo enrollment checkout.', [
@@ -208,8 +229,13 @@ class EnrollmentController extends Controller
                 'message' => $exception->getMessage(),
             ]);
 
+            $message = 'We could not open secure checkout right now. No charge was made. Please try again.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 502);
+            }
+
             return redirect()->route($redirectRoute)
-                ->with('error', 'We could not open secure checkout right now. No charge was made. Please try again.');
+                ->with('error', $message);
         }
     }
 
