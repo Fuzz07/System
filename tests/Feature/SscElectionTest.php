@@ -262,6 +262,11 @@ class SscElectionTest extends TestCase
         $this->assertEquals('officer', $this->candidateUser->role);
         $this->assertEquals('SSC President', $this->candidateUser->position);
 
+        $rosterResponse = $this->get(route('admin.officers'));
+        $rosterResponse->assertOk()
+            ->assertSee($this->candidateUser->fullname)
+            ->assertDontSee($this->oldOfficer->fullname);
+
         // 6. Verify school year results are flagged announced
         $this->activeSy->refresh();
         $this->assertTrue($this->activeSy->results_announced);
