@@ -172,11 +172,23 @@ class CandidacyController extends Controller
             return back()->with('danger', 'No active school year set.');
         }
 
+        if ($activeSy->results_announced) {
+            return back()->with('warning', 'Election results have already been announced and the officer list is up to date.');
+        }
+
+        if ($activeSy->voting_open || !$activeSy->voting_ends_at) {
+            return back()->with('danger', 'Complete or close the election voting period before announcing the winners.');
+        }
+
         $candidates = Candidacy::with('user')
             ->withCount('votes')
             ->where('school_year', $activeSy->label)
             ->where('status', 'approved')
             ->get();
+
+        if ($candidates->isEmpty()) {
+            return back()->with('danger', 'There are no approved candidates to announce as election winners.');
+        }
 
         $candidatesByPosition = [];
         foreach ($candidates as $c) {

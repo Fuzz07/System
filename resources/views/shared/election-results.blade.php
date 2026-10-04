@@ -47,6 +47,25 @@
                 <i class="bi bi-clock me-1"></i> Live Tally Active
             </span>
         @endif
+
+        @if(Auth::user()->isAdmin()
+            && !$isArchive
+            && $selectedSy
+            && !$selectedSy->voting_open
+            && $selectedSy->voting_ends_at
+            && !$selectedSy->results_announced
+            && !empty($candidatesByPosition))
+            <form method="POST" action="{{ route('admin.election.announce') }}" class="m-0"
+                data-confirm-title="Announce the election winners?"
+                data-confirm-ok="Announce Results"
+                data-confirm-tone="warning"
+                data-confirm="The winners will become active officers, replacing the current officers in their positions. The officers list will update immediately.">
+                @csrf
+                <button type="submit" class="btn btn-warning fw-bold px-3 py-2" style="border-radius:12px;">
+                    <i class="bi bi-trophy-fill me-1"></i> Announce Winners & Update Officers
+                </button>
+            </form>
+        @endif
     </div>
 </div>
 

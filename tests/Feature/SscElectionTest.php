@@ -246,7 +246,21 @@ class SscElectionTest extends TestCase
 
         $this->actingAs($this->admin);
 
-        // 3. Announce results
+        $this->post(route('admin.election.announce'))->assertSessionHas('danger');
+        $this->assertSame('officer', $this->oldOfficer->fresh()->role);
+
+        // Results can only be announced after voting is closed. The results
+        // dashboard exposes the promotion action once the election is complete.
+        $this->get(route('admin.election.results'))
+            ->assertOk()
+            ->assertDontSee('Announce Winners & Update Officers', false);
+
+        $this->post(route('admin.election.close'))->assertSessionHas('warning');
+        $this->get(route('admin.election.results'))
+            ->assertOk()
+            ->assertSee('Announce Winners & Update Officers', false);
+
+        // 3. Announce results from the results dashboard.
         $response = $this->post(route('admin.election.announce'));
 
         $response->assertRedirect();
@@ -307,6 +321,7 @@ class SscElectionTest extends TestCase
         $candidacy = Candidacy::where('user_id', $this->candidateUser->id)->first();
         $this->voteFor($candidacy, $this->student1);
 
+        $this->markVotingComplete();
         $this->actingAs($this->admin)->post(route('admin.election.announce'))->assertSessionHas('success');
 
         // The contested seat changes hands...
@@ -336,6 +351,7 @@ class SscElectionTest extends TestCase
         ]);
         $this->voteFor($candidacy, $this->student1);
 
+        $this->markVotingComplete();
         $this->actingAs($this->admin)->post(route('admin.election.announce'))->assertSessionHas('success');
 
         $this->oldOfficer->refresh();
@@ -361,6 +377,7 @@ class SscElectionTest extends TestCase
             ]), $this->student1);
         }
 
+        $this->markVotingComplete();
         $this->actingAs($this->admin)->post(route('admin.election.announce'))->assertSessionHas('success');
 
         $this->assertEquals('SSC President', $this->candidateUser->refresh()->position);
@@ -388,6 +405,16 @@ class SscElectionTest extends TestCase
             'year_level' => '3rd Year',
             'department' => 'BSIS',
             'age' => 20,
+        ]);
+    }
+
+    private function markVotingComplete(): void
+    {
+        $this->activeSy->update([
+            'candidacy_open' => false,
+            'voting_open' => false,
+            'voting_starts_at' => now()->subHour(),
+            'voting_ends_at' => now()->subMinute(),
         ]);
     }
 

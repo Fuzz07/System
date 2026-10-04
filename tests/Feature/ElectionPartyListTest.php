@@ -215,6 +215,12 @@ class ElectionPartyListTest extends TestCase
         $party = $this->party('Abante Party', 'ABANTE');
         $winner = $this->user('student', 'Winning Candidate');
         $this->votes($this->candidacy($winner, 'SSC President', $party, 'approved'), 3);
+        $this->schoolYear->update([
+            'candidacy_open' => false,
+            'voting_open' => false,
+            'voting_starts_at' => now()->subHour(),
+            'voting_ends_at' => now()->subMinute(),
+        ]);
 
         $this->actingAs($this->admin)
             ->post(route('admin.election.announce'))
