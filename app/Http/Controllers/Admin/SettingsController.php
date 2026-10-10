@@ -201,11 +201,20 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'sy_label' => ['required', 'regex:/^\d{4}-\d{4}$/', 'unique:school_years,label'],
             'semester' => ['required', \Illuminate\Validation\Rule::in(array_keys(SchoolYear::SEMESTERS))],
+            'starts_on' => ['nullable', 'date'],
+            'ends_on' => ['nullable', 'date', 'after_or_equal:starts_on'],
         ]);
+
+        // Dates left blank are filled from the usual academic calendar, so every
+        // term carries a window that semester reports and term ordering can use.
+        $term = new SchoolYear(['label' => $validated['sy_label'], 'semester' => $validated['semester']]);
+        [$defaultStart, $defaultEnd] = $term->defaultTermDates();
 
         SchoolYear::create([
             'label' => $validated['sy_label'],
             'semester' => $validated['semester'],
+            'starts_on' => $validated['starts_on'] ?? $defaultStart,
+            'ends_on' => $validated['ends_on'] ?? $defaultEnd,
             'is_active' => false,
         ]);
 
@@ -263,6 +272,28 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('admin.settings')->with('success', $message);
+    }
+
+    /**
+     * Sets the calendar window a term covers. Semester reports match projects,
+     * disbursements, expenses and cash book entries against these dates, so a
+     * term that ran long can be corrected here without touching any records.
+     */
+    public function updateSchoolYearDates(Request $request, SchoolYear $schoolYear)
+    {
+        $validated = $request->validate([
+            'starts_on' => ['required', 'date'],
+            'ends_on' => ['required', 'date', 'after_or_equal:starts_on'],
+        ], [
+            'ends_on.after_or_equal' => 'The term cannot end before it starts.',
+        ]);
+
+        $schoolYear->update($validated);
+
+        SscHelper::logActivity(Auth::id(), 'SETTINGS_CHANGE', "Set {$schoolYear->academic_term} report coverage to {$schoolYear->termRangeLabel()}");
+
+        return redirect()->route('admin.settings')
+            ->with('success', "Semester reports for {$schoolYear->academic_term} now cover {$schoolYear->termRangeLabel()}.");
     }
 
     public function deleteSchoolYear(SchoolYear $schoolYear)

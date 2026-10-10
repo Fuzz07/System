@@ -23,6 +23,9 @@
     <span class="nav-icon"><i class="bi bi-folder-check"></i></span> Liquidation Reports
     @if(($pendingLiquidations ?? 0) > 0)<span class="badge-count">{{ $pendingLiquidations }}</span>@endif
 </a>
+<a href="{{ route('admin.semester_reports') }}" class="nav-link {{ request()->routeIs('admin.semester_reports*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-journals"></i></span> Semester Reports
+</a>
 
 <div class="nav-section-label">Management</div>
 <a href="{{ route('admin.announcements') }}" class="nav-link {{ request()->routeIs('admin.announcements') ? 'active' : '' }}">

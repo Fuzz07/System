@@ -20,6 +20,9 @@
 <a href="{{ route('treasurer.reports') }}" class="nav-link {{ request()->routeIs('treasurer.reports') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-bar-chart-line"></i></span> Release Reports
 </a>
+<a href="{{ route('treasurer.semester_reports') }}" class="nav-link {{ request()->routeIs('treasurer.semester_reports*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-journals"></i></span> Semester Reports
+</a>
 <a href="{{ route('treasurer.announcements') }}" class="nav-link {{ request()->routeIs('treasurer.announcements') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-megaphone"></i></span> Announcements
 </a>

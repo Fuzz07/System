@@ -14,6 +14,10 @@
     <span class="nav-icon"><i class="bi bi-cash-stack"></i></span> Contribution Fee
 </a>
 
+<a href="{{ route('student.semester_reports') }}" class="nav-link {{ request()->routeIs('student.semester_reports*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-journals"></i></span> Semester Reports
+</a>
+
 <a href="{{ route('student.profile.edit') }}" class="nav-link {{ request()->routeIs('student.profile.*') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-person-gear"></i></span> Account Details
 </a>

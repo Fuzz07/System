@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 class SchoolYear extends Model
 {
@@ -19,6 +21,8 @@ class SchoolYear extends Model
     protected $fillable = [
         'label',
         'semester',
+        'starts_on',
+        'ends_on',
         'is_active',
         'candidacy_open',
         'voting_open',
@@ -30,6 +34,8 @@ class SchoolYear extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'students_promoted_at' => 'datetime',
+        'starts_on' => 'date',
+        'ends_on' => 'date',
         'is_active' => 'boolean',
         'candidacy_open' => 'boolean',
         'voting_open' => 'boolean',
@@ -55,6 +61,65 @@ class SchoolYear extends Model
     public function getStartYearAttribute(): ?int
     {
         return preg_match('/^(\d{4})-\d{4}$/', (string) $this->label, $m) ? (int) $m[1] : null;
+    }
+
+    /**
+     * Where a term falls on the calendar when no one has set its dates: the
+     * usual local academic year, first semester August-December and second
+     * semester January-July of the following year. Null for a malformed label.
+     *
+     * @return array{0: ?Carbon, 1: ?Carbon} Start and end date.
+     */
+    public function defaultTermDates(): array
+    {
+        $startYear = $this->start_year;
+
+        if ($startYear === null) {
+            return [null, null];
+        }
+
+        if (($this->semester ?: self::SEMESTER_FIRST) === self::SEMESTER_FIRST) {
+            return [Carbon::create($startYear, 8, 1)->startOfDay(), Carbon::create($startYear, 12, 31)->startOfDay()];
+        }
+
+        return [Carbon::create($startYear + 1, 1, 1)->startOfDay(), Carbon::create($startYear + 1, 7, 31)->startOfDay()];
+    }
+
+    /** First day of the term, as set by an admin or derived from the calendar. */
+    public function termStart(): ?Carbon
+    {
+        return $this->starts_on ? $this->starts_on->copy()->startOfDay() : $this->defaultTermDates()[0];
+    }
+
+    /** Last day of the term, as set by an admin or derived from the calendar. */
+    public function termEnd(): ?Carbon
+    {
+        return $this->ends_on ? $this->ends_on->copy()->startOfDay() : $this->defaultTermDates()[1];
+    }
+
+    /** Whether the term has a usable date window to report on. */
+    public function hasTermWindow(): bool
+    {
+        return $this->termStart() !== null && $this->termEnd() !== null;
+    }
+
+    /** "August 1 - December 31, 2026", for report headings. */
+    public function termRangeLabel(): string
+    {
+        $start = $this->termStart();
+        $end = $this->termEnd();
+
+        if (!$start || !$end) {
+            return 'Dates not set';
+        }
+
+        return $start->format('F j, Y') . ' - ' . $end->format('F j, Y');
+    }
+
+    /** Terms in calendar order, most recent first, with undated terms last. */
+    public function scopeNewestTermFirst(Builder $query): Builder
+    {
+        return $query->orderByRaw('starts_on IS NULL')->orderByDesc('starts_on')->orderByDesc('id');
     }
 
     /**

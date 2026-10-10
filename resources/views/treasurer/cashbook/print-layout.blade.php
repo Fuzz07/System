@@ -33,7 +33,7 @@
 </head>
 <body>
   <div class="report-toolbar">
-    <a href="{{ route('treasurer.cashbook', ['month' => $report->start->format('Y-m')]) }}"><i class="bi bi-arrow-left"></i> Back to Cash Book</a>
+    <a href="{{ $backUrl ?? route('treasurer.cashbook', ['month' => $report->start->format('Y-m')]) }}"><i class="bi bi-arrow-left"></i> {{ $backLabel ?? 'Back to Cash Book' }}</a>
     <button type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
   </div>
 

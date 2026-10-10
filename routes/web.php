@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SemesterReportController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\Officer;
 use App\Http\Controllers\Student;
@@ -23,6 +24,15 @@ if (!function_exists('registerEnrollmentPaymentRoutes')) {
         Route::post('/enrollment-payments/{student}/walk-in', [Admin\EnrollmentPaymentController::class, 'markPaidWalkIn'])->name('enrollment.payments.walk_in');
         Route::post('/enrollment-payments/{payment}/approve-proof', [Admin\EnrollmentPaymentController::class, 'approveProof'])->name('enrollment.payments.proof.approve');
         Route::post('/enrollment-payments/{payment}/reject-proof', [Admin\EnrollmentPaymentController::class, 'rejectProof'])->name('enrollment.payments.proof.reject');
+    }
+}
+
+// Semester transparency reports, shared by the student, treasurer and admin portals
+// (names get the portal prefix). Students read the same figures staff do.
+if (!function_exists('registerSemesterReportRoutes')) {
+    function registerSemesterReportRoutes() {
+        Route::get('/semester-reports', [SemesterReportController::class, 'index'])->name('semester_reports');
+        Route::get('/semester-reports/{schoolYear}/print', [SemesterReportController::class, 'print'])->name('semester_reports.print');
     }
 }
 
@@ -104,11 +114,14 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::get('/feedback', [Admin\FeedbackController::class, 'index'])->name('feedback');
         Route::post('/feedback/{feedback}/reply', [Admin\FeedbackController::class, 'reply'])->name('feedback.reply');
 
+        registerSemesterReportRoutes();
+
         Route::get('/logs', [Admin\LogController::class, 'index'])->name('logs');
 
         Route::get('/settings', [Admin\SettingsController::class, 'index'])->name('settings');
         Route::post('/settings/school-year', [Admin\SettingsController::class, 'addSchoolYear'])->name('settings.sy.add');
         Route::patch('/settings/school-year/{schoolYear}/activate', [Admin\SettingsController::class, 'activateSchoolYear'])->name('settings.sy.activate');
+        Route::patch('/settings/school-year/{schoolYear}/dates', [Admin\SettingsController::class, 'updateSchoolYearDates'])->name('settings.sy.dates');
         Route::delete('/settings/school-year/{schoolYear}', [Admin\SettingsController::class, 'deleteSchoolYear'])->name('settings.sy.delete');
         Route::post('/settings/export/request-otp', [Admin\SettingsController::class, 'requestExportOtp'])->name('settings.export.request_otp');
         Route::match(['get', 'post'], '/settings/export', [Admin\SettingsController::class, 'export'])->name('settings.export');
@@ -216,6 +229,7 @@ Route::domain('treasurer.' . $baseDomain)->group(function () {
         Route::get('/release', [App\Http\Controllers\Treasurer\ReleaseController::class, 'index'])->name('release');
         Route::post('/release', [App\Http\Controllers\Treasurer\ReleaseController::class, 'store'])->name('release.submit');
         Route::get('/reports', [App\Http\Controllers\Treasurer\ReleaseController::class, 'reports'])->name('reports');
+        registerSemesterReportRoutes();
         Route::get('/announcements', [App\Http\Controllers\Treasurer\ReleaseController::class, 'announcements'])->name('announcements');
 
         Route::get('/expenses', [Admin\ExpenseController::class, 'index'])->name('expenses');
@@ -349,6 +363,8 @@ Route::group([], function () use ($baseDomain) {
                 });
             return response()->json(['announcements' => $announcements]);
         })->name('api.announcements');
+
+        registerSemesterReportRoutes();
 
         Route::get('/feedback', [Student\FeedbackController::class, 'index'])->name('feedback');
         Route::post('/feedback', [Student\FeedbackController::class, 'store'])->name('feedback.store');

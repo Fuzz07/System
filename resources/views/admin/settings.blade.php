@@ -309,7 +309,7 @@
             </div>
             <div class="card-body p-4 d-flex flex-column justify-content-between">
                 <div>
-                    <form method="POST" action="{{ route('admin.settings.sy.add') }}" class="row g-2 align-items-center mb-3">
+                    <form method="POST" action="{{ route('admin.settings.sy.add') }}" class="row g-2 align-items-end mb-3">
                         @csrf
                         <div class="col-sm-5">
                             <div class="input-group input-group-sm">
@@ -329,6 +329,21 @@
                                 <i class="bi bi-plus me-1"></i> Add SY
                             </button>
                         </div>
+                        <div class="col-sm-6">
+                            <label for="sy_starts_on" class="form-label mb-1" style="font-size: 0.7rem; font-weight: 700; color: #64748b;">Report coverage starts</label>
+                            <input type="date" id="sy_starts_on" name="starts_on" value="{{ old('starts_on') }}" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="sy_ends_on" class="form-label mb-1" style="font-size: 0.7rem; font-weight: 700; color: #64748b;">Report coverage ends</label>
+                            <input type="date" id="sy_ends_on" name="ends_on" value="{{ old('ends_on') }}" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-12">
+                            <div class="text-muted" style="font-size: 0.7rem;">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Semester reports cover these dates. Leave them blank to use the usual academic calendar
+                                (first semester August&ndash;December, second semester January&ndash;July).
+                            </div>
+                        </div>
                     </form>
 
                     <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
@@ -337,6 +352,7 @@
                                 <tr>
                                     <th>School Year</th>
                                     <th>Semester</th>
+                                    <th>Report Coverage</th>
                                     <th>Status</th>
                                     <th class="text-end">Actions</th>
                                 </tr>
@@ -346,6 +362,30 @@
                                 <tr>
                                     <td style="font-weight: 700; color: #0f172a;">{{ $sy->label }}</td>
                                     <td>{{ $sy->semester_label }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ route('admin.settings.sy.dates', $sy) }}" class="d-flex align-items-center gap-1">
+                                            @csrf @method('PATCH')
+                                            <input type="date" name="starts_on" value="{{ optional($sy->termStart())->toDateString() }}"
+                                                class="form-control form-control-sm" style="width: 132px; font-size: 0.72rem;"
+                                                aria-label="Report coverage start for {{ $sy->label }} {{ $sy->semester_label }}" required>
+                                            <span class="text-muted" style="font-size: 0.72rem;">to</span>
+                                            <input type="date" name="ends_on" value="{{ optional($sy->termEnd())->toDateString() }}"
+                                                class="form-control form-control-sm" style="width: 132px; font-size: 0.72rem;"
+                                                aria-label="Report coverage end for {{ $sy->label }} {{ $sy->semester_label }}" required>
+                                            <button class="btn btn-outline-primary btn-sm" style="font-size: 0.72rem;" title="Save report coverage">
+                                                <i class="bi bi-check2"></i>
+                                            </button>
+                                        </form>
+                                        @if(!$sy->hasTermWindow())
+                                            <div class="text-danger" style="font-size: 0.66rem; margin-top: 2px;">
+                                                No dates on record — semester reports cannot match projects or expenses to this term.
+                                            </div>
+                                        @elseif(!$sy->starts_on || !$sy->ends_on)
+                                            <div class="text-muted" style="font-size: 0.66rem; margin-top: 2px;">
+                                                Defaulted from the academic calendar
+                                            </div>
+                                        @endif
+                                    </td>
                                     <td>
                                         @if($sy->is_active)
                                             <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
