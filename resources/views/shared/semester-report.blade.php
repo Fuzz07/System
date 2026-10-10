@@ -24,10 +24,14 @@
     </p>
   </div>
   @if ($term)
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{{ route($portal . '.semester_reports.records', $term) }}" target="_blank"
+         class="btn btn-outline-secondary btn-sm" style="border-radius:8px;">
+        <i class="bi bi-table"></i> Records of Expenses
+      </a>
       <a href="{{ route($portal . '.semester_reports.print', $term) }}" target="_blank"
          class="btn btn-outline-secondary btn-sm" style="border-radius:8px;">
-        <i class="bi bi-printer"></i> Printable Sheet
+        <i class="bi bi-printer"></i> Financial Summary
       </a>
     </div>
   @endif
@@ -226,6 +230,74 @@
     </div>
   </div>
 
+  {{-- Month by month, matching the printed Records of Expenses --}}
+  @if ($report->months->isNotEmpty())
+    <div class="card mb-4">
+      <div class="card-header-custom d-flex justify-content-between align-items-center">
+        <span class="card-title"><i class="bi bi-calendar3 me-1"></i> Monthly Breakdown</span>
+        <span class="badge bg-secondary">{{ $report->months->count() }} month(s)</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="table table-hover mb-0" style="font-size:.82rem;">
+          <thead style="background:#f8fafc;">
+            <tr>
+              <th style="padding:12px 16px;font-weight:700;color:#475569;">Month</th>
+              <th style="padding:12px 16px;font-weight:700;color:#475569;text-align:right;">Balance Forward</th>
+              <th style="padding:12px 16px;font-weight:700;color:#475569;text-align:right;">Collections</th>
+              <th style="padding:12px 16px;font-weight:700;color:#475569;text-align:right;">Expenses</th>
+              <th style="padding:12px 16px;font-weight:700;color:#475569;text-align:right;">Ending Balance</th>
+              <th style="padding:12px 16px;font-weight:700;color:#475569;text-align:center;">Entries</th>
+              @if ($portal === 'treasurer')
+                <th style="padding:12px 16px;font-weight:700;color:#475569;text-align:center;">Month Sheets</th>
+              @endif
+            </tr>
+          </thead>
+          <tbody>
+            @foreach ($report->months as $month)
+              <tr>
+                <td style="padding:10px 16px;font-weight:600;color:#1e293b;white-space:nowrap;">
+                  {{ $month->label() }}
+                  @if ($month->isPartial())
+                    <div style="font-size:.7rem;color:#94a3b8;">{{ $month->coverageLabel() }}</div>
+                  @endif
+                </td>
+                <td style="padding:10px 16px;text-align:right;color:#64748b;">{{ $money($month->beginningBalance) }}</td>
+                <td style="padding:10px 16px;text-align:right;font-weight:700;color:#00a878;">{{ $money($month->totalCollections) }}</td>
+                <td style="padding:10px 16px;text-align:right;font-weight:700;color:#dc2626;">{{ $money($month->totalExpenses) }}</td>
+                <td style="padding:10px 16px;text-align:right;font-weight:700;color:#0f172a;">{{ $money($month->endingBalance()) }}</td>
+                <td style="padding:10px 16px;text-align:center;color:#64748b;">{{ $month->entries->count() }}</td>
+                @if ($portal === 'treasurer')
+                  <td style="padding:10px 16px;text-align:center;white-space:nowrap;">
+                    <a href="{{ route('treasurer.cashbook.records', $month->key()) }}" target="_blank"
+                       style="color:#3b82f6;font-size:.78rem;text-decoration:none;" title="Records of Expenses for {{ $month->label() }}">
+                      <i class="bi bi-table"></i> Records
+                    </a>
+                    <span style="color:#cbd5e1;">|</span>
+                    <a href="{{ route('treasurer.cashbook.financial', $month->key()) }}" target="_blank"
+                       style="color:#3b82f6;font-size:.78rem;text-decoration:none;" title="Financial Report for {{ $month->label() }}">
+                      <i class="bi bi-file-earmark-text"></i> Financial
+                    </a>
+                  </td>
+                @endif
+              </tr>
+            @endforeach
+          </tbody>
+          <tfoot>
+            <tr style="background:#f8fafc;">
+              <td style="padding:12px 16px;font-weight:800;color:#0f172a;">Whole Semester</td>
+              <td style="padding:12px 16px;text-align:right;font-weight:800;color:#64748b;">{{ $money($report->openingBalance) }}</td>
+              <td style="padding:12px 16px;text-align:right;font-weight:800;color:#00a878;">{{ $money($report->cashCollections) }}</td>
+              <td style="padding:12px 16px;text-align:right;font-weight:800;color:#dc2626;">{{ $money($report->cashExpenses) }}</td>
+              <td style="padding:12px 16px;text-align:right;font-weight:800;color:#0f172a;">{{ $money($report->closingBalance()) }}</td>
+              <td style="padding:12px 16px;"></td>
+              @if ($portal === 'treasurer')<td style="padding:12px 16px;"></td>@endif
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  @endif
+
   {{-- Accountability counters --}}
   <div class="row g-3 mb-4">
     <div class="col-md-4">
@@ -264,7 +336,7 @@
   <div class="card mb-4">
     <div class="card-header-custom d-flex justify-content-between align-items-center">
       <span class="card-title"><i class="bi bi-lightbulb me-1"></i> Projects Proposed this Semester</span>
-      <span class="badge bg-secondary">{{ $report->projects->count() }} records</span>
+      <span class="badge bg-secondary">{{ $projects->total() }} records</span>
     </div>
     <div style="overflow-x:auto;">
       <table class="table table-hover mb-0" style="font-size:.82rem;">
@@ -280,7 +352,7 @@
           </tr>
         </thead>
         <tbody>
-          @forelse ($report->projects as $project)
+          @forelse ($projects as $project)
             <tr>
               <td style="padding:10px 16px;font-weight:600;color:#1e293b;max-width:220px;">{{ $project->project_title }}</td>
               <td style="padding:10px 16px;color:#64748b;">{{ $project->officer->fullname ?? '—' }}</td>
@@ -303,13 +375,14 @@
         </tbody>
       </table>
     </div>
+    {{ $projects->links('partials.pagination') }}
   </div>
 
   {{-- Expense lines charged to the term's funds --}}
   <div class="card mb-4">
     <div class="card-header-custom d-flex justify-content-between align-items-center">
       <span class="card-title"><i class="bi bi-receipt-cutoff me-1"></i> Approved Expenses Charged to this Semester</span>
-      <span class="badge bg-secondary">{{ $report->expenses->count() }} records</span>
+      <span class="badge bg-secondary">{{ $expenses->total() }} records</span>
     </div>
     <div style="overflow-x:auto;">
       <table class="table table-hover mb-0" style="font-size:.82rem;">
@@ -324,7 +397,7 @@
           </tr>
         </thead>
         <tbody>
-          @forelse ($report->expenses as $expense)
+          @forelse ($expenses as $expense)
             <tr>
               <td style="padding:10px 16px;font-weight:600;color:#1e293b;max-width:220px;">{{ $expense->expense_title }}</td>
               <td style="padding:10px 16px;color:#64748b;">{{ $expense->budget->title ?? '—' }}</td>
@@ -348,6 +421,7 @@
         </tbody>
       </table>
     </div>
+    {{ $expenses->links('partials.pagination') }}
   </div>
   @endif
 @endif

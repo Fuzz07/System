@@ -33,6 +33,7 @@ if (!function_exists('registerSemesterReportRoutes')) {
     function registerSemesterReportRoutes() {
         Route::get('/semester-reports', [SemesterReportController::class, 'index'])->name('semester_reports');
         Route::get('/semester-reports/{schoolYear}/print', [SemesterReportController::class, 'print'])->name('semester_reports.print');
+        Route::get('/semester-reports/{schoolYear}/records-of-expenses', [SemesterReportController::class, 'records'])->name('semester_reports.records');
     }
 }
 

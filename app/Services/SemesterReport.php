@@ -60,6 +60,10 @@ class SemesterReport
     public array $cashCategoryTotals = [];
     public float $cashCollections = 0.0;
     public float $cashExpenses = 0.0;
+    /** Each month the term spans, oldest first, for the month-by-month sheet. */
+    public Collection $months;
+    /** Cash on hand entering the term, before any of its own collections or expenses. */
+    public float $openingBalance = 0.0;
 
     public int $liquidationsFiled = 0;
     public int $liquidationsApproved = 0;
@@ -73,6 +77,7 @@ class SemesterReport
         $report->funds = collect();
         $report->projects = collect();
         $report->expenses = collect();
+        $report->months = collect();
 
         $report->loadFunds($term->enrollmentTermKeys());
         $report->loadContributions($term->enrollmentTermKeys());
@@ -158,6 +163,8 @@ class SemesterReport
         $entries = CashBookEntry::whereIn('type', [CashBookEntry::TYPE_COLLECTION, CashBookEntry::TYPE_EXPENSE])
             ->where('entry_date', '>=', $from)
             ->where('entry_date', '<', $until)
+            ->orderBy('entry_date')
+            ->orderBy('id')
             ->get();
 
         $this->cashCollections = round((float) $entries->where('type', CashBookEntry::TYPE_COLLECTION)->sum('amount'), 2);
@@ -171,6 +178,66 @@ class SemesterReport
                 $this->cashCategoryTotals[$category] = round((float) $items->sum('amount'), 2);
             }
         }
+
+        $this->buildMonths($entries, $from);
+    }
+
+    /**
+     * Splits the term into its calendar months and carries the cash balance
+     * from each month into the next, the way the printed Records of Expenses
+     * sheet does. A fund approved during a month counts toward that month's
+     * beginning balance, matching CashBookReport.
+     */
+    private function buildMonths(Collection $entries, string $from): void
+    {
+        $this->openingBalance = round(
+            (float) Budget::where('status', 'Approved')->where('created_at', '<', $from)->sum('allocated_amount')
+            + (float) CashBookEntry::where('type', CashBookEntry::TYPE_COLLECTION)->where('entry_date', '<', $from)->sum('amount')
+            - (float) CashBookEntry::where('type', CashBookEntry::TYPE_EXPENSE)->where('entry_date', '<', $from)->sum('amount'),
+            2
+        );
+
+        // Funds approved inside the term, bucketed by the month they were approved in.
+        $fundsByMonth = Budget::where('status', 'Approved')
+            ->where('created_at', '>=', $from)
+            ->where('created_at', '<', $this->end->copy()->addDay()->toDateString())
+            ->get(['allocated_amount', 'created_at'])
+            ->groupBy(fn ($budget) => $budget->created_at->format('Y-m'))
+            ->map(fn ($group) => round((float) $group->sum('allocated_amount'), 2));
+
+        $running = $this->openingBalance;
+        $cursor = $this->start->copy()->startOfMonth();
+
+        while ($cursor->lessThanOrEqualTo($this->end)) {
+            $coverageStart = $cursor->greaterThan($this->start) ? $cursor->copy() : $this->start->copy();
+            $monthEnd = $cursor->copy()->endOfMonth();
+            $coverageEnd = $monthEnd->lessThan($this->end) ? $monthEnd : $this->end->copy();
+
+            $month = new SemesterMonth(
+                $cursor->copy(),
+                $coverageStart,
+                $coverageEnd,
+                $entries->filter(function ($entry) use ($coverageStart, $coverageEnd) {
+                    $date = $entry->entry_date->toDateString();
+                    return $date >= $coverageStart->toDateString() && $date <= $coverageEnd->toDateString();
+                })->values()
+            );
+
+            $running = round($running + ($fundsByMonth[$cursor->format('Y-m')] ?? 0), 2);
+            $month->beginningBalance = $running;
+            $running = $month->endingBalance();
+
+            $this->months->push($month);
+            $cursor->addMonth()->startOfMonth();
+        }
+    }
+
+    /** Where the term's cash stands after its last month. */
+    public function closingBalance(): float
+    {
+        return $this->months->isNotEmpty()
+            ? $this->months->last()->endingBalance()
+            : $this->openingBalance;
     }
 
     /** Share of the term's allocation that has been spent, for the progress bars. */

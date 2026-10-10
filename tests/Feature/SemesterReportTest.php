@@ -202,6 +202,131 @@ class SemesterReportTest extends TestCase
             ]);
     }
 
+    public function test_the_term_is_split_into_its_months_with_balances_carried_forward(): void
+    {
+        [$first] = $this->seedTwoTerms();
+
+        $report = SemesterReport::forTerm($first);
+        $months = $report->months;
+
+        $this->assertSame(
+            ['August 2026', 'September 2026', 'October 2026', 'November 2026', 'December 2026'],
+            $months->map(fn ($month) => $month->label())->all()
+        );
+
+        // The 30,000 fund is approved on the term's first day, so August opens with it.
+        $august = $months->firstWhere('monthStart.month', 8);
+        $this->assertSame(30000.0, $august->beginningBalance);
+        $this->assertSame(0.0, $august->totalCollections);
+        $this->assertSame(30000.0, $august->endingBalance());
+
+        // September collected 3,000 and spent nothing.
+        $september = $months[1];
+        $this->assertSame(30000.0, $september->beginningBalance);
+        $this->assertSame(3000.0, $september->totalCollections);
+        $this->assertSame(0.0, $september->totalExpenses);
+        $this->assertSame(33000.0, $september->endingBalance());
+        $this->assertSame(33000.0, $september->cashDebitTotal());
+        $this->assertSame('August', $september->previousMonthName());
+
+        // December's 1,200 expense closes the term out.
+        $december = $months->last();
+        $this->assertSame(33000.0, $december->beginningBalance);
+        $this->assertSame(1200.0, $december->totalExpenses);
+        $this->assertSame(['Office Supplies/Equipments' => 1200.0], $december->categoryTotals);
+        $this->assertSame(31800.0, $december->endingBalance());
+        $this->assertSame(31800.0, $report->closingBalance());
+
+        // Month subtotals add up to the semester figures.
+        $this->assertSame($report->cashCollections, round($months->sum('totalCollections'), 2));
+        $this->assertSame($report->cashExpenses, round($months->sum('totalExpenses'), 2));
+        $this->assertFalse($months->contains(fn ($month) => $month->isPartial()));
+    }
+
+    public function test_a_term_starting_mid_month_only_counts_its_own_days(): void
+    {
+        $term = SchoolYear::create([
+            'label' => '2026-2027',
+            'semester' => SchoolYear::SEMESTER_FIRST,
+            'starts_on' => '2026-08-15',
+            'ends_on' => '2026-09-30',
+        ]);
+
+        CashBookEntry::create(['entry_date' => '2026-08-10', 'type' => 'expense', 'particulars' => 'Before the term', 'category' => 'Event Supplies', 'amount' => 500]);
+        CashBookEntry::create(['entry_date' => '2026-08-20', 'type' => 'expense', 'particulars' => 'Inside the term', 'category' => 'Event Supplies', 'amount' => 700]);
+
+        $report = SemesterReport::forTerm($term);
+        $august = $report->months->first();
+
+        $this->assertTrue($august->isPartial());
+        $this->assertSame('August 15 - August 31, 2026', $august->coverageLabel());
+        $this->assertSame(700.0, $august->totalExpenses);
+        $this->assertSame(700.0, $report->cashExpenses);
+        // Spending before the term lowers the balance it opens with.
+        $this->assertSame(-500.0, $report->openingBalance);
+    }
+
+    public function test_the_records_of_expenses_sheet_lists_every_month(): void
+    {
+        [$first] = $this->seedTwoTerms();
+
+        $this->actingAs($this->user('treasurer', 'Treasurer', 'treasurer@example.com'))
+            ->get(route('treasurer.semester_reports.records', $first))
+            ->assertOk()
+            ->assertSee('Records of Expenses for 2026-2027 - First Semester')
+            ->assertSeeInOrder([
+                'August 2026',
+                'September 2026', 'Membership dues', '3,000.00',
+                'October 2026',
+                'November 2026',
+                'December 2026', 'Bond paper', '1,200.00',
+                'Semester Total', 'Whole Semester',
+            ])
+            ->assertSee('Office Supplies/Equipments')
+            ->assertSee('Total Cash Balance from July');
+    }
+
+    public function test_a_student_can_open_the_records_of_expenses_sheet(): void
+    {
+        [$first] = $this->seedTwoTerms();
+
+        $this->actingAs($this->user('student', 'Reader', 'reader@example.com'))
+            ->get(route('student.semester_reports.records', $first))
+            ->assertOk()
+            ->assertSee('Bond paper');
+    }
+
+    public function test_long_tables_are_paged_eight_rows_at_a_time(): void
+    {
+        $term = SchoolYear::create([
+            'label' => '2026-2027',
+            'semester' => SchoolYear::SEMESTER_FIRST,
+            'is_active' => true,
+        ]);
+
+        for ($i = 1; $i <= 10; $i++) {
+            $this->proposal('Project ' . $i, '2026-09-' . str_pad((string) $i, 2, '0', STR_PAD_LEFT));
+        }
+
+        $student = $this->user('student', 'Reader', 'reader@example.com');
+
+        // Newest first, so page one holds projects 10 down to 3.
+        $this->actingAs($student)
+            ->get(route('student.semester_reports', ['term' => $term->id]))
+            ->assertOk()
+            ->assertSee('Project 10')
+            ->assertSee('Project 3')
+            ->assertDontSee('Project 2<')
+            ->assertSee('10</strong> records', false);
+
+        $this->actingAs($student)
+            ->get(route('student.semester_reports', ['term' => $term->id, 'projects' => 2]))
+            ->assertOk()
+            ->assertSee('Project 2')
+            ->assertSee('Project 1')
+            ->assertDontSee('Project 10');
+    }
+
     public function test_officers_cannot_open_the_semester_report(): void
     {
         $this->actingAs($this->officer)->get(route('student.semester_reports'))->assertForbidden();
