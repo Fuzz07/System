@@ -406,10 +406,11 @@
               <td style="padding:10px 16px;color:#64748b;white-space:nowrap;">{{ $expense->created_at?->format('M d, Y') ?? '—' }}</td>
               <td style="padding:10px 16px;">
                 @if ($expense->receipt)
-                  <a href="{{ \App\Helpers\SscHelper::getUploadUrl($expense->receipt) }}" target="_blank"
-                     style="color:#3b82f6;font-size:.78rem;text-decoration:none;">
+                  <button type="button" class="btn btn-outline-primary btn-sm"
+                          style="font-size:.72rem;padding:2px 8px;"
+                          data-bs-toggle="modal" data-bs-target="#receiptModal{{ $expense->id }}">
                     <i class="bi bi-file-earmark"></i> View
-                  </a>
+                  </button>
                 @else
                   <span style="color:#cbd5e1;">—</span>
                 @endif
@@ -423,6 +424,13 @@
     </div>
     {{ $expenses->links('partials.pagination') }}
   </div>
+
+  @foreach($expenses->getCollection()->filter->receipt as $ex)
+    @include('partials.expense-receipt-modal', [
+      'ex' => $ex,
+      'showPeople' => true,
+    ])
+  @endforeach
   @endif
 @endif
 @endsection

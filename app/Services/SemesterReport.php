@@ -102,7 +102,7 @@ class SemesterReport
         }
 
         // Matches the dashboards: only approved expense lines count as spent.
-        $this->expenses = Expense::with(['budget', 'officer'])
+        $this->expenses = Expense::with(['budget', 'officer', 'approver'])
             ->whereIn('budget_id', $this->funds->pluck('id'))
             ->where('status', 'Approved')
             ->orderByDesc('amount')
