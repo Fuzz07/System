@@ -45,6 +45,20 @@ if (!function_exists('registerSemesterReportRoutes')) {
     }
 }
 
+// Cash book routes, shared by admin and treasurer portals (names get the portal prefix).
+if (!function_exists('registerCashBookRoutes')) {
+    function registerCashBookRoutes() {
+        Route::get('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'index'])->name('cashbook');
+        Route::post('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'store'])->name('cashbook.store');
+        Route::put('/cash-book/{entry}', [App\Http\Controllers\Treasurer\CashBookController::class, 'update'])->name('cashbook.update');
+        Route::delete('/cash-book/{entry}', [App\Http\Controllers\Treasurer\CashBookController::class, 'destroy'])->name('cashbook.destroy');
+        Route::get('/cash-book/{month}/records-of-expenses', [App\Http\Controllers\Treasurer\CashBookController::class, 'records'])
+            ->where('month', '\d{4}-(0[1-9]|1[0-2])')->name('cashbook.records');
+        Route::get('/cash-book/{month}/financial-report', [App\Http\Controllers\Treasurer\CashBookController::class, 'financialReport'])
+            ->where('month', '\d{4}-(0[1-9]|1[0-2])')->name('cashbook.financial');
+    }
+}
+
 // Helper to register standard auth routes on subdomains
 if (!function_exists('registerSubdomainAuthRoutes')) {
     function registerSubdomainAuthRoutes(string $portal) {
@@ -124,6 +138,7 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::post('/feedback/{feedback}/reply', [Admin\FeedbackController::class, 'reply'])->name('feedback.reply');
 
         registerSemesterReportRoutes();
+        registerCashBookRoutes();
 
         Route::get('/logs', [Admin\LogController::class, 'index'])->name('logs');
 
@@ -246,14 +261,7 @@ Route::domain('treasurer.' . $baseDomain)->group(function () {
 
         registerEnrollmentPaymentRoutes();
 
-        Route::get('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'index'])->name('cashbook');
-        Route::post('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'store'])->name('cashbook.store');
-        Route::put('/cash-book/{entry}', [App\Http\Controllers\Treasurer\CashBookController::class, 'update'])->name('cashbook.update');
-        Route::delete('/cash-book/{entry}', [App\Http\Controllers\Treasurer\CashBookController::class, 'destroy'])->name('cashbook.destroy');
-        Route::get('/cash-book/{month}/records-of-expenses', [App\Http\Controllers\Treasurer\CashBookController::class, 'records'])
-            ->where('month', '\d{4}-(0[1-9]|1[0-2])')->name('cashbook.records');
-        Route::get('/cash-book/{month}/financial-report', [App\Http\Controllers\Treasurer\CashBookController::class, 'financialReport'])
-            ->where('month', '\d{4}-(0[1-9]|1[0-2])')->name('cashbook.financial');
+        registerCashBookRoutes();
     });
 });
 

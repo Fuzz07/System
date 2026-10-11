@@ -137,6 +137,44 @@ class TreasurerCashBookTest extends TestCase
             ->assertDontSee('Fujidenzo Water Dispenser');
     }
 
+    public function test_admin_can_use_the_cash_book_and_its_print_reports(): void
+    {
+        $this->seedJuneAndJuly();
+        $admin = User::create([
+            'fullname' => 'Admin',
+            'email' => 'admin@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.cashbook', ['month' => '2026-07']))
+            ->assertOk()
+            ->assertSee('Cash Book')
+            ->assertSee(route('admin.cashbook.store'), false)
+            ->assertSee(route('admin.cashbook.records', '2026-07'), false)
+            ->assertSee(route('admin.cashbook.financial', '2026-07'), false);
+
+        $this->get(route('admin.cashbook.records', '2026-06'))
+            ->assertOk()
+            ->assertSee(route('admin.cashbook', ['month' => '2026-06']), false)
+            ->assertSee('Fujidenzo Water Dispenser Black');
+
+        $this->get(route('admin.cashbook.financial', '2026-07'))
+            ->assertOk()
+            ->assertSee(route('admin.cashbook', ['month' => '2026-07']), false)
+            ->assertSee('Ending Total Cash Balance');
+
+        $this->post(route('admin.cashbook.store'), [
+            'entry_date' => '2026-07-17',
+            'type' => 'expense',
+            'particulars' => 'Admin-recorded expense',
+            'category' => 'Office Supplies/Equipments',
+            'amount' => '25',
+        ])->assertRedirect(route('admin.cashbook', ['month' => '2026-07']));
+    }
+
     public function test_records_of_expenses_print(): void
     {
         $this->seedJuneAndJuly();
@@ -173,7 +211,7 @@ class TreasurerCashBookTest extends TestCase
             ->assertDontSee('Total Collections');
     }
 
-    public function test_only_the_treasurer_can_use_the_cash_book(): void
+    public function test_officers_cannot_use_the_cash_book(): void
     {
         $officer = User::create([
             'fullname' => 'Officer',

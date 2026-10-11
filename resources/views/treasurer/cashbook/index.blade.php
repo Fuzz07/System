@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('sidebar-nav') @include('partials.sidebar-treasurer') @endsection
+@section('sidebar-nav') @include('partials.sidebar-' . $portal) @endsection
 
 @php
     $fmt = fn ($amount) => \App\Helpers\SscHelper::formatCurrency($amount);
@@ -28,14 +28,14 @@
 </div>
 
 <div class="card mb-4"><div class="card-body-custom d-flex flex-wrap gap-2 align-items-center justify-content-between">
-    <form method="GET" action="{{ route('treasurer.cashbook') }}" class="d-flex gap-2 align-items-center">
-        <a href="{{ route('treasurer.cashbook', ['month' => $prevMonth]) }}" class="btn btn-outline-secondary btn-sm" title="Previous month" aria-label="Previous month"><i class="bi bi-chevron-left"></i></a>
+    <form method="GET" action="{{ route($portal . '.cashbook') }}" class="d-flex gap-2 align-items-center">
+        <a href="{{ route($portal . '.cashbook', ['month' => $prevMonth]) }}" class="btn btn-outline-secondary btn-sm" title="Previous month" aria-label="Previous month"><i class="bi bi-chevron-left"></i></a>
         <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm" style="width:170px;" onchange="this.form.submit()" aria-label="Month">
-        <a href="{{ route('treasurer.cashbook', ['month' => $nextMonth]) }}" class="btn btn-outline-secondary btn-sm" title="Next month" aria-label="Next month"><i class="bi bi-chevron-right"></i></a>
+        <a href="{{ route($portal . '.cashbook', ['month' => $nextMonth]) }}" class="btn btn-outline-secondary btn-sm" title="Next month" aria-label="Next month"><i class="bi bi-chevron-right"></i></a>
     </form>
     <div class="d-flex gap-2">
-        <a href="{{ route('treasurer.cashbook.records', $month) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Records of Expenses</a>
-        <a href="{{ route('treasurer.cashbook.financial', $month) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Financial Report</a>
+        <a href="{{ route($portal . '.cashbook.records', $month) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Records of Expenses</a>
+        <a href="{{ route($portal . '.cashbook.financial', $month) }}" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Financial Report</a>
     </div>
 </div></div>
 
@@ -86,7 +86,7 @@
                     </td>
                     <td style="text-align:center;white-space:nowrap;">
                         <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editEntry{{ $entry->id }}" title="Edit" aria-label="Edit entry"><i class="bi bi-pencil-square"></i></button>
-                        <form method="POST" action="{{ route('treasurer.cashbook.destroy', $entry) }}" class="d-inline" data-confirm="Delete this cash book entry?">
+                        <form method="POST" action="{{ route($portal . '.cashbook.destroy', $entry) }}" class="d-inline" data-confirm="Delete this cash book entry?">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete" aria-label="Delete entry"><i class="bi bi-trash"></i></button>
                         </form>
@@ -122,7 +122,7 @@
 {{-- New Entry Modal --}}
 <div class="modal fade" id="entryModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content" style="border-radius:var(--radius);border:none;">
     <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;"><i class="bi bi-journal-plus"></i> New Cash Book Entry</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <form method="POST" action="{{ route('treasurer.cashbook.store') }}">@csrf
+    <form method="POST" action="{{ route($portal . '.cashbook.store') }}">@csrf
         <input type="hidden" name="entry_form" value="create">
         <div class="modal-body p-4">@include('treasurer.cashbook.entry-fields', ['values' => $newValues])</div>
         <div class="modal-footer border-0 pt-0"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn-primary-custom"><i class="bi bi-save"></i> Save Entry</button></div>
@@ -133,7 +133,7 @@
 @foreach($entries as $entry)
 <div class="modal fade" id="editEntry{{ $entry->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content" style="border-radius:var(--radius);border:none;">
     <div class="modal-header modal-header-custom"><h5 class="modal-title" style="font-weight:700;"><i class="bi bi-pencil-square"></i> Edit Entry</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <form method="POST" action="{{ route('treasurer.cashbook.update', $entry) }}">@csrf @method('PUT')
+    <form method="POST" action="{{ route($portal . '.cashbook.update', $entry) }}">@csrf @method('PUT')
         <div class="modal-body p-4">@include('treasurer.cashbook.entry-fields', ['values' => [
             'entry_date'   => $entry->entry_date->toDateString(),
             'type'         => $entry->type,

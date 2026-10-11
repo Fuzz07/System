@@ -25,7 +25,12 @@ class CashBookController extends Controller
             ->orderBy('entry_date')->orderBy('id')
             ->get();
 
-        return view('treasurer.cashbook.index', compact('month', 'report', 'entries'));
+        return view('treasurer.cashbook.index', [
+            'month' => $month,
+            'report' => $report,
+            'entries' => $entries,
+            'portal' => $this->portal(),
+        ]);
     }
 
     public function store(Request $request)
@@ -33,7 +38,7 @@ class CashBookController extends Controller
         $entry = CashBookEntry::create($this->validatedEntry($request) + ['recorded_by' => Auth::id()]);
 
         SscHelper::logActivity(Auth::id(), 'CASHBOOK_ADD', "Recorded {$entry->type}: {$entry->particulars} (" . SscHelper::formatCurrency($entry->amount) . ')');
-        return redirect()->route('treasurer.cashbook', ['month' => $entry->entry_date->format('Y-m')])
+        return redirect()->route($this->portal() . '.cashbook', ['month' => $entry->entry_date->format('Y-m')])
             ->with('success', 'Cash book entry recorded.');
     }
 
@@ -42,7 +47,7 @@ class CashBookController extends Controller
         $entry->update($this->validatedEntry($request));
 
         SscHelper::logActivity(Auth::id(), 'CASHBOOK_UPDATE', "Updated cash book entry #{$entry->id}: {$entry->particulars}");
-        return redirect()->route('treasurer.cashbook', ['month' => $entry->entry_date->format('Y-m')])
+        return redirect()->route($this->portal() . '.cashbook', ['month' => $entry->entry_date->format('Y-m')])
             ->with('success', 'Cash book entry updated.');
     }
 
@@ -52,18 +57,29 @@ class CashBookController extends Controller
         $entry->delete();
 
         SscHelper::logActivity(Auth::id(), 'CASHBOOK_DELETE', "Deleted cash book entry #{$entry->id}: {$entry->particulars}");
-        return redirect()->route('treasurer.cashbook', ['month' => $month])
+        return redirect()->route($this->portal() . '.cashbook', ['month' => $month])
             ->with('success', 'Cash book entry deleted.');
     }
 
     public function records(string $month)
     {
-        return view('treasurer.cashbook.records', ['report' => CashBookReport::forMonth($month)]);
+        return view('treasurer.cashbook.records', [
+            'report' => CashBookReport::forMonth($month),
+            'backUrl' => route($this->portal() . '.cashbook', ['month' => $month]),
+        ]);
     }
 
     public function financialReport(string $month)
     {
-        return view('treasurer.cashbook.financial-report', ['report' => CashBookReport::forMonth($month)]);
+        return view('treasurer.cashbook.financial-report', [
+            'report' => CashBookReport::forMonth($month),
+            'backUrl' => route($this->portal() . '.cashbook', ['month' => $month]),
+        ]);
+    }
+
+    private function portal(): string
+    {
+        return Auth::user()->role === 'admin' ? 'admin' : 'treasurer';
     }
 
     private function validatedEntry(Request $request): array

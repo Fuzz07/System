@@ -29,6 +29,9 @@
 <a href="{{ route('admin.cashbook') }}" class="nav-link {{ request()->routeIs('admin.cashbook*') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-journal-bookmark"></i></span> Cash Book
 </a>
+<a href="{{ route('admin.cashbook') }}" class="nav-link {{ request()->routeIs('admin.cashbook*') ? 'active' : '' }}">
+    <span class="nav-icon"><i class="bi bi-journal-bookmark"></i></span> Cash Book
+</a>
 
 <div class="nav-section-label">Management</div>
 <a href="{{ route('admin.announcements') }}" class="nav-link {{ request()->routeIs('admin.announcements') ? 'active' : '' }}">
