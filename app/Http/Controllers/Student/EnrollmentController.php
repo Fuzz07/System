@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
 use App\Models\EnrollmentPayment;
+use App\Services\EnrollmentFee;
 use App\Services\EnrollmentPaymentSettlementService;
 use App\Services\PayMongoService;
 use App\Support\UploadValidation;
@@ -35,9 +36,9 @@ class EnrollmentController extends Controller
     public function store(Request $request)
     {
         $student = Auth::user();
-        $amount = config('ssc.enrollment_fee_amount', 50);
         $currentSy = SscHelper::getActiveAcademicTerm();
         $payment = $this->currentPayment();
+        $amount = $payment ? (float) $payment->amount : EnrollmentFee::forStudent($student);
         $redirectRoute = $this->indexRoute($request);
 
         if ($payment && $payment->status === 'paid') {
@@ -112,7 +113,7 @@ class EnrollmentController extends Controller
 
         $student = Auth::user();
         $payment = $this->currentPayment();
-        $amount = (float) config('ssc.enrollment_fee_amount', 50);
+        $amount = $payment ? (float) $payment->amount : EnrollmentFee::forStudent($student);
         $amountInCentavos = (int) round($amount * 100);
 
         if ($payment?->status === 'paid') {
@@ -286,9 +287,11 @@ class EnrollmentController extends Controller
 
     private function paymentContext(): array
     {
+        $payment = $this->currentPayment();
+
         return [
-            'payment' => $this->currentPayment(),
-            'amount' => config('ssc.enrollment_fee_amount', 50),
+            'payment' => $payment,
+            'amount' => $payment ? (float) $payment->amount : EnrollmentFee::forStudent(Auth::user()),
             'currentSy' => SscHelper::getActiveAcademicTerm(),
             'paymongoEnabled' => $this->payMongo->isConfigured(),
         ];

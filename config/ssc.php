@@ -23,6 +23,8 @@ return [
     'current_school_year' => env('SSC_CURRENT_SCHOOL_YEAR', null),
     // default enrollment fee amount
     'enrollment_fee_amount' => env('SSC_ENROLLMENT_FEE', 50),
+    // first-semester fee for first-year students
+    'enrollment_fee_first_year_first_semester_amount' => env('SSC_FIRST_YEAR_FIRST_SEMESTER_FEE', 100),
     // GCash number to display in student payment instructions
     'gcash_number' => env('SSC_GCASH_NUMBER', ''),
     // Bank / InstaPay details for admin enrollment payments

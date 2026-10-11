@@ -34,7 +34,7 @@ class EnrollmentAddStudentTest extends TestCase
         $response->assertRedirect(route('admin.enrollment.payments', ['search' => '2026-0042']));
         $response->assertSessionHasNoErrors();
 
-        $student = User::where('email', 'juan.delacruz@mcclawis.edu.ph')->firstOrFail();
+        $student = User::where('email', 'juan.delacruz@gmail.com')->firstOrFail();
         $this->assertSame('Juan Santos Dela Cruz', $student->fullname);
         $this->assertSame('student', $student->role);
         $this->assertSame('active', $student->status);
@@ -49,6 +49,8 @@ class EnrollmentAddStudentTest extends TestCase
 
         $this->post(route('admin.enrollment.payments.students.store'), $this->studentForm([
             'payment_status' => 'paid',
+            'year_level' => '1st Year',
+            'email' => 'freshman.delacruz@gmail.com',
             'reference' => 'OR-7384',
         ]))->assertSessionHasNoErrors();
 
@@ -58,10 +60,10 @@ class EnrollmentAddStudentTest extends TestCase
         $this->assertSame('walk_in', $payment->method);
         $this->assertSame('OR-7384', $payment->reference);
         $this->assertSame($this->schoolYear->academic_term, $payment->semester);
-        $this->assertEquals(config('ssc.enrollment_fee_amount', 50), (float) $payment->amount);
+        $this->assertEquals(config('ssc.enrollment_fee_first_year_first_semester_amount', 100), (float) $payment->amount);
 
         $budget = Budget::where('title', Budget::ENROLLMENT_TITLE_PREFIX)->firstOrFail();
-        $this->assertEquals(config('ssc.enrollment_fee_amount', 50), (float) $budget->allocated_amount);
+        $this->assertEquals(config('ssc.enrollment_fee_first_year_first_semester_amount', 100), (float) $budget->allocated_amount);
     }
 
     public function test_duplicate_or_invalid_students_are_rejected(): void
@@ -69,7 +71,7 @@ class EnrollmentAddStudentTest extends TestCase
         $this->actingAs($this->user('admin'));
         User::create([
             'fullname' => 'Existing Student',
-            'email' => 'juan.delacruz@mcclawis.edu.ph',
+            'email' => 'juan.delacruz@gmail.com',
             'student_id' => '2026-0042',
             'password' => 'password',
             'role' => 'student',
@@ -83,7 +85,7 @@ class EnrollmentAddStudentTest extends TestCase
             'email' => 'someone@gmail.com',
             'student_id' => '42',
             'department' => 'BSCS',
-        ]))->assertSessionHasErrors(['email', 'student_id', 'department']);
+        ]))->assertSessionHasErrors(['student_id', 'department']);
 
         $this->assertSame(1, User::where('role', 'student')->count());
     }
@@ -158,7 +160,7 @@ class EnrollmentAddStudentTest extends TestCase
             'middle_name' => 'Santos',
             'last_name' => 'Dela Cruz',
             'student_id' => '2026-0042',
-            'email' => 'Juan.DelaCruz@mcclawis.edu.ph',
+            'email' => 'Juan.DelaCruz@gmail.com',
             'department' => 'BSIT',
             'year_level' => '2nd Year',
             'payment_status' => 'unpaid',

@@ -9,6 +9,7 @@ use App\Models\Candidacy;
 use App\Models\EnrollmentPayment;
 use App\Models\Proposal;
 use App\Models\SchoolYear;
+use App\Services\EnrollmentFee;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Request;
@@ -143,7 +144,7 @@ class ChatbotController extends Controller
                     return "Your contribution fee payment for {$academicTerm} is currently {$payment->status}.{$proof} Open the Contribution Fee page to review the record or upload the required proof.";
                 }
 
-                $amount = number_format((float) config('ssc.enrollment_fee_amount', 50), 2);
+                $amount = number_format(EnrollmentFee::forStudent($student, $activeYear), 2);
                 return "There is no contribution fee payment record for your account for {$academicTerm}. The configured fee is PHP {$amount}; open the Contribution Fee page to view the approved payment methods and submit proof.";
             }
 

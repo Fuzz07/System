@@ -104,6 +104,40 @@ class EnrollmentPaymentSemesterTest extends TestCase
         ]);
     }
 
+    public function test_first_year_first_semester_fee_is_one_hundred_pesos(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $schoolYear = SchoolYear::create([
+            'label' => '2026-2027',
+            'semester' => SchoolYear::SEMESTER_FIRST,
+            'is_active' => true,
+        ]);
+        $student = User::create([
+            'fullname' => 'Freshman Student',
+            'email' => 'freshman.first.semester@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'student',
+            'status' => 'active',
+            'year_level' => '1st Year',
+        ]);
+
+        $this->actingAs($student)
+            ->get(route('student.enrollment.index'))
+            ->assertOk()
+            ->assertSee('₱100.00');
+
+        $this->actingAs($student)->post(route('student.enrollment.store'), [
+            'payment_method' => 'gcash',
+            'proof' => \Illuminate\Http\UploadedFile::fake()->image('freshman-receipt.jpg'),
+        ])->assertRedirect(route('student.enrollment.index'));
+
+        $this->assertDatabaseHas('enrollment_payments', [
+            'user_id' => $student->id,
+            'semester' => $schoolYear->academic_term,
+            'amount' => 100,
+        ]);
+    }
+
     public function test_switching_semester_starts_a_separate_payment_period(): void
     {
         $schoolYear = SchoolYear::create([
@@ -158,6 +192,7 @@ class EnrollmentPaymentSemesterTest extends TestCase
             'password' => bcrypt('password'),
             'role' => 'student',
             'status' => 'active',
+            'year_level' => '1st Year',
         ]);
 
         $this->actingAs($student)->post(route('student.enrollment.store'), [
@@ -169,6 +204,7 @@ class EnrollmentPaymentSemesterTest extends TestCase
             'user_id' => $student->id,
             'semester' => '2026-2027 - Second Semester',
             'status' => 'pending',
+            'amount' => 50,
         ]);
     }
 }

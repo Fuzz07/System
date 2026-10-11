@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\EnrollmentPayment;
 use App\Models\Budget;
+use App\Models\SchoolYear;
 use App\Models\User;
+use App\Services\EnrollmentFee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\SscHelper;
@@ -71,8 +73,14 @@ class EnrollmentPaymentController extends Controller
         $portal = $this->portal($request);
         $departmentOptions = Budget::DEPARTMENTS;
         $yearLevelOptions = self::YEAR_LEVELS;
+        $activeSchoolYear = SchoolYear::query()->where('is_active', true)->first();
+        $feeAmountsByYear = collect(self::YEAR_LEVELS)
+            ->mapWithKeys(fn (string $level) => [
+                $level => EnrollmentFee::forYearLevel($level, $activeSchoolYear?->semester),
+            ])
+            ->all();
 
-        return view('admin.enrollment_payments', compact('students', 'search', 'dept', 'year', 'status', 'departments', 'years', 'currentSy', 'distribution', 'portal', 'departmentOptions', 'yearLevelOptions'));
+        return view('admin.enrollment_payments', compact('students', 'search', 'dept', 'year', 'status', 'departments', 'years', 'currentSy', 'distribution', 'portal', 'departmentOptions', 'yearLevelOptions', 'feeAmountsByYear'));
     }
 
     public function markPaid(EnrollmentPayment $payment, Request $request)
@@ -181,7 +189,7 @@ class EnrollmentPaymentController extends Controller
     protected function recordWalkInPayment(User $student, ?string $reference = null): ?EnrollmentPayment
     {
         $currentSy = SscHelper::getActiveAcademicTerm();
-        $amount = config('ssc.enrollment_fee_amount', 50);
+        $amount = EnrollmentFee::forStudent($student);
 
         $payment = EnrollmentPayment::where('user_id', $student->id)
             ->whereIn('semester', SscHelper::getActiveEnrollmentTermKeys())

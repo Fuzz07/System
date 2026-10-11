@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EnrollmentPayment;
 use App\Helpers\SscHelper;
 use App\Services\EnrollmentPaymentSettlementService;
+use App\Services\EnrollmentFee;
 use App\Services\PayMongoService;
 use App\Support\UploadValidation;
 use Illuminate\Http\JsonResponse;
@@ -68,7 +69,7 @@ class StudentApiController extends Controller
             ->orderByDesc('created_at')
             ->first();
 
-        $amount = config('ssc.enrollment_fee_amount', 50);
+        $amount = $payment ? (float) $payment->amount : EnrollmentFee::forStudent($student);
 
         return response()->json([
             'success' => true,
@@ -97,7 +98,6 @@ class StudentApiController extends Controller
     public function uploadEnrollmentProof(Request $request)
     {
         $student = auth('api')->user();
-        $amount = config('ssc.enrollment_fee_amount', 50);
         $currentSy = SscHelper::getActiveAcademicTerm();
         $currentTermKeys = SscHelper::getActiveEnrollmentTermKeys();
 
@@ -105,6 +105,7 @@ class StudentApiController extends Controller
             ->whereIn('semester', $currentTermKeys)
             ->orderByDesc('created_at')
             ->first();
+        $amount = $payment ? (float) $payment->amount : EnrollmentFee::forStudent($student);
 
         if ($payment && $payment->status === 'paid') {
             return response()->json([
@@ -194,14 +195,14 @@ class StudentApiController extends Controller
 
         /** @var \App\Models\User $student */
         $student         = auth('api')->user();
-        $amount          = (float) config('ssc.enrollment_fee_amount', 50);
-        $amountCentavos  = (int) round($amount * 100);
         $currentTermKeys = SscHelper::getActiveEnrollmentTermKeys();
 
         $payment = EnrollmentPayment::where('user_id', $student->id)
             ->whereIn('semester', $currentTermKeys)
             ->orderByDesc('created_at')
             ->first();
+        $amount = $payment ? (float) $payment->amount : EnrollmentFee::forStudent($student);
+        $amountCentavos = (int) round($amount * 100);
 
         if ($payment?->status === 'paid') {
             return response()->json([

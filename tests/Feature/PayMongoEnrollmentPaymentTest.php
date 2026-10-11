@@ -53,6 +53,7 @@ class PayMongoEnrollmentPaymentTest extends TestCase
         ]);
 
         $student = $this->student('checkout.student@example.com');
+        $student->update(['year_level' => '1st Year']);
 
         $response = $this->actingAs($student)
             ->post(route('student.enrollment.paymongo.checkout'))
@@ -75,7 +76,7 @@ class PayMongoEnrollmentPaymentTest extends TestCase
             return $request->method() === 'POST'
                 && $request->url() === 'https://api.paymongo.com/v2/checkout_sessions'
                 && $request->hasHeader('Authorization', 'Basic '.base64_encode('sk_test_example:'))
-                && data_get($payload, 'data.attributes.line_items.0.amount') === 5000
+                && data_get($payload, 'data.attributes.line_items.0.amount') === 10000
                 && data_get($payload, 'data.attributes.billing.email') === $student->email
                 && data_get($payload, 'data.attributes.reference_number') === $payment->reference
                 && data_get($payload, 'data.attributes.payment_method_types') === ['gcash', 'qrph', 'card'];

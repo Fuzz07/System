@@ -258,7 +258,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Year Level <span class="text-danger">*</span></label>
-                        <select name="year_level" class="form-select" required>
+                        <select name="year_level" id="studentYearLevel" class="form-select" required>
                             <option value="">Select year level...</option>
                             @foreach($yearLevelOptions as $option)
                             <option value="{{ $option }}" @selected($fromAddStudent && old('year_level') === $option)>{{ $option }}</option>
@@ -271,7 +271,7 @@
                             <input type="radio" class="btn-check" name="payment_status" id="paymentStatusUnpaid" value="unpaid" @checked($paymentStatus === 'unpaid') data-payment-status>
                             <label class="btn btn-outline-warning" for="paymentStatusUnpaid">Unpaid</label>
                             <input type="radio" class="btn-check" name="payment_status" id="paymentStatusPaid" value="paid" @checked($paymentStatus === 'paid') data-payment-status>
-                            <label class="btn btn-outline-success" for="paymentStatusPaid">Paid ({{ \App\Helpers\SscHelper::formatCurrency(config('ssc.enrollment_fee_amount', 50)) }})</label>
+                            <label class="btn btn-outline-success" for="paymentStatusPaid">Paid (<span id="paymentFeeAmount">select year level</span>)</label>
                         </div>
                     </div>
                     <div class="col-md-6" id="paymentReferenceField">
@@ -294,10 +294,21 @@
 (function () {
     // The OR/Reference No. only applies when the student pays now.
     const referenceField = document.getElementById('paymentReferenceField');
+    const yearLevelField = document.getElementById('studentYearLevel');
+    const feeAmountLabel = document.getElementById('paymentFeeAmount');
+    const feeAmountsByYear = @json($feeAmountsByYear);
+    const updateFeeAmount = () => {
+        const amount = feeAmountsByYear[yearLevelField.value];
+        feeAmountLabel.textContent = amount === undefined
+            ? 'select year level'
+            : '\u20B1' + Number(amount).toFixed(2);
+    };
     const sync = () => {
         referenceField.hidden = !document.getElementById('paymentStatusPaid').checked;
     };
     document.querySelectorAll('[data-payment-status]').forEach((radio) => radio.addEventListener('change', sync));
+    yearLevelField.addEventListener('change', updateFeeAmount);
+    updateFeeAmount();
     sync();
 
     @if($errors->any() && $fromAddStudent)
