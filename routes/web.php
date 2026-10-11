@@ -24,13 +24,13 @@ if (!function_exists('registerEnrollmentPaymentRoutes')) {
         Route::post('/enrollment-payments/{student}/walk-in', [Admin\EnrollmentPaymentController::class, 'markPaidWalkIn'])->name('enrollment.payments.walk_in');
         Route::post('/enrollment-payments/{payment}/approve-proof', [Admin\EnrollmentPaymentController::class, 'approveProof'])->name('enrollment.payments.proof.approve');
         Route::post('/enrollment-payments/{payment}/reject-proof', [Admin\EnrollmentPaymentController::class, 'rejectProof'])->name('enrollment.payments.proof.reject');
-        Route::get('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'index'])->name('cashbook');
-        Route::post('/cash-book', [App\Http\Controllers\Treasurer\CashBookController::class, 'store'])->name('cashbook.store');
-        Route::put('/cash-book/{entry}', [App\Http\Controllers\Treasurer\CashBookController::class, 'update'])->name('cashbook.update');
-        Route::delete('/cash-book/{entry}', [App\Http\Controllers\Treasurer\CashBookController::class, 'destroy'])->name('cashbook.destroy');
-        Route::get('/cash-book/{month}/records-of-expenses', [App\Http\Controllers\Treasurer\CashBookController::class, 'records'])
+        Route::get('/cash-book', [Admin\CashBookController::class, 'index'])->name('cashbook');
+        Route::post('/cash-book', [Admin\CashBookController::class, 'store'])->name('cashbook.store');
+        Route::put('/cash-book/{entry}', [Admin\CashBookController::class, 'update'])->name('cashbook.update');
+        Route::delete('/cash-book/{entry}', [Admin\CashBookController::class, 'destroy'])->name('cashbook.destroy');
+        Route::get('/cash-book/{month}/records-of-expenses', [Admin\CashBookController::class, 'records'])
             ->where('month', '\d{4}-(0[1-9]|1[0-2])')->name('cashbook.records');
-        Route::get('/cash-book/{month}/financial-report', [App\Http\Controllers\Treasurer\CashBookController::class, 'financialReport'])
+        Route::get('/cash-book/{month}/financial-report', [Admin\CashBookController::class, 'financialReport'])
             ->where('month', '\d{4}-(0[1-9]|1[0-2])')->name('cashbook.financial');
     }
 }
