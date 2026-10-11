@@ -26,7 +26,7 @@
 <a href="{{ route('admin.semester_reports') }}" class="nav-link {{ request()->routeIs('admin.semester_reports*') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-journals"></i></span> Semester Reports
 </a>
-<a href="{{ route('treasurer.cashbook') }}" class="nav-link {{ request()->routeIs('treasurer.cashbook*') ? 'active' : '' }}">
+<a href="{{ route('admin.cashbook') }}" class="nav-link {{ request()->routeIs('admin.cashbook*') ? 'active' : '' }}">
     <span class="nav-icon"><i class="bi bi-journal-bookmark"></i></span> Cash Book
 </a>
 
