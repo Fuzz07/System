@@ -177,11 +177,19 @@ class SemesterReportTest extends TestCase
         [$first] = $this->seedTwoTerms();
 
         foreach ([['treasurer', 'treasurer.semester_reports'], ['admin', 'admin.semester_reports']] as [$role, $routeName]) {
-            $this->actingAs($this->user($role, ucfirst($role), "{$role}@example.com"))
+            $portal = $role;
+            $response = $this->actingAs($this->user($role, ucfirst($role), "{$role}@example.com"))
                 ->get(route($routeName, ['term' => $first->id]))
                 ->assertOk()
                 ->assertSee('₱30,000.00')
                 ->assertSee('Leadership Seminar');
+
+            if ($portal === 'admin') {
+                $response->assertSee('Month Sheets')
+                    ->assertSee(route('admin.cashbook.records', '2026-08'), false)
+                    ->assertSee(route('admin.cashbook.financial', '2026-08'), false)
+                    ->assertDontSee(route('treasurer.cashbook.records', '2026-08'), false);
+            }
         }
     }
 

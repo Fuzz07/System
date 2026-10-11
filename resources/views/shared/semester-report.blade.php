@@ -247,7 +247,7 @@
               <th style="padding:12px 16px;font-weight:700;color:#475569;text-align:right;">Expenses</th>
               <th style="padding:12px 16px;font-weight:700;color:#475569;text-align:right;">Ending Balance</th>
               <th style="padding:12px 16px;font-weight:700;color:#475569;text-align:center;">Entries</th>
-              @if ($portal === 'treasurer')
+              @if (in_array($portal, ['admin', 'treasurer'], true))
                 <th style="padding:12px 16px;font-weight:700;color:#475569;text-align:center;">Month Sheets</th>
               @endif
             </tr>
@@ -266,14 +266,14 @@
                 <td style="padding:10px 16px;text-align:right;font-weight:700;color:#dc2626;">{{ $money($month->totalExpenses) }}</td>
                 <td style="padding:10px 16px;text-align:right;font-weight:700;color:#0f172a;">{{ $money($month->endingBalance()) }}</td>
                 <td style="padding:10px 16px;text-align:center;color:#64748b;">{{ $month->entries->count() }}</td>
-                @if ($portal === 'treasurer')
+                @if (in_array($portal, ['admin', 'treasurer'], true))
                   <td style="padding:10px 16px;text-align:center;white-space:nowrap;">
-                    <a href="{{ route('treasurer.cashbook.records', $month->key()) }}" target="_blank"
+                    <a href="{{ route($portal . '.cashbook.records', $month->key()) }}" target="_blank"
                        style="color:#3b82f6;font-size:.78rem;text-decoration:none;" title="Records of Expenses for {{ $month->label() }}">
                       <i class="bi bi-table"></i> Records
                     </a>
                     <span style="color:#cbd5e1;">|</span>
-                    <a href="{{ route('treasurer.cashbook.financial', $month->key()) }}" target="_blank"
+                    <a href="{{ route($portal . '.cashbook.financial', $month->key()) }}" target="_blank"
                        style="color:#3b82f6;font-size:.78rem;text-decoration:none;" title="Financial Report for {{ $month->label() }}">
                       <i class="bi bi-file-earmark-text"></i> Financial
                     </a>
@@ -290,7 +290,7 @@
               <td style="padding:12px 16px;text-align:right;font-weight:800;color:#dc2626;">{{ $money($report->cashExpenses) }}</td>
               <td style="padding:12px 16px;text-align:right;font-weight:800;color:#0f172a;">{{ $money($report->closingBalance()) }}</td>
               <td style="padding:12px 16px;"></td>
-              @if ($portal === 'treasurer')<td style="padding:12px 16px;"></td>@endif
+              @if (in_array($portal, ['admin', 'treasurer'], true))<td style="padding:12px 16px;"></td>@endif
             </tr>
           </tfoot>
         </table>
