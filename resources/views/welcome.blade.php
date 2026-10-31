@@ -24,7 +24,7 @@
         content="Meet Dave A. Alagban, a full-stack developer building user-centered web, mobile, and IoT solutions, including the SSC Transparency System of Madridejos Community College.">
     <meta property="og:url" content="{{ url('/') }}">
     <script type="application/ld+json">
-        @json([
+        {!! json_encode([
             '@context' => 'https://schema.org',
             '@type' => 'WebSite',
             'name' => 'SSC Transparency System — Madridejos Community College',
@@ -36,7 +36,7 @@
                 'description' => 'A full-stack developer focused on scalable, user-centered web applications and digital solutions.',
                 'sameAs' => 'https://github.com/fuzz07',
             ],
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
     </script>
     <meta name="keywords"
         content="Dave A. Alagban, Full Stack Developer, Web Developer, Mobile App Developer, IoT, React.js, Spring Boot, SSC Transparency System, Madridejos Community College">
