@@ -12,9 +12,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>SSC Transparency System — Madridejos Community College</title>
+    <title>Dave A. Alagban | SSC Transparency System — Madridejos Community College</title>
     <meta name="description"
-        content="The official Supreme Student Council Transparency and Budget Allocation System of Madridejos Community College. Track budgets, view proposals, and participate in student governance.">
+        content="The official Supreme Student Council Transparency and Budget Allocation System of Madridejos Community College, developed by Dave A. Alagban. Track budgets, view proposals, and participate in student governance.">
+    <meta name="author" content="Dave A. Alagban">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url('/') }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Dave A. Alagban | SSC Transparency System">
+    <meta property="og:description"
+        content="The official Supreme Student Council Transparency and Budget Allocation System of Madridejos Community College, developed by Dave A. Alagban.">
+    <meta property="og:url" content="{{ url('/') }}">
+    <script type="application/ld+json">
+        @json([
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'name' => 'SSC Transparency System — Madridejos Community College',
+            'url' => url('/'),
+            'creator' => [
+                '@type' => 'Person',
+                'name' => 'Dave A. Alagban',
+            ],
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+    </script>
     <meta name="keywords"
         content="SSC, Supreme Student Council, Transparency, Budget, Madridejos Community College, Student Government">
     <link rel="icon" type="image/png" href="{{ asset('assets/images/ssc_logo.png') }}">
@@ -1542,7 +1562,7 @@
         <div class="footer-bottom">
             <p class="footer-copyright">&copy; {{ date('Y') }} Supreme Student Council — Madridejos Community College.
                 All rights reserved. </p>
-            <p style="color: red;">Developed by : Dave A. Alagban</p>
+            <p>Developed by Dave A. Alagban</p>
             <div class="footer-badge">
                 <i class="bi bi-patch-check-fill" style="color: #f06529; font-size: 0.85rem;"></i>
                 <span>Supreme Student Council · S.Y. {{ $activeSyLabel }}</span>
