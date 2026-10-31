@@ -12,16 +12,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dave A. Alagban | SSC Transparency System — Madridejos Community College</title>
+    <title>Dave A. Alagban | Full-Stack Developer &amp; SSC Transparency System</title>
     <meta name="description"
-        content="The official Supreme Student Council Transparency and Budget Allocation System of Madridejos Community College, developed by Dave A. Alagban. Track budgets, view proposals, and participate in student governance.">
+        content="Meet Dave A. Alagban, a full-stack developer building user-centered web, mobile, and IoT solutions, including the SSC Transparency System of Madridejos Community College.">
     <meta name="author" content="Dave A. Alagban">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ url('/') }}">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Dave A. Alagban | SSC Transparency System">
+    <meta property="og:title" content="Dave A. Alagban | Full-Stack Developer">
     <meta property="og:description"
-        content="The official Supreme Student Council Transparency and Budget Allocation System of Madridejos Community College, developed by Dave A. Alagban.">
+        content="Meet Dave A. Alagban, a full-stack developer building user-centered web, mobile, and IoT solutions, including the SSC Transparency System of Madridejos Community College.">
     <meta property="og:url" content="{{ url('/') }}">
     <script type="application/ld+json">
         @json([
@@ -32,11 +32,14 @@
             'creator' => [
                 '@type' => 'Person',
                 'name' => 'Dave A. Alagban',
+                'jobTitle' => 'Full Stack Developer',
+                'description' => 'A full-stack developer focused on scalable, user-centered web applications and digital solutions.',
+                'sameAs' => 'https://github.com/fuzz07',
             ],
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
     </script>
     <meta name="keywords"
-        content="SSC, Supreme Student Council, Transparency, Budget, Madridejos Community College, Student Government">
+        content="Dave A. Alagban, Full Stack Developer, Web Developer, Mobile App Developer, IoT, React.js, Spring Boot, SSC Transparency System, Madridejos Community College">
     <link rel="icon" type="image/png" href="{{ asset('assets/images/ssc_logo.png') }}">
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     <link rel="apple-touch-icon" href="{{ asset('assets/img/icon-192.png') }}">
@@ -461,6 +464,84 @@
             width: 100%;
             height: auto;
             display: block;
+        }
+
+        /* ─── DEVELOPER PROFILE ─── */
+        .developer-section {
+            padding: 96px 32px;
+            background: var(--slate-50);
+        }
+
+        .developer-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .developer-card {
+            padding: clamp(28px, 5vw, 56px);
+            background: #fff;
+            border: 1px solid var(--slate-200);
+            border-radius: 24px;
+            box-shadow: 0 16px 48px rgba(15, 23, 42, 0.06);
+        }
+
+        .developer-card .section-title {
+            margin-bottom: 12px;
+        }
+
+        .developer-bio {
+            max-width: 760px;
+            margin: 0 auto 32px;
+            color: var(--slate-600);
+            font-size: 1rem;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        .developer-details {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+        }
+
+        .developer-detail {
+            padding: 24px;
+            background: var(--slate-50);
+            border-radius: 16px;
+        }
+
+        .developer-detail h3 {
+            margin-bottom: 10px;
+            color: var(--slate-900);
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .developer-detail p {
+            color: var(--slate-600);
+            font-size: 0.9rem;
+            line-height: 1.75;
+        }
+
+        .developer-profile-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            margin-top: 28px;
+            padding: 11px 18px;
+            border-radius: 999px;
+            background: var(--charcoal);
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .developer-profile-link:hover {
+            background: var(--primary-dark);
+            color: #fff;
+            transform: translateY(-2px);
         }
 
         /* ─── GALLERY ─── */
@@ -948,6 +1029,10 @@
                 gap: 36px;
             }
 
+            .developer-details {
+                grid-template-columns: 1fr;
+            }
+
             .gallery-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -1257,6 +1342,7 @@
             <a href="#home" class="nav-link">Home</a>
             <a href="#features" class="nav-link">Features</a>
             <a href="#officers" class="nav-link">Officers</a>
+            <a href="#developer" class="nav-link">Developer</a>
 
             <a href="{{ route('login.student') }}" class="nav-cta">
                 <i class="bi bi-box-arrow-in-right"></i> Student Login
@@ -1358,6 +1444,62 @@
             </div>
             <div class="overview-image fade-up" style="animation-delay: 0.06s;">
                 <img src="{{ asset('assets/images/b5.jpg') }}" alt="Madridejos Community College SSC" />
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── DEVELOPER PROFILE SECTION ─── -->
+    <section class="developer-section" id="developer">
+        <div class="developer-inner">
+            <div class="developer-card fade-up">
+                <div class="section-header">
+                    <span class="section-eyebrow">About the Developer</span>
+                    <h2 class="section-title">Dave A. Alagban</h2>
+                    <p class="section-subtitle">Full Stack Developer</p>
+                </div>
+                <p class="developer-bio">
+                    Dave A. Alagban is a Full Stack Developer passionate about building scalable, user-centered web
+                    applications. With experience across front-end and back-end technologies, he develops efficient,
+                    secure, and maintainable solutions for real-world challenges. His work focuses on high-quality
+                    digital experiences, clean code, modern frameworks, and continuous innovation.
+                </p>
+                <div class="developer-details">
+                    <div class="developer-detail">
+                        <h3>Projects &amp; Responsibilities</h3>
+                        <p>
+                            He has developed full-stack web and mobile applications for health, productivity, fitness,
+                            education, and community needs. His work includes system architecture, UI/UX design,
+                            frontend and backend development, database management, API integration, deployment, and
+                            technical documentation.
+                        </p>
+                    </div>
+                    <div class="developer-detail">
+                        <h3>Technologies</h3>
+                        <p>
+                            React.js, Spring Boot, JavaScript, Java, HTML5, CSS3, Tailwind CSS, MySQL, PostgreSQL,
+                            Supabase, Firebase, REST APIs, Git, and cloud deployment platforms.
+                        </p>
+                    </div>
+                    <div class="developer-detail">
+                        <h3>Achievements</h3>
+                        <p>
+                            He has built academic and community-focused digital solutions, developed IoT and embedded
+                            systems projects using ESP32, and contributed to research-driven applications designed for
+                            usability and real-world impact.
+                        </p>
+                    </div>
+                    <div class="developer-detail">
+                        <h3>Specializations</h3>
+                        <p>
+                            Full Stack Development, Mobile Application Development, Database Design, System Integration,
+                            API Development, IoT Solutions, and Human-Centered Software Design.
+                        </p>
+                    </div>
+                </div>
+                <a class="developer-profile-link" href="https://github.com/fuzz07" target="_blank"
+                    rel="me noopener noreferrer">
+                    <i class="bi bi-github" aria-hidden="true"></i> View GitHub profile
+                </a>
             </div>
         </div>
     </section>
