@@ -315,6 +315,21 @@
                     </div>
                 </div>
             </div>
+            <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="card-header-custom">
+                    <span class="card-title">Contribution Fees by Department</span>
+                    <button type="button" class="chart-expand-btn" data-bs-toggle="modal" data-bs-target="#contributionChartModal"
+                        title="Expand" aria-label="Expand the contribution fee chart"><i class="bi bi-arrows-angle-expand"></i></button>
+                </div>
+                <div class="card-body-custom d-flex align-items-center justify-content-center chart-clickable"
+                    style="flex: 1; position: relative;" data-bs-toggle="modal" data-bs-target="#contributionChartModal"
+                    title="Click to see the full contribution breakdown">
+                    <div
+                        style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; padding: 10px;">
+                        <canvas id="contributionBarChart" role="img" aria-label="Paid contribution fees by department"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- Right Column: Pending Stats + Recent Expenses --}}
@@ -396,6 +411,8 @@
     @php
         $budgetAllocated = (float) $budgets->sum('allocated_amount');
         $budgetRemaining = (float) $budgets->sum('remaining_balance');
+        $contributionLabels = $contributionDepartments->pluck('department')->values();
+        $contributionData = $contributionDepartments->pluck('collected')->map(fn ($amount) => (float) $amount)->values();
         $monthLabels = $monthlyExpenses
             ->map(fn ($m) => \Illuminate\Support\Carbon::parse($m->month . '-01')->format('M Y'))
             ->values();
@@ -526,6 +543,88 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="contributionChartModal" tabindex="-1" aria-labelledby="contributionChartModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius:var(--radius);border:none;overflow:hidden;">
+                <div class="modal-header modal-header-custom">
+                    <div>
+                        <h5 class="modal-title" id="contributionChartModalTitle" style="font-weight:700;">
+                            <i class="bi bi-cash-stack"></i> Contribution Fees by Department
+                        </h5>
+                        <div class="small" style="color: rgba(255,255,255,.7);">
+                            Confirmed payments for {{ $activeTerm?->academic_term ?? 'the active semester' }}
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    @if($contributionDepartments->isEmpty())
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-cash-stack" style="font-size:2rem;opacity:.4;"></i>
+                            <div class="mt-2">No paid contribution fees recorded for the active semester.</div>
+                        </div>
+                    @else
+                        <div class="row g-4 align-items-start">
+                            <div class="col-lg-7">
+                                <div class="chart-modal-canvas">
+                                    <canvas id="contributionBarChartLarge" role="img" aria-label="Contribution fees collected by department"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-lg-5">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <div class="chart-stat">
+                                            <div class="chart-stat-label">Collected</div>
+                                            <div class="chart-stat-value text-success">{!! \App\Helpers\SscHelper::formatCurrency($contributionCollected) !!}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="chart-stat">
+                                            <div class="chart-stat-label">Students Paid</div>
+                                            <div class="chart-stat-value">{{ number_format($contributionPayers) }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="chart-breakdown">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead><tr><th>Department</th><th class="text-end">Students Paid</th><th class="text-end">Collected</th></tr></thead>
+                                        <tbody>
+                                            @foreach($contributionDepartments as $i => $row)
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="chart-swatch" data-chart-swatch="contribution" data-index="{{ $i }}"></span>
+                                                            <span class="fw-semibold text-dark">{{ $row->department }}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-end">{{ number_format((int) $row->students) }}</td>
+                                                    <td class="text-end fw-semibold">{!! \App\Helpers\SscHelper::formatCurrency((float) $row->collected) !!}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot>
+                                            <tr class="fw-bold">
+                                                <td>Total</td>
+                                                <td class="text-end">{{ number_format($contributionPayers) }}</td>
+                                                <td class="text-end">{!! \App\Helpers\SscHelper::formatCurrency($contributionCollected) !!}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <a href="{{ route('admin.enrollment.payments.reports') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-file-earmark-bar-graph"></i> Open Contribution Reports
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -535,6 +634,8 @@
             const budgetData = @json($budgets->pluck('allocated_amount')->map(fn ($v) => (float) $v));
             const monthLabels = @json($monthLabels);
             const monthData = @json($monthlyExpenses->pluck('total')->map(fn ($v) => (float) $v));
+            const contributionLabels = @json($contributionLabels);
+            const contributionData = @json($contributionData);
 
             // Clicking a small chart opens its pop-up, so a click on the
             // doughnut's legend should not also hide a slice behind it.
@@ -544,6 +645,7 @@
                 budgetChart.update('none');
             }
             createBarChart('expenseBarChart', monthLabels, monthData);
+            createBarChart('contributionBarChart', contributionLabels, contributionData);
 
             // The full-size charts are drawn the first time their pop-up opens:
             // a chart drawn inside a hidden pop-up has no size to fill.
@@ -559,6 +661,7 @@
             };
             drawOnShow('budgetChartModal', () => createPieChart('budgetPieChartLarge', budgetLabels, budgetData));
             drawOnShow('expenseChartModal', () => createBarChart('expenseBarChartLarge', monthLabels, monthData));
+            drawOnShow('contributionChartModal', () => createBarChart('contributionBarChartLarge', contributionLabels, contributionData));
 
             // Colour each table row's swatch like its slice or bar. Repainted
             // after a live refresh, which resets the inline colours.
@@ -567,6 +670,7 @@
                     .forEach(swatch => { swatch.style.background = colors[swatch.dataset.index] || '#cbd5e1'; });
                 paint('budget', generateChartColors(budgetData.length));
                 paint('month', ordinalRampColors(monthData.length));
+                paint('contribution', ordinalRampColors(contributionData.length));
             };
             paintSwatches();
             document.addEventListener('ssc:content-updated', paintSwatches);

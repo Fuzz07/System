@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Budget;
+use App\Models\EnrollmentPayment;
 use App\Models\Expense;
+use App\Models\SchoolYear;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -76,6 +78,63 @@ class AdminDashboardChartTest extends TestCase
             ->assertOk()
             ->assertSee('No approved budgets yet.')
             ->assertSee('No approved expenses yet.');
+    }
+
+    public function test_contribution_chart_shows_paid_fees_grouped_by_department_for_the_active_term(): void
+    {
+        $term = SchoolYear::create([
+            'label' => '2026-2027',
+            'semester' => SchoolYear::SEMESTER_FIRST,
+            'is_active' => true,
+        ]);
+        $firstStudent = User::create([
+            'fullname' => 'First BSIT Student',
+            'email' => 'first-bsit@example.com',
+            'password' => 'password',
+            'role' => 'student',
+            'status' => 'active',
+            'department' => 'BSIT',
+        ]);
+        $secondStudent = User::create([
+            'fullname' => 'Second BSIT Student',
+            'email' => 'second-bsit@example.com',
+            'password' => 'password',
+            'role' => 'student',
+            'status' => 'active',
+            'department' => 'BSIT',
+        ]);
+        $pendingStudent = User::create([
+            'fullname' => 'Pending BEED Student',
+            'email' => 'pending-beed@example.com',
+            'password' => 'password',
+            'role' => 'student',
+            'status' => 'active',
+            'department' => 'BEED',
+        ]);
+
+        foreach ([[$firstStudent, 100, 'paid'], [$secondStudent, 150, 'paid'], [$pendingStudent, 500, 'pending']] as [$student, $amount, $status]) {
+            EnrollmentPayment::create([
+                'user_id' => $student->id,
+                'amount' => $amount,
+                'semester' => $term->academic_term,
+                'status' => $status,
+            ]);
+        }
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Contribution Fees by Department')
+            ->assertSee('Confirmed payments for 2026-2027 - First Semester')
+            ->assertSee('₱250.00')
+            ->assertSee('Students Paid')
+            ->assertSee('id="contributionBarChart"', false)
+            ->assertSee('id="contributionBarChartLarge"', false);
+
+        $this->assertSame(250.0, (float) $response->viewData('contributionCollected'));
+        $this->assertSame(2, $response->viewData('contributionPayers'));
+        $this->assertCount(1, $response->viewData('contributionDepartments'));
+        $this->assertSame('BSIT', $response->viewData('contributionDepartments')->first()->department);
     }
 
     private function budget(string $title, string $department, float $allocated, float $remaining): Budget

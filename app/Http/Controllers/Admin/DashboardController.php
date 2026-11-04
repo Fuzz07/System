@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Helpers\SscHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Budget;
+use App\Models\EnrollmentPayment;
 use App\Models\Expense;
 use App\Models\Feedback;
 use App\Models\Proposal;
+use App\Models\SchoolYear;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +26,20 @@ class DashboardController extends Controller
         $pendingFeedback   = Feedback::where('status', 'Pending')->count();
         $pendingStudents   = User::where('role', 'student')->notArchived()->where('status', 'inactive')->count();
         $totalUsers        = User::count();
+
+        $activeTerm = SchoolYear::where('is_active', true)->first();
+        $contributionDepartments = $activeTerm
+            ? EnrollmentPayment::query()
+                ->join('users', 'users.id', '=', 'enrollment_payments.user_id')
+                ->whereIn('enrollment_payments.semester', $activeTerm->enrollmentTermKeys())
+                ->where('enrollment_payments.status', 'paid')
+                ->groupBy('users.department')
+                ->selectRaw("COALESCE(NULLIF(users.department, ''), 'Unassigned') as department, COUNT(DISTINCT enrollment_payments.user_id) as students, SUM(enrollment_payments.amount) as collected")
+                ->orderBy('department')
+                ->get()
+            : collect();
+        $contributionCollected = round((float) $contributionDepartments->sum('collected'), 2);
+        $contributionPayers = (int) $contributionDepartments->sum('students');
 
         // Budget distribution chart, and the breakdown its pop-up lists
         $budgets = Budget::where('status', 'Approved')
@@ -66,7 +82,8 @@ class DashboardController extends Controller
         return view('admin.dashboard', compact(
             'totalBudget', 'totalExpenses', 'remainingBudget',
             'pendingProposals', 'pendingExpenses', 'pendingFeedback', 'pendingStudents', 'totalUsers',
-            'budgets', 'monthlyExpenses', 'recentExpenses', 'pendingApprovals'
+            'budgets', 'monthlyExpenses', 'recentExpenses', 'pendingApprovals',
+            'activeTerm', 'contributionDepartments', 'contributionCollected', 'contributionPayers'
         ));
     }
 
