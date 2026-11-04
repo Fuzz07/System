@@ -695,6 +695,60 @@
 </div>
 
 <div class="row g-4 mb-4">
+    <!-- Change admin account email with OTP confirmation -->
+    <div class="col-12">
+        <div class="settings-card d-flex flex-column" style="border-top: 4px solid #2563eb;">
+            <div class="card-header-accent d-flex align-items-center gap-2">
+                <div class="icon-box" style="background: #eff6ff;">
+                    <i class="bi bi-envelope-at-fill text-primary"></i>
+                </div>
+                <div>
+                    <h5 class="card-title mb-0" style="font-size: 1.02rem; font-weight: 700; color: #0f172a;">Change Admin Gmail</h5>
+                    <div class="text-muted" style="font-size: 0.74rem;">A verification code will be sent to the new Gmail before the account address is changed.</div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="small text-muted mb-3">Current Gmail: <strong>{{ Auth::user()->email }}</strong></div>
+                <form method="POST" action="{{ route('admin.settings.email.request_otp') }}" class="row g-3 align-items-end">
+                    @csrf
+                    <div class="col-md-8">
+                        <label for="new_admin_email" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: #334155;">New Gmail address</label>
+                        <input type="email" id="new_admin_email" name="new_email" value="{{ old('new_email', session('admin_email_change_user_id') === Auth::id() ? session('admin_email_change_address') : '') }}"
+                            class="form-control @error('new_email') is-invalid @enderror" autocomplete="email"
+                            placeholder="name@gmail.com" required>
+                        @error('new_email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-4 d-grid">
+                        <button type="submit" class="btn btn-outline-primary fw-semibold">
+                            <i class="bi bi-send me-1"></i> Send Verification Code
+                        </button>
+                    </div>
+                </form>
+
+                @if(session('admin_email_change_user_id') === Auth::id() && session('admin_email_change_address'))
+                    <form method="POST" action="{{ route('admin.settings.email.verify') }}" class="row g-3 align-items-end mt-2">
+                        @csrf
+                        <input type="hidden" name="new_email" value="{{ session('admin_email_change_address') }}">
+                        <div class="col-md-8">
+                            <label for="admin_email_otp" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: #334155;">
+                                Six-digit code sent to {{ session('admin_email_change_address') }}
+                            </label>
+                            <input type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" id="admin_email_otp" name="otp"
+                                class="form-control @error('otp') is-invalid @enderror" autocomplete="one-time-code" required>
+                            @error('otp')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-4 d-grid">
+                            <button type="submit" class="btn btn-primary fw-semibold">
+                                <i class="bi bi-shield-check me-1"></i> Verify and Change Gmail
+                            </button>
+                        </div>
+                        <div class="col-12 small text-muted">The code expires in 5 minutes. Request another code if it expires.</div>
+                    </form>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <!-- Card 7: Change Password -->
     <div class="col-12">
         <div class="settings-card d-flex flex-column" style="border-top: 4px solid #e34f26;">

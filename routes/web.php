@@ -157,6 +157,10 @@ Route::domain('admin.' . $baseDomain)->group(function () use ($baseDomain) {
         Route::post('/settings/candidacy/toggle', [Admin\SettingsController::class, 'toggleCandidacy'])->name('settings.candidacy.toggle');
         Route::post('/settings/reset-device', [Admin\SettingsController::class, 'resetDevice'])->name('settings.reset_device');
         Route::post('/settings/logout-others', [Admin\SettingsController::class, 'logoutOthers'])->name('settings.logout_others');
+        Route::post('/settings/email/request-otp', [Admin\SettingsController::class, 'requestEmailChangeOtp'])
+            ->middleware('throttle:3,1')->name('settings.email.request_otp');
+        Route::post('/settings/email/verify', [Admin\SettingsController::class, 'verifyEmailChangeOtp'])
+            ->middleware('throttle:5,1')->name('settings.email.verify');
         // Throttled: each attempt checks the current password.
         Route::put('/settings/password', [Admin\SettingsController::class, 'changePassword'])->middleware('throttle:5,1')->name('settings.password');
         Route::delete('/settings/logout-device/{sessionId}', [Admin\SettingsController::class, 'logoutDevice'])->name('settings.logout_device');

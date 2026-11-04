@@ -9,7 +9,11 @@ use App\Services\StudentPromotionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class SettingsController extends Controller
@@ -174,6 +178,133 @@ class SettingsController extends Controller
         SscHelper::logActivity($user->id, 'ADMIN_PASSWORD_CHANGE', 'Changed the admin account password and signed out other devices.');
 
         return redirect()->route('admin.settings')->with('success', 'Your password has been changed. Any other devices signed in to this account have been logged out.');
+    }
+
+    public function requestEmailChangeOtp(Request $request)
+    {
+        $user = Auth::user();
+        $request->merge(['new_email' => Str::lower(trim((string) $request->input('new_email')))]);
+        $validated = $request->validate([
+            'new_email' => [
+                'required',
+                'email:rfc',
+                'ends_with:gmail.com',
+                Rule::unique('users', 'email')->ignore($user->id),
+                Rule::notIn([Str::lower($user->email)]),
+            ],
+        ], [
+            'new_email.ends_with' => 'Enter a Gmail address ending in @gmail.com.',
+            'new_email.unique' => 'That Gmail address is already associated with an account.',
+        ]);
+
+        $email = $validated['new_email'];
+        $otp = (string) random_int(100000, 999999);
+        $request->session()->forget($this->emailChangeSessionKeys());
+        $request->session()->put([
+            'admin_email_change_user_id' => $user->id,
+            'admin_email_change_address' => $email,
+            'admin_email_change_otp_hash' => Hash::make($otp),
+            'admin_email_change_expires_at' => now()->addMinutes(5)->timestamp,
+            'admin_email_change_attempts' => 0,
+        ]);
+
+        try {
+            Mail::send([], [], function ($message) use ($email, $otp) {
+                $message->to($email)
+                    ->subject('Admin Account Email Change Verification')
+                    ->html("
+                        <div style='font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #cbd5e1; border-radius: 8px;'>
+                            <h2 style='color: #0f172a;'>Verify your new SSC admin email</h2>
+                            <p style='color: #334155; font-size: 16px;'>Enter this code in the signed-in admin settings page to change the account email to this address.</p>
+                            <div style='background: #f1f5f9; padding: 15px; border-radius: 6px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e3a8a; margin: 20px 0;'>{$otp}</div>
+                            <p style='color: #64748b; font-size: 14px;'>This code expires in 5 minutes. If you did not request this change, you can ignore this message.</p>
+                        </div>
+                    ");
+            });
+        } catch (\Throwable $exception) {
+            $request->session()->forget($this->emailChangeSessionKeys());
+            Log::error('Admin email change OTP email failed', [
+                'user_id' => $user->id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return redirect()->route('admin.settings')
+                ->withInput(['new_email' => $email])
+                ->with('danger', 'We could not send a verification code. Check the Gmail address and try again.');
+        }
+
+        return redirect()->route('admin.settings')
+            ->with('success', 'A verification code was sent to ' . $email . '. Enter it to confirm the email change.');
+    }
+
+    public function verifyEmailChangeOtp(Request $request)
+    {
+        $validated = $request->validate([
+            'new_email' => ['required', 'email:rfc', 'ends_with:gmail.com'],
+            'otp' => ['required', 'digits:6'],
+        ]);
+        $user = Auth::user();
+        $pendingEmail = $request->session()->get('admin_email_change_address');
+        $expiresAt = $request->session()->get('admin_email_change_expires_at');
+        $otpHash = $request->session()->get('admin_email_change_otp_hash');
+
+        if (
+            $request->session()->get('admin_email_change_user_id') !== $user->id
+            || !is_string($pendingEmail)
+            || !hash_equals($pendingEmail, Str::lower(trim($validated['new_email'])))
+            || !is_int($expiresAt)
+            || now()->timestamp > $expiresAt
+            || !is_string($otpHash)
+        ) {
+            $request->session()->forget($this->emailChangeSessionKeys());
+
+            return redirect()->route('admin.settings')
+                ->with('danger', 'The email verification request is missing or expired. Request a new code.');
+        }
+
+        if (!Hash::check($validated['otp'], $otpHash)) {
+            $attempts = $request->session()->increment('admin_email_change_attempts');
+            if ($attempts >= 5) {
+                $request->session()->forget($this->emailChangeSessionKeys());
+
+                return redirect()->route('admin.settings')
+                    ->with('danger', 'Too many incorrect codes. Request a new verification code.');
+            }
+
+            return redirect()->route('admin.settings')
+                ->withInput(['new_email' => $pendingEmail])
+                ->withErrors(['otp' => 'The verification code is incorrect.']);
+        }
+
+        $request->validate([
+            'new_email' => [
+                Rule::unique('users', 'email')->ignore($user->id),
+                Rule::notIn([Str::lower($user->email)]),
+            ],
+        ], [
+            'new_email.unique' => 'That Gmail address is already associated with another account. Request a code for a different address.',
+        ]);
+
+        $oldEmail = $user->email;
+        $user->email = $pendingEmail;
+        $user->save();
+        $request->session()->forget($this->emailChangeSessionKeys());
+        SscHelper::logActivity($user->id, 'ADMIN_EMAIL_CHANGE', 'Changed the admin account email address.');
+
+        return redirect()->route('admin.settings')
+            ->with('success', "Your admin account email has been changed from {$oldEmail} to {$pendingEmail}.");
+    }
+
+    /** @return array<int, string> */
+    private function emailChangeSessionKeys(): array
+    {
+        return [
+            'admin_email_change_user_id',
+            'admin_email_change_address',
+            'admin_email_change_otp_hash',
+            'admin_email_change_expires_at',
+            'admin_email_change_attempts',
+        ];
     }
 
     public function registerCurrentDevice()
