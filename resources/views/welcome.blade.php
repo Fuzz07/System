@@ -12,7 +12,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dave A. Alagban | Full-Stack Developer &amp; SSC Transparency System</title>
+    <title>SSC Transparency System</title>
     <meta name="description"
         content="Meet Dave A. Alagban, a full-stack developer building user-centered web, mobile, and IoT solutions, including the SSC Transparency System of Madridejos Community College.">
     <meta name="author" content="Dave A. Alagban">
