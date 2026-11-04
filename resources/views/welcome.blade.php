@@ -466,17 +466,7 @@
             display: block;
         }
 
-        /* ─── DEVELOPER PROFILE ─── */
-        .developer-section {
-            padding: 96px 32px;
-            background: var(--slate-50);
-        }
-
-        .developer-inner {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
+        /* ─── DEVELOPER PROFILE MODAL ─── */
         .developer-card {
             padding: clamp(28px, 5vw, 56px);
             background: #fff;
@@ -542,6 +532,80 @@
             background: var(--primary-dark);
             color: #fff;
             transform: translateY(-2px);
+        }
+
+        .developer-about-trigger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            margin-left: 4px;
+            padding: 0;
+            border: 1px solid currentColor;
+            border-radius: 50%;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            font-size: 0.72rem;
+            font-weight: 800;
+            line-height: 1;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+
+        .developer-about-trigger:hover,
+        .developer-about-trigger:focus-visible {
+            color: #fff;
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .developer-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        .developer-modal-overlay.active {
+            display: flex;
+        }
+
+        .developer-modal-card {
+            position: relative;
+            width: min(100%, 900px);
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 24px;
+        }
+
+        .developer-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 50%;
+            background: var(--slate-100);
+            color: var(--slate-700);
+            font-size: 1.4rem;
+            cursor: pointer;
+        }
+
+        .developer-modal-close:hover,
+        .developer-modal-close:focus-visible {
+            background: var(--slate-200);
         }
 
         /* ─── GALLERY ─── */
@@ -1342,7 +1406,6 @@
             <a href="#home" class="nav-link">Home</a>
             <a href="#features" class="nav-link">Features</a>
             <a href="#officers" class="nav-link">Officers</a>
-            <a href="#developer" class="nav-link">Developer</a>
 
             <a href="{{ route('login.student') }}" class="nav-cta">
                 <i class="bi bi-box-arrow-in-right"></i> Student Login
@@ -1448,61 +1511,62 @@
         </div>
     </section>
 
-    <!-- ─── DEVELOPER PROFILE SECTION ─── -->
-    <section class="developer-section" id="developer">
-        <div class="developer-inner">
-            <div class="developer-card fade-up">
-                <div class="section-header">
-                    <span class="section-eyebrow">About the Developer</span>
-                    <h2 class="section-title">Dave A. Alagban</h2>
-                    <p class="section-subtitle">Full Stack Developer</p>
-                </div>
-                <p class="developer-bio">
-                    Dave A. Alagban is a Full Stack Developer passionate about building scalable, user-centered web
-                    applications. With experience across front-end and back-end technologies, he develops efficient,
-                    secure, and maintainable solutions for real-world challenges. His work focuses on high-quality
-                    digital experiences, clean code, modern frameworks, and continuous innovation.
-                </p>
-                <div class="developer-details">
-                    <div class="developer-detail">
-                        <h3>Projects &amp; Responsibilities</h3>
-                        <p>
-                            He has developed full-stack web and mobile applications for health, productivity, fitness,
-                            education, and community needs. His work includes system architecture, UI/UX design,
-                            frontend and backend development, database management, API integration, deployment, and
-                            technical documentation.
-                        </p>
-                    </div>
-                    <div class="developer-detail">
-                        <h3>Technologies</h3>
-                        <p>
-                            React.js, Spring Boot, JavaScript, Java, HTML5, CSS3, Tailwind CSS, MySQL, PostgreSQL,
-                            Supabase, Firebase, REST APIs, Git, and cloud deployment platforms.
-                        </p>
-                    </div>
-                    <div class="developer-detail">
-                        <h3>Achievements</h3>
-                        <p>
-                            He has built academic and community-focused digital solutions, developed IoT and embedded
-                            systems projects using ESP32, and contributed to research-driven applications designed for
-                            usability and real-world impact.
-                        </p>
-                    </div>
-                    <div class="developer-detail">
-                        <h3>Specializations</h3>
-                        <p>
-                            Full Stack Development, Mobile Application Development, Database Design, System Integration,
-                            API Development, IoT Solutions, and Human-Centered Software Design.
-                        </p>
-                    </div>
-                </div>
-                <a class="developer-profile-link" href="https://github.com/fuzz07" target="_blank"
-                    rel="me noopener noreferrer">
-                    <i class="bi bi-github" aria-hidden="true"></i> View GitHub profile
-                </a>
+    <!-- ─── DEVELOPER PROFILE MODAL ─── -->
+    <div class="developer-modal-overlay" id="developerModal" aria-hidden="true">
+        <section class="developer-card developer-modal-card" role="dialog" aria-modal="true"
+            aria-labelledby="developerModalTitle">
+            <button type="button" class="developer-modal-close" id="developerModalClose"
+                aria-label="Close developer information">×</button>
+            <div class="section-header">
+                <span class="section-eyebrow">About the Developer</span>
+                <h2 class="section-title" id="developerModalTitle">Dave A. Alagban</h2>
+                <p class="section-subtitle">Full Stack Developer</p>
             </div>
-        </div>
-    </section>
+            <p class="developer-bio">
+                Dave A. Alagban is a Full Stack Developer passionate about building scalable, user-centered web
+                applications. With experience across front-end and back-end technologies, he develops efficient,
+                secure, and maintainable solutions for real-world challenges. His work focuses on high-quality
+                digital experiences, clean code, modern frameworks, and continuous innovation.
+            </p>
+            <div class="developer-details">
+                <div class="developer-detail">
+                    <h3>Projects &amp; Responsibilities</h3>
+                    <p>
+                        He has developed full-stack web and mobile applications for health, productivity, fitness,
+                        education, and community needs. His work includes system architecture, UI/UX design,
+                        frontend and backend development, database management, API integration, deployment, and
+                        technical documentation.
+                    </p>
+                </div>
+                <div class="developer-detail">
+                    <h3>Technologies</h3>
+                    <p>
+                        React.js, Spring Boot, JavaScript, Java, HTML5, CSS3, Tailwind CSS, MySQL, PostgreSQL,
+                        Supabase, Firebase, REST APIs, Git, and cloud deployment platforms.
+                    </p>
+                </div>
+                <div class="developer-detail">
+                    <h3>Achievements</h3>
+                    <p>
+                        He has built academic and community-focused digital solutions, developed IoT and embedded
+                        systems projects using ESP32, and contributed to research-driven applications designed for
+                        usability and real-world impact.
+                    </p>
+                </div>
+                <div class="developer-detail">
+                    <h3>Specializations</h3>
+                    <p>
+                        Full Stack Development, Mobile Application Development, Database Design, System Integration,
+                        API Development, IoT Solutions, and Human-Centered Software Design.
+                    </p>
+                </div>
+            </div>
+            <a class="developer-profile-link" href="https://github.com/fuzz07" target="_blank"
+                rel="me noopener noreferrer">
+                <i class="bi bi-github" aria-hidden="true"></i> View GitHub profile
+            </a>
+        </section>
+    </div>
 
     <!-- ─── SSC PHOTO GALLERY SECTION ─── -->
     <section class="gallery-section" id="gallery">
@@ -1704,7 +1768,9 @@
         <div class="footer-bottom">
             <p class="footer-copyright">&copy; {{ date('Y') }} Supreme Student Council — Madridejos Community College.
                 All rights reserved. </p>
-            <p>Developed by Dave A. Alagban</p>
+            <p>Developed by Dave A. Alagban<button type="button" class="developer-about-trigger"
+                    id="developerModalOpen" aria-label="About the developer" aria-haspopup="dialog"
+                    aria-controls="developerModal">!</button></p>
             <div class="footer-badge">
                 <i class="bi bi-patch-check-fill" style="color: #f06529; font-size: 0.85rem;"></i>
                 <span>Supreme Student Council · S.Y. {{ $activeSyLabel }}</span>
@@ -1738,6 +1804,37 @@
         });
 
         document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        // Developer profile modal
+        const developerModal = document.getElementById('developerModal');
+        const developerModalOpen = document.getElementById('developerModalOpen');
+        const developerModalClose = document.getElementById('developerModalClose');
+
+        if (developerModal && developerModalOpen && developerModalClose) {
+            const closeDeveloperModal = () => {
+                developerModal.classList.remove('active');
+                developerModal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+                developerModalOpen.focus();
+            };
+
+            developerModalOpen.addEventListener('click', () => {
+                developerModal.classList.add('active');
+                developerModal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                developerModalClose.focus();
+            });
+
+            developerModalClose.addEventListener('click', closeDeveloperModal);
+            developerModal.addEventListener('click', event => {
+                if (event.target === developerModal) closeDeveloperModal();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && developerModal.classList.contains('active')) {
+                    closeDeveloperModal();
+                }
+            });
+        }
 
         // Photo Gallery Modal
         const galleryCards = document.querySelectorAll('.gallery-card');
