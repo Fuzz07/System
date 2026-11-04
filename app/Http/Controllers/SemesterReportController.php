@@ -9,6 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 /**
  * The per-semester transparency report. Students read it to see where their
@@ -32,7 +33,8 @@ class SemesterReportController extends Controller
     {
         $terms = SemesterReport::reportableTerms();
         $term = SemesterReport::resolveTerm($request->query('term'));
-        $report = $term ? SemesterReport::forTerm($term) : null;
+        $month = $this->monthFilter($request, $term);
+        $report = $term ? SemesterReport::forTerm($term, $month) : null;
 
         return view('shared.semester-report', [
             'terms'    => $terms,
@@ -46,12 +48,17 @@ class SemesterReportController extends Controller
     }
 
     /** The printable sheet for one term, laid out like the treasurer's other reports. */
-    public function print(SchoolYear $schoolYear)
+    public function print(SchoolYear $schoolYear, Request $request)
     {
+        $month = $this->monthFilter($request, $schoolYear);
+
         return view('shared.semester-report-print', [
-            'report'    => SemesterReport::forTerm($schoolYear),
+            'report'    => SemesterReport::forTerm($schoolYear, $month),
             'portal'    => $this->portal(),
-            'backUrl'   => route($this->portal() . '.semester_reports', ['term' => $schoolYear->id]),
+            'backUrl'   => route($this->portal() . '.semester_reports', array_filter([
+                'term' => $schoolYear->id,
+                'month' => $month,
+            ])),
             'backLabel' => 'Back to Semester Reports',
         ]);
     }
@@ -87,6 +94,17 @@ class SemesterReportController extends Controller
                 'query' => Arr::except($request->query(), $pageName),
             ]
         );
+    }
+
+    /** Validate a month against the selected term's calendar window. */
+    private function monthFilter(Request $request, ?SchoolYear $term): ?string
+    {
+        $allowedMonths = $term ? SemesterReport::monthOptions($term)->keys()->all() : [];
+        $validated = $request->validate([
+            'month' => ['nullable', Rule::in($allowedMonths)],
+        ]);
+
+        return $validated['month'] ?? null;
     }
 
     /** The signed-in user's portal, used to build links back into their own side of the app. */

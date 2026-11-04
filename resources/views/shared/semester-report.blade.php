@@ -17,7 +17,7 @@
     <h1><i class="bi bi-journals me-2" style="color:#0ea5e9;"></i>Semester Reports</h1>
     <p>
       @if ($term)
-        Where every peso went in {{ $term->academic_term }} &mdash; {{ $term->termRangeLabel() }}
+        Where every peso went in {{ $term->academic_term }} &mdash; {{ $report->periodLabel() }}
       @else
         A full account of collections, allocations and spending for each academic term
       @endif
@@ -29,7 +29,10 @@
          class="btn btn-outline-secondary btn-sm" style="border-radius:8px;">
         <i class="bi bi-table"></i> Records of Expenses
       </a>
-      <a href="{{ route($portal . '.semester_reports.print', $term) }}" target="_blank"
+      <a href="{{ route($portal . '.semester_reports.print', array_filter([
+            'schoolYear' => $term->id,
+            'month' => $report->selectedMonth,
+          ])) }}" target="_blank"
          class="btn btn-outline-secondary btn-sm" style="border-radius:8px;">
         <i class="bi bi-printer"></i> Financial Summary
       </a>
@@ -49,7 +52,8 @@
       <form method="GET" class="row g-2 align-items-end">
         <div class="col-sm-6 col-lg-5">
           <label for="term" class="form-label fw-bold" style="font-size:.78rem;color:#475569;">Academic Term</label>
-          <select name="term" id="term" class="form-select form-select-sm" onchange="this.form.submit()">
+          <select name="term" id="term" class="form-select form-select-sm"
+                  onchange="if(this.form.elements.month)this.form.elements.month.value='';this.form.submit()">
             @foreach ($terms as $option)
               <option value="{{ $option->id }}" @selected($term && $term->id === $option->id)>
                 {{ $option->academic_term }}@if($option->is_active) (Active)@endif
@@ -57,6 +61,17 @@
             @endforeach
           </select>
         </div>
+        @if ($term && $report && $report->availableMonths->isNotEmpty())
+          <div class="col-sm-6 col-lg-4">
+            <label for="month" class="form-label fw-bold" style="font-size:.78rem;color:#475569;">Month</label>
+            <select name="month" id="month" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">All months in semester</option>
+              @foreach ($report->availableMonths as $key => $label)
+                <option value="{{ $key }}" @selected($report->selectedMonth === $key)>{{ $label }}</option>
+              @endforeach
+            </select>
+          </div>
+        @endif
         <div class="col-sm-3">
           <button type="submit" class="btn btn-primary btn-sm fw-bold w-100" style="border-radius:8px;">
             <i class="bi bi-arrow-repeat me-1"></i> View Report
@@ -284,7 +299,7 @@
           </tbody>
           <tfoot>
             <tr style="background:#f8fafc;">
-              <td style="padding:12px 16px;font-weight:800;color:#0f172a;">Whole Semester</td>
+              <td style="padding:12px 16px;font-weight:800;color:#0f172a;">{{ $report->selectedMonth ? 'Selected Month' : 'Whole Semester' }}</td>
               <td style="padding:12px 16px;text-align:right;font-weight:800;color:#64748b;">{{ $money($report->openingBalance) }}</td>
               <td style="padding:12px 16px;text-align:right;font-weight:800;color:#00a878;">{{ $money($report->cashCollections) }}</td>
               <td style="padding:12px 16px;text-align:right;font-weight:800;color:#dc2626;">{{ $money($report->cashExpenses) }}</td>

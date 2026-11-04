@@ -126,6 +126,41 @@ class SemesterReportTest extends TestCase
         $this->assertSame(20, $report->spentPercent());
     }
 
+    public function test_a_selected_month_limits_the_semester_report_to_that_month(): void
+    {
+        $term = SchoolYear::create([
+            'label' => '2026-2027',
+            'semester' => SchoolYear::SEMESTER_FIRST,
+            'starts_on' => '2026-06-01',
+            'ends_on' => '2026-08-31',
+        ]);
+        $junePayment = $this->payment($this->user('student', 'June Student', 'june@example.com'), $term, 60, 'paid');
+        $junePayment->update(['paid_at' => '2026-06-15 10:00:00']);
+        $augustPayment = $this->payment($this->user('student', 'August Student', 'august@example.com'), $term, 90, 'paid');
+        $augustPayment->update(['paid_at' => '2026-08-15 10:00:00']);
+
+        $report = SemesterReport::forTerm($term, '2026-08');
+
+        $this->assertSame(90.0, $report->contributionsCollected);
+        $this->assertSame(1, $report->contributionPayers);
+        $this->assertSame('August 2026', $report->periodLabel());
+        $this->assertSame(['2026-06', '2026-07', '2026-08'], $report->availableMonths->keys()->all());
+        $this->assertCount(1, $report->months);
+
+        $this->actingAs($augustPayment->user)
+            ->get(route('student.semester_reports', ['term' => $term->id, 'month' => '2026-08']))
+            ->assertOk()
+            ->assertSee('August 2026')
+            ->assertSee('data-count="90"', false);
+
+        $this->actingAs($this->user('treasurer', 'Monthly Report Treasurer', 'monthly-report-treasurer@example.com'))
+            ->get(route('treasurer.semester_reports.print', ['schoolYear' => $term->id, 'month' => '2026-08']))
+            ->assertOk()
+            ->assertSee('August 2026')
+            ->assertSee('90.00')
+            ->assertDontSee('60.00');
+    }
+
     public function test_an_undated_term_reports_funds_but_no_dated_records(): void
     {
         $term = SchoolYear::create(['label' => 'bad-label', 'semester' => SchoolYear::SEMESTER_FIRST]);
@@ -191,6 +226,50 @@ class SemesterReportTest extends TestCase
                     ->assertDontSee(route('treasurer.cashbook.records', '2026-08'), false);
             }
         }
+    }
+
+    public function test_contribution_reports_filter_by_department_and_year_and_offer_print_and_csv(): void
+    {
+        $term = SchoolYear::create([
+            'label' => '2026-2027',
+            'semester' => SchoolYear::SEMESTER_FIRST,
+            'is_active' => true,
+        ]);
+        $matched = $this->user('student', 'Matched Student', 'matched@example.com');
+        $matched->update(['department' => 'BSIT', 'year_level' => '1st Year']);
+        $other = $this->user('student', 'Other Student', 'other@example.com');
+        $other->update(['department' => 'BSBA', 'year_level' => '2nd Year']);
+        $this->payment($matched, $term, 150, 'paid')->update(['paid_at' => '2026-09-10 10:00:00']);
+        $this->payment($other, $term, 200, 'paid')->update(['paid_at' => '2026-09-11 10:00:00']);
+        $admin = $this->user('admin', 'Admin', 'reports-admin@example.com');
+
+        $filters = [
+            'term' => $term->id,
+            'department' => 'BSIT',
+            'year_level' => '1st Year',
+        ];
+
+        $this->actingAs($admin)
+            ->get(route('admin.enrollment.payments.reports', $filters))
+            ->assertOk()
+            ->assertSee('Matched Student')
+            ->assertDontSee('Other Student')
+            ->assertSee('150.00');
+
+        $this->get(route('admin.enrollment.payments.reports.print', $filters))
+            ->assertOk()
+            ->assertSee('Contribution Fee Collection Report')
+            ->assertSee('Matched Student')
+            ->assertDontSee('Other Student');
+
+        $download = $this->get(route('admin.enrollment.payments.reports.download', $filters))
+            ->assertOk()
+            ->assertHeader('content-type', 'text/csv; charset=UTF-8')
+            ->assertHeader('content-disposition');
+        $csv = $download->streamedContent();
+        $this->assertStringContainsString('Breakdown by Department and Year Level', $csv);
+        $this->assertStringContainsString('Matched Student', $csv);
+        $this->assertStringNotContainsString('Other Student', $csv);
     }
 
     public function test_the_printable_sheet_lists_the_terms_totals(): void

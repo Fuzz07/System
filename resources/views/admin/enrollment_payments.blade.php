@@ -3,12 +3,17 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
             <h4 class="mb-0">Semester Contribution Fees</h4>
             <small class="text-muted">Current term: {{ $currentSy }}</small>
         </div>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="bi bi-person-plus"></i> Add Student</button>
+        <div class="d-flex gap-2">
+            <a href="{{ route($portal . '.enrollment.payments.reports') }}" class="btn btn-outline-primary">
+                <i class="bi bi-file-earmark-bar-graph"></i> Contribution Reports
+            </a>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="bi bi-person-plus"></i> Add Student</button>
+        </div>
     </div>
 
     @php

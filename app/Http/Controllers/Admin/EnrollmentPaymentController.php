@@ -8,6 +8,7 @@ use App\Models\Budget;
 use App\Models\SchoolYear;
 use App\Models\User;
 use App\Services\EnrollmentFee;
+use App\Services\SemesterReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\SscHelper;
@@ -81,6 +82,135 @@ class EnrollmentPaymentController extends Controller
             ->all();
 
         return view('admin.enrollment_payments', compact('students', 'search', 'dept', 'year', 'status', 'departments', 'years', 'currentSy', 'distribution', 'portal', 'departmentOptions', 'yearLevelOptions', 'feeAmountsByYear'));
+    }
+
+    public function contributionReport(Request $request)
+    {
+        return view('shared.contribution-report', $this->contributionReportData($request));
+    }
+
+    public function printContributionReport(Request $request)
+    {
+        $data = $this->contributionReportData($request);
+        $data['backUrl'] = route($data['portal'] . '.enrollment.payments.reports', $request->query());
+        $data['backLabel'] = 'Back to Contribution Reports';
+
+        return view('shared.contribution-report-print', $data);
+    }
+
+    public function downloadContributionReport(Request $request)
+    {
+        $data = $this->contributionReportData($request);
+        $termLabel = $data['term']?->academic_term ?? 'all-terms';
+        $filename = 'contribution-report-' . Str::slug($termLabel) . '.csv';
+
+        return response()->streamDownload(function () use ($data) {
+            $output = fopen('php://output', 'w');
+            if ($output === false) {
+                throw new \RuntimeException('Unable to open the contribution report output stream.');
+            }
+
+            fwrite($output, "\xEF\xBB\xBF");
+            fputcsv($output, ['Contribution Fee Report']);
+            fputcsv($output, ['Academic Term', $data['term']?->academic_term ?? '—']);
+            fputcsv($output, ['Department', $data['department'] ?: 'All Departments']);
+            fputcsv($output, ['Year Level', $data['yearLevel'] ?: 'All Year Levels']);
+            fputcsv($output, []);
+            fputcsv($output, ['Breakdown by Department and Year Level']);
+            fputcsv($output, ['Department', 'Year Level', 'Students Paid', 'Payment Records', 'Collected']);
+
+            foreach ($data['breakdown'] as $row) {
+                fputcsv($output, [
+                    $this->spreadsheetSafe($row['department']),
+                    $this->spreadsheetSafe($row['year_level']),
+                    $row['students'],
+                    $row['payments'],
+                    number_format($row['collected'], 2, '.', ''),
+                ], ',', '"', '');
+            }
+
+            fputcsv($output, []);
+            fputcsv($output, ['Paid Contribution Details']);
+            fputcsv($output, ['Student', 'Student ID', 'Department', 'Year Level', 'Amount', 'Payment Date', 'Reference', 'Method']);
+
+            foreach ($data['payments'] as $payment) {
+                fputcsv($output, array_map([$this, 'spreadsheetSafe'], [
+                    $payment->user->fullname,
+                    $payment->user->student_id,
+                    $payment->user->department,
+                    $payment->user->year_level,
+                    number_format((float) $payment->amount, 2, '.', ''),
+                    ($payment->paid_at ?? $payment->created_at)?->format('Y-m-d'),
+                    $payment->reference,
+                    $payment->method,
+                ]), ',', '"', '');
+            }
+
+            fclose($output);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * Shared filter and query for the on-screen, printable and downloaded reports.
+     *
+     * @return array<string, mixed>
+     */
+    private function contributionReportData(Request $request): array
+    {
+        $validated = $request->validate([
+            'department' => ['nullable', Rule::in(Budget::DEPARTMENTS)],
+            'year_level' => ['nullable', Rule::in(self::YEAR_LEVELS)],
+        ]);
+        $terms = SemesterReport::reportableTerms();
+        $term = SemesterReport::resolveTerm($request->query('term'));
+        $department = $validated['department'] ?? '';
+        $yearLevel = $validated['year_level'] ?? '';
+
+        $payments = $term
+            ? EnrollmentPayment::with('user')
+                ->whereIn('semester', $term->enrollmentTermKeys())
+                ->where('status', 'paid')
+                ->whereHas('user', function ($query) use ($department, $yearLevel) {
+                    $query->where('role', 'student')
+                        ->when($department !== '', fn ($query) => $query->where('department', $department))
+                        ->when($yearLevel !== '', fn ($query) => $query->where('year_level', $yearLevel));
+                })
+                ->orderByRaw('COALESCE(paid_at, enrollment_payments.created_at) DESC')
+                ->get()
+            : collect();
+
+        $breakdown = $payments
+            ->groupBy(fn (EnrollmentPayment $payment) => ($payment->user->department ?: 'Unassigned') . '|' . ($payment->user->year_level ?: 'Unspecified'))
+            ->map(function ($group) {
+                return [
+                    'department' => $group->first()->user->department ?: 'Unassigned',
+                    'year_level' => $group->first()->user->year_level ?: 'Unspecified',
+                    'students' => $group->pluck('user_id')->unique()->count(),
+                    'payments' => $group->count(),
+                    'collected' => round((float) $group->sum('amount'), 2),
+                ];
+            })->values();
+
+        return [
+            'terms' => $terms,
+            'term' => $term,
+            'department' => $department,
+            'yearLevel' => $yearLevel,
+            'departmentOptions' => Budget::DEPARTMENTS,
+            'yearLevelOptions' => self::YEAR_LEVELS,
+            'payments' => $payments,
+            'breakdown' => $breakdown,
+            'totalCollected' => round((float) $payments->sum('amount'), 2),
+            'portal' => $this->portal($request),
+        ];
+    }
+
+    /** Prevent spreadsheet applications from treating student text as formulas. */
+    private function spreadsheetSafe(?string $value): ?string
+    {
+        return $value !== null && preg_match('/^[\s]*[=+\-@]/u', $value) === 1
+            ? "'" . $value
+            : $value;
     }
 
     public function markPaid(EnrollmentPayment $payment, Request $request)

@@ -31,6 +31,12 @@ class SemesterReport
     public ?Carbon $start;
     /** Last day of the term's calendar window, inclusive. */
     public ?Carbon $end;
+    /** Date window represented by this report, which may be one month of the term. */
+    public ?Carbon $periodStart;
+    public ?Carbon $periodEnd;
+    public ?string $selectedMonth = null;
+    /** @var Collection<string, string> */
+    public Collection $availableMonths;
 
     /** Approved funds allocated for the term. */
     public Collection $funds;
@@ -68,12 +74,23 @@ class SemesterReport
     public int $liquidationsFiled = 0;
     public int $liquidationsApproved = 0;
 
-    public static function forTerm(SchoolYear $term): self
+    public static function forTerm(SchoolYear $term, ?string $month = null): self
     {
         $report = new self;
         $report->term = $term;
         $report->start = $term->termStart();
         $report->end = $term->termEnd();
+        $report->periodStart = $report->start?->copy();
+        $report->periodEnd = $report->end?->copy();
+        $report->availableMonths = self::monthOptions($term);
+
+        if ($month !== null && $report->availableMonths->has($month)) {
+            $report->selectedMonth = $month;
+            $monthStart = Carbon::createFromFormat('!Y-m', $month);
+            $monthEnd = $monthStart->copy()->endOfMonth();
+            $report->periodStart = $monthStart->greaterThan($report->start) ? $monthStart : $report->start?->copy();
+            $report->periodEnd = $monthEnd->lessThan($report->end) ? $monthEnd : $report->end?->copy();
+        }
         $report->funds = collect();
         $report->projects = collect();
         $report->expenses = collect();
@@ -86,14 +103,49 @@ class SemesterReport
         return $report;
     }
 
+    /** Month options covered by the term, keyed by YYYY-MM for filter forms. */
+    public static function monthOptions(SchoolYear $term): Collection
+    {
+        $start = $term->termStart();
+        $end = $term->termEnd();
+        $months = collect();
+
+        if (!$start || !$end || $end->lessThan($start)) {
+            return $months;
+        }
+
+        $cursor = $start->copy()->startOfMonth();
+        while ($cursor->lessThanOrEqualTo($end)) {
+            $months->put($cursor->format('Y-m'), $cursor->format('F Y'));
+            $cursor->addMonth()->startOfMonth();
+        }
+
+        return $months;
+    }
+
+    /** Human-readable date range for the whole term or selected month. */
+    public function periodLabel(): string
+    {
+        if ($this->selectedMonth !== null) {
+            return $this->availableMonths->get($this->selectedMonth);
+        }
+
+        return $this->term->termRangeLabel();
+    }
+
     /** Funds and the expenses charged against them, matched on the academic term string. */
     private function loadFunds(array $termKeys): void
     {
-        $this->funds = Budget::with('creator')
+        $funds = Budget::with('creator')
             ->whereIn('school_year', $termKeys)
-            ->where('status', 'Approved')
-            ->orderByDesc('allocated_amount')
-            ->get();
+            ->where('status', 'Approved');
+
+        if ($this->selectedMonth !== null && $this->periodStart && $this->periodEnd) {
+            $funds->where('created_at', '>=', $this->periodStart->toDateString())
+                ->where('created_at', '<', $this->periodEnd->copy()->addDay()->toDateString());
+        }
+
+        $this->funds = $funds->orderByDesc('allocated_amount')->get();
 
         $this->totalAllocated = round((float) $this->funds->sum('allocated_amount'), 2);
 
@@ -102,11 +154,16 @@ class SemesterReport
         }
 
         // Matches the dashboards: only approved expense lines count as spent.
-        $this->expenses = Expense::with(['budget', 'officer', 'approver'])
+        $expenses = Expense::with(['budget', 'officer', 'approver'])
             ->whereIn('budget_id', $this->funds->pluck('id'))
-            ->where('status', 'Approved')
-            ->orderByDesc('amount')
-            ->get();
+            ->where('status', 'Approved');
+
+        if ($this->selectedMonth !== null && $this->periodStart && $this->periodEnd) {
+            $expenses->where('created_at', '>=', $this->periodStart->toDateString())
+                ->where('created_at', '<', $this->periodEnd->copy()->addDay()->toDateString());
+        }
+
+        $this->expenses = $expenses->orderByDesc('amount')->get();
 
         $this->totalSpent = round((float) $this->expenses->sum('amount'), 2);
         $this->totalRemaining = round($this->totalAllocated - $this->totalSpent, 2);
@@ -116,6 +173,11 @@ class SemesterReport
     {
         $paid = EnrollmentPayment::whereIn('semester', $termKeys)->where('status', 'paid');
 
+        if ($this->selectedMonth !== null && $this->periodStart && $this->periodEnd) {
+            $paid->whereRaw('DATE(COALESCE(paid_at, created_at)) >= ?', [$this->periodStart->toDateString()])
+                ->whereRaw('DATE(COALESCE(paid_at, created_at)) < ?', [$this->periodEnd->copy()->addDay()->toDateString()]);
+        }
+
         $this->contributionsCollected = round((float) $paid->clone()->sum('amount'), 2);
         $this->contributionPayers = (int) $paid->clone()->distinct('user_id')->count('user_id');
     }
@@ -123,13 +185,13 @@ class SemesterReport
     /** Projects, releases, liquidations and cash book entries falling inside the term window. */
     private function loadDatedRecords(): void
     {
-        if (!$this->start || !$this->end) {
+        if (!$this->periodStart || !$this->periodEnd) {
             return;
         }
 
         // Exclusive upper bound so DATE and DATETIME columns both read the whole last day.
-        $from = $this->start->toDateString();
-        $until = $this->end->copy()->addDay()->toDateString();
+        $from = $this->periodStart->toDateString();
+        $until = $this->periodEnd->copy()->addDay()->toDateString();
 
         $this->projects = Proposal::with('officer')
             ->withSum('releases', 'amount_released')
@@ -200,18 +262,18 @@ class SemesterReport
         // Funds approved inside the term, bucketed by the month they were approved in.
         $fundsByMonth = Budget::where('status', 'Approved')
             ->where('created_at', '>=', $from)
-            ->where('created_at', '<', $this->end->copy()->addDay()->toDateString())
+            ->where('created_at', '<', $this->periodEnd->copy()->addDay()->toDateString())
             ->get(['allocated_amount', 'created_at'])
             ->groupBy(fn ($budget) => $budget->created_at->format('Y-m'))
             ->map(fn ($group) => round((float) $group->sum('allocated_amount'), 2));
 
         $running = $this->openingBalance;
-        $cursor = $this->start->copy()->startOfMonth();
+        $cursor = $this->periodStart->copy()->startOfMonth();
 
-        while ($cursor->lessThanOrEqualTo($this->end)) {
-            $coverageStart = $cursor->greaterThan($this->start) ? $cursor->copy() : $this->start->copy();
+        while ($cursor->lessThanOrEqualTo($this->periodEnd)) {
+            $coverageStart = $cursor->greaterThan($this->periodStart) ? $cursor->copy() : $this->periodStart->copy();
             $monthEnd = $cursor->copy()->endOfMonth();
-            $coverageEnd = $monthEnd->lessThan($this->end) ? $monthEnd : $this->end->copy();
+            $coverageEnd = $monthEnd->lessThan($this->periodEnd) ? $monthEnd : $this->periodEnd->copy();
 
             $month = new SemesterMonth(
                 $cursor->copy(),

@@ -17,6 +17,9 @@ $baseDomain = env('APP_URL_BASE', 'mccsupremestudentcouncil.com');
 if (!function_exists('registerEnrollmentPaymentRoutes')) {
     function registerEnrollmentPaymentRoutes() {
         Route::get('/enrollment-payments', [Admin\EnrollmentPaymentController::class, 'index'])->name('enrollment.payments');
+        Route::get('/enrollment-payments/reports', [Admin\EnrollmentPaymentController::class, 'contributionReport'])->name('enrollment.payments.reports');
+        Route::get('/enrollment-payments/reports/print', [Admin\EnrollmentPaymentController::class, 'printContributionReport'])->name('enrollment.payments.reports.print');
+        Route::get('/enrollment-payments/reports/download', [Admin\EnrollmentPaymentController::class, 'downloadContributionReport'])->name('enrollment.payments.reports.download');
         Route::post('/enrollment-payments/students', [Admin\EnrollmentPaymentController::class, 'storeStudent'])->name('enrollment.payments.students.store');
         Route::post('/enrollment-payments/students/import', [Admin\EnrollmentPaymentController::class, 'importStudents'])->name('enrollment.payments.students.import');
         Route::get('/enrollment-payments/students/import/template', [Admin\EnrollmentPaymentController::class, 'importTemplate'])->name('enrollment.payments.students.template');

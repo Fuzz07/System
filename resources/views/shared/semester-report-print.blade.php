@@ -49,7 +49,7 @@
         <div>MCC-SSC</div>
         <div>Semester Transparency Report</div>
         <div>{{ $report->term->academic_term }}</div>
-        <div class="term-range">Covering {{ $report->term->termRangeLabel() }}</div>
+        <div class="term-range">Covering {{ $report->periodLabel() }}</div>
     </div>
 
     <table class="financial-table">
