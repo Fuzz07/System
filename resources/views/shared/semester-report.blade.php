@@ -49,11 +49,11 @@
         No academic terms have been registered yet, so there is nothing to report on.
       </div>
     @else
-      <form method="GET" class="row g-2 align-items-end">
+      <form method="GET" class="row g-2 align-items-end" data-auto-filter>
         <div class="col-sm-6 col-lg-5">
           <label for="term" class="form-label fw-bold" style="font-size:.78rem;color:#475569;">Academic Term</label>
           <select name="term" id="term" class="form-select form-select-sm"
-                  onchange="if(this.form.elements.month)this.form.elements.month.value='';this.form.submit()">
+                  data-auto-filter-control data-reset-filter="month">
             @foreach ($terms as $option)
               <option value="{{ $option->id }}" @selected($term && $term->id === $option->id)>
                 {{ $option->academic_term }}@if($option->is_active) (Active)@endif
@@ -64,7 +64,7 @@
         @if ($term && $report && $report->availableMonths->isNotEmpty())
           <div class="col-sm-6 col-lg-4">
             <label for="month" class="form-label fw-bold" style="font-size:.78rem;color:#475569;">Month</label>
-            <select name="month" id="month" class="form-select form-select-sm" onchange="this.form.submit()">
+            <select name="month" id="month" class="form-select form-select-sm" data-auto-filter-control>
               <option value="">All months in semester</option>
               @foreach ($report->availableMonths as $key => $label)
                 <option value="{{ $key }}" @selected($report->selectedMonth === $key)>{{ $label }}</option>
@@ -72,11 +72,6 @@
             </select>
           </div>
         @endif
-        <div class="col-sm-3">
-          <button type="submit" class="btn btn-primary btn-sm fw-bold w-100" style="border-radius:8px;">
-            <i class="bi bi-arrow-repeat me-1"></i> View Report
-          </button>
-        </div>
         <div class="col-lg-4 text-lg-end">
           <div style="font-size:.75rem;color:#94a3b8;">
             <i class="bi bi-info-circle me-1"></i>

@@ -227,6 +227,37 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="{{ asset('assets/js/main.js') }}?v={{ @filemtime(public_path('assets/js/main.js')) ?: 1 }}"></script>
     <script src="{{ asset('assets/js/live-updates.js') }}?v={{ @filemtime(public_path('assets/js/live-updates.js')) ?: 1 }}"></script>
+    <script>
+        (() => {
+            const searchTimers = new WeakMap();
+
+            document.addEventListener('change', event => {
+                const control = event.target.closest('[data-auto-filter-control]');
+                if (!control) return;
+
+                const form = control.closest('[data-auto-filter]');
+                if (!form) return;
+
+                const resetFilter = control.dataset.resetFilter;
+                if (resetFilter && form.elements[resetFilter]) {
+                    form.elements[resetFilter].value = '';
+                }
+
+                form.requestSubmit();
+            });
+
+            document.addEventListener('input', event => {
+                const search = event.target.closest('[data-auto-filter-search]');
+                if (!search) return;
+
+                const form = search.closest('[data-auto-filter]');
+                if (!form) return;
+
+                clearTimeout(searchTimers.get(form));
+                searchTimers.set(form, setTimeout(() => form.requestSubmit(), 350));
+            });
+        })();
+    </script>
     @stack('scripts')
 </body>
 </html>

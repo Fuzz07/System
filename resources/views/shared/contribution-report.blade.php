@@ -19,10 +19,11 @@
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route($portal . '.enrollment.payments.reports') }}" class="row g-3 align-items-end">
+            <form method="GET" action="{{ route($portal . '.enrollment.payments.reports') }}"
+                  class="row g-3 align-items-end" data-auto-filter>
                 <div class="col-md-5">
                     <label for="term" class="form-label fw-semibold">Academic term</label>
-                    <select class="form-select" name="term" id="term">
+                    <select class="form-select" name="term" id="term" data-auto-filter-control>
                         @forelse($terms as $option)
                             <option value="{{ $option->id }}" @selected($term && $term->id === $option->id)>
                                 {{ $option->academic_term }}{{ $option->is_active ? ' (Active)' : '' }}
@@ -34,7 +35,7 @@
                 </div>
                 <div class="col-md-3">
                     <label for="department" class="form-label fw-semibold">Department</label>
-                    <select class="form-select" name="department" id="department">
+                    <select class="form-select" name="department" id="department" data-auto-filter-control>
                         <option value="">All Departments</option>
                         @foreach($departmentOptions as $option)
                             <option value="{{ $option }}" @selected($department === $option)>{{ $option }}</option>
@@ -43,15 +44,12 @@
                 </div>
                 <div class="col-md-2">
                     <label for="year_level" class="form-label fw-semibold">Year level</label>
-                    <select class="form-select" name="year_level" id="year_level">
+                    <select class="form-select" name="year_level" id="year_level" data-auto-filter-control>
                         <option value="">All Years</option>
                         @foreach($yearLevelOptions as $option)
                             <option value="{{ $option }}" @selected($yearLevel === $option)>{{ $option }}</option>
                         @endforeach
                     </select>
-                </div>
-                <div class="col-md-2 d-grid">
-                    <button class="btn btn-primary" type="submit"><i class="bi bi-funnel me-1"></i> Apply</button>
                 </div>
             </form>
         </div>

@@ -105,12 +105,13 @@
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <form class="row g-2 mb-3" method="GET">
+            <form class="row g-2 mb-3" method="GET" data-auto-filter>
                 <div class="col-md-4">
-                    <input type="text" name="search" value="{{ $search ?? '' }}" class="form-control" placeholder="Search by name or student id">
+                    <input type="search" name="search" value="{{ $search ?? '' }}" class="form-control"
+                           placeholder="Search by name or student id" data-auto-filter-search>
                 </div>
                 <div class="col-md-3">
-                    <select name="department" class="form-select">
+                    <select name="department" class="form-select" data-auto-filter-control>
                         <option value="">All Departments</option>
                         @foreach($departments as $d)
                             <option value="{{ $d }}" {{ ($dept ?? '') == $d ? 'selected' : '' }}>{{ $d }}</option>
@@ -118,7 +119,7 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select name="year_level" class="form-select">
+                    <select name="year_level" class="form-select" data-auto-filter-control>
                         <option value="">All Years</option>
                         @foreach($years as $y)
                             <option value="{{ $y }}" {{ ($year ?? '') == $y ? 'selected' : '' }}>{{ $y }}</option>
@@ -126,18 +127,13 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <select name="status" class="form-select">
+                    <select name="status" class="form-select" data-auto-filter-control>
                         <option value="all" {{ ($status ?? 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
                         <option value="unpaid" {{ ($status ?? '') === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
                         <option value="pending" {{ ($status ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="paid" {{ ($status ?? '') === 'paid' ? 'selected' : '' }}>Paid</option>
                     </select>
                 </div>
-                    <div class="col-md-1 text-end">
-                    <button class="btn btn-primary">Filter</button>
-               
-                </div>
-               
             </form>
 
             <div class="table-responsive">
