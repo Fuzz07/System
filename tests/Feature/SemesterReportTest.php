@@ -288,6 +288,25 @@ class SemesterReportTest extends TestCase
             ->assertDontSee('Other Student');
     }
 
+    public function test_contribution_report_includes_payments_saved_with_legacy_ordinal_term_label(): void
+    {
+        $term = SchoolYear::create([
+            'label' => '2026-2027',
+            'semester' => SchoolYear::SEMESTER_FIRST,
+            'is_active' => true,
+        ]);
+        $student = $this->user('student', 'Legacy Term Student', 'legacy-term@example.com');
+        $student->update(['department' => 'BSIT', 'year_level' => '1st Year']);
+        $payment = $this->payment($student, $term, 100, 'paid');
+        $payment->update(['semester' => $term->label . ' - 1st Semester']);
+
+        $this->actingAs($this->user('admin', 'Admin', 'legacy-report-admin@example.com'))
+            ->get(route('admin.enrollment.payments.reports', ['term' => $term->id]))
+            ->assertOk()
+            ->assertSee('Legacy Term Student')
+            ->assertSee('100.00');
+    }
+
     public function test_the_printable_sheet_lists_the_terms_totals(): void
     {
         [$first] = $this->seedTwoTerms();

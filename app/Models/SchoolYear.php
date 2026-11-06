@@ -134,6 +134,9 @@ class SchoolYear extends Model
 
         if (($this->semester ?: self::SEMESTER_FIRST) === self::SEMESTER_FIRST) {
             $keys[] = $this->label;
+            $keys[] = $this->label . ' - 1st Semester';
+        } else {
+            $keys[] = $this->label . ' - 2nd Semester';
         }
 
         return array_values(array_unique($keys));
