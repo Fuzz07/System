@@ -111,40 +111,22 @@ class EnrollmentPaymentController extends Controller
             }
 
             fwrite($output, "\xEF\xBB\xBF");
-            fputcsv($output, ['Contribution Fee Report']);
+            fputcsv($output, ['SSC MONTHLY DUES']);
             fputcsv($output, ['Academic Term', $data['term']?->academic_term ?? '—']);
             fputcsv($output, ['Department', $data['department'] ?: 'All Departments']);
             fputcsv($output, ['Year Level', $data['yearLevel'] ?: 'All Year Levels']);
-            fputcsv($output, []);
-            fputcsv($output, ['Breakdown by Department and Year Level']);
-            fputcsv($output, ['Department', 'Year Level', 'Students Paid', 'Payment Records', 'Collected']);
+            fputcsv($output, ['Section', $data['section'] ?: 'All Sections']);
+            fputcsv($output, ['No.', 'Name', 'Section & Year', 'Amount']);
 
-            foreach ($data['breakdown'] as $row) {
+            foreach ($data['payments']->values() as $index => $payment) {
                 fputcsv($output, [
-                    $this->spreadsheetSafe($row['department']),
-                    $this->spreadsheetSafe($row['year_level']),
-                    $row['students'],
-                    $row['payments'],
-                    number_format($row['collected'], 2, '.', ''),
+                    $index + 1,
+                    $this->spreadsheetSafe($payment->user->fullname),
+                    $this->spreadsheetSafe(trim(($payment->user->section ? $payment->user->section . ' - ' : '') . ($payment->user->year_level ?? ''))),
+                    number_format((float) $payment->amount, 2, '.', ''),
                 ], ',', '"', '');
             }
-
-            fputcsv($output, []);
-            fputcsv($output, ['Paid Contribution Details']);
-            fputcsv($output, ['Student', 'Student ID', 'Department', 'Year Level', 'Amount', 'Payment Date', 'Reference', 'Method']);
-
-            foreach ($data['payments'] as $payment) {
-                fputcsv($output, array_map([$this, 'spreadsheetSafe'], [
-                    $payment->user->fullname,
-                    $payment->user->student_id,
-                    $payment->user->department,
-                    $payment->user->year_level,
-                    number_format((float) $payment->amount, 2, '.', ''),
-                    ($payment->paid_at ?? $payment->created_at)?->format('Y-m-d'),
-                    $payment->reference,
-                    $payment->method,
-                ]), ',', '"', '');
-            }
+            fputcsv($output, ['', 'Total', '', number_format($data['totalCollected'], 2, '.', '')]);
 
             fclose($output);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
@@ -160,46 +142,46 @@ class EnrollmentPaymentController extends Controller
         $validated = $request->validate([
             'department' => ['nullable', Rule::in(Budget::DEPARTMENTS)],
             'year_level' => ['nullable', Rule::in(self::YEAR_LEVELS)],
+            'section' => ['nullable', 'string', 'max:100'],
         ]);
         $terms = SemesterReport::reportableTerms();
         $term = SemesterReport::resolveTerm($request->query('term'));
         $department = $validated['department'] ?? '';
         $yearLevel = $validated['year_level'] ?? '';
+        $section = trim($validated['section'] ?? '');
+        $sectionOptions = User::where('role', 'student')
+            ->whereNotNull('section')
+            ->where('section', '!=', '')
+            ->distinct()
+            ->orderBy('section')
+            ->pluck('section');
 
         $payments = $term
             ? EnrollmentPayment::with('user')
                 ->whereIn('semester', $term->enrollmentTermKeys())
                 ->where('status', 'paid')
-                ->whereHas('user', function ($query) use ($department, $yearLevel) {
+                ->whereHas('user', function ($query) use ($department, $yearLevel, $section) {
                     $query->where('role', 'student')
                         ->when($department !== '', fn ($query) => $query->where('department', $department))
-                        ->when($yearLevel !== '', fn ($query) => $query->where('year_level', $yearLevel));
+                        ->when($yearLevel !== '', fn ($query) => $query->where('year_level', $yearLevel))
+                        ->when($section !== '', fn ($query) => $query->where('section', $section));
                 })
                 ->orderByRaw('COALESCE(paid_at, enrollment_payments.created_at) DESC')
                 ->get()
+                ->sortBy(fn (EnrollmentPayment $payment) => mb_strtolower($payment->user->fullname))
+                ->values()
             : collect();
-
-        $breakdown = $payments
-            ->groupBy(fn (EnrollmentPayment $payment) => ($payment->user->department ?: 'Unassigned') . '|' . ($payment->user->year_level ?: 'Unspecified'))
-            ->map(function ($group) {
-                return [
-                    'department' => $group->first()->user->department ?: 'Unassigned',
-                    'year_level' => $group->first()->user->year_level ?: 'Unspecified',
-                    'students' => $group->pluck('user_id')->unique()->count(),
-                    'payments' => $group->count(),
-                    'collected' => round((float) $group->sum('amount'), 2),
-                ];
-            })->values();
 
         return [
             'terms' => $terms,
             'term' => $term,
             'department' => $department,
             'yearLevel' => $yearLevel,
+            'section' => $section,
             'departmentOptions' => Budget::DEPARTMENTS,
             'yearLevelOptions' => self::YEAR_LEVELS,
+            'sectionOptions' => $sectionOptions,
             'payments' => $payments,
-            'breakdown' => $breakdown,
             'totalCollected' => round((float) $payments->sum('amount'), 2),
             'portal' => $this->portal($request),
         ];
@@ -259,8 +241,9 @@ class EnrollmentPaymentController extends Controller
             'first_name' => trim((string) $request->input('first_name')),
             'middle_name' => ($middleName = trim((string) $request->input('middle_name'))) !== '' ? $middleName : null,
             'last_name' => trim((string) $request->input('last_name')),
-            'student_id' => trim((string) $request->input('student_id')),
-            'email' => Str::lower(trim((string) $request->input('email'))),
+            'student_id' => ($studentId = trim((string) $request->input('student_id'))) !== '' ? $studentId : null,
+            'email' => ($email = Str::lower(trim((string) $request->input('email')))) !== '' ? $email : null,
+            'section' => ($section = trim((string) $request->input('section'))) !== '' ? $section : null,
             'reference' => ($reference = trim((string) $request->input('reference'))) !== '' ? $reference : null,
         ]);
 
@@ -268,8 +251,9 @@ class EnrollmentPaymentController extends Controller
             'first_name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
             'middle_name' => ['nullable', 'string', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
             'last_name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL][\pL\s.\'-]*$/u'],
-            'student_id' => ['required', 'regex:/^\d{4}-\d{4}$/', 'unique:users,student_id'],
-            'email' => ['required', 'email:rfc', 'max:255', 'ends_with:@gmail.com', 'unique:users,email'],
+            'student_id' => ['nullable', 'regex:/^\d{4}-\d{4}$/', 'unique:users,student_id'],
+            'email' => ['nullable', 'email:rfc', 'max:255', 'ends_with:@gmail.com', 'unique:users,email'],
+            'section' => ['nullable', 'string', 'max:100'],
             'department' => ['required', Rule::in(Budget::DEPARTMENTS)],
             'year_level' => ['required', Rule::in(self::YEAR_LEVELS)],
             'payment_status' => ['required', 'in:paid,unpaid'],
@@ -293,13 +277,14 @@ class EnrollmentPaymentController extends Controller
             'student_id' => $data['student_id'],
             'email' => $data['email'],
             'department' => $data['department'],
+            'section' => $data['section'],
             'year_level' => $data['year_level'],
             'password' => Str::random(40),
             'role' => 'student',
             'status' => 'active',
         ]);
 
-        SscHelper::logActivity(Auth::id(), 'ENROLLMENT_ADD_STUDENT', "Added student {$student->email} from enrollment payments");
+        SscHelper::logActivity(Auth::id(), 'ENROLLMENT_ADD_STUDENT', "Added student {$student->fullname} from enrollment payments");
 
         $message = "{$student->fullname} was added as unpaid.";
         if ($data['payment_status'] === 'paid') {

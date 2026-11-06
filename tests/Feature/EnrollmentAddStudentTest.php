@@ -29,6 +29,7 @@ class EnrollmentAddStudentTest extends TestCase
 
         $response = $this->post(route('admin.enrollment.payments.students.store'), $this->studentForm([
             'payment_status' => 'unpaid',
+            'section' => '3-P5',
         ]));
 
         $response->assertRedirect(route('admin.enrollment.payments', ['search' => '2026-0042']));
@@ -39,7 +40,23 @@ class EnrollmentAddStudentTest extends TestCase
         $this->assertSame('student', $student->role);
         $this->assertSame('active', $student->status);
         $this->assertSame('BSIT', $student->department);
+        $this->assertSame('3-P5', $student->section);
         $this->assertSame('2nd Year', $student->year_level);
+        $this->assertSame(0, EnrollmentPayment::count());
+    }
+
+    public function test_contribution_fee_add_student_allows_missing_gmail_and_student_id(): void
+    {
+        $this->actingAs($this->user('admin'))
+            ->post(route('admin.enrollment.payments.students.store'), $this->studentForm([
+                'student_id' => '',
+                'email' => '',
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $student = User::where('fullname', 'Juan Santos Dela Cruz')->firstOrFail();
+        $this->assertNull($student->student_id);
+        $this->assertNull($student->email);
         $this->assertSame(0, EnrollmentPayment::count());
     }
 

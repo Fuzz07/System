@@ -40,20 +40,22 @@
   <section class="report-sheet">
     @yield('content')
 
-    <div class="signatories">
-      @foreach ([
-          ['Prepared by:', \App\Helpers\SscHelper::signatoryName('Treasurer'), 'SSC Treasurer'],
-          ['Verified by:', \App\Helpers\SscHelper::signatoryName('Auditor'), 'SSC Auditor'],
-          ['Approved by:', \App\Helpers\SscHelper::signatoryName('President'), 'SSC President'],
-          ['Noted by:', config('ssc.adviser'), 'SSC Adviser'],
-      ] as [$label, $name, $role])
-        <div class="signatory">
-          <div class="signatory-label">{{ $label }}</div>
-          <div class="signatory-name">{{ $name ?: ' ' }}</div>
-          <div class="signatory-role">{{ $role }}</div>
-        </div>
-      @endforeach
-    </div>
+    @unless(View::hasSection('hide-signatories'))
+      <div class="signatories">
+        @foreach ([
+            ['Prepared by:', \App\Helpers\SscHelper::signatoryName('Treasurer'), 'SSC Treasurer'],
+            ['Verified by:', \App\Helpers\SscHelper::signatoryName('Auditor'), 'SSC Auditor'],
+            ['Approved by:', \App\Helpers\SscHelper::signatoryName('President'), 'SSC President'],
+            ['Noted by:', config('ssc.adviser'), 'SSC Adviser'],
+        ] as [$label, $name, $role])
+          <div class="signatory">
+            <div class="signatory-label">{{ $label }}</div>
+            <div class="signatory-name">{{ $name ?: ' ' }}</div>
+            <div class="signatory-role">{{ $role }}</div>
+          </div>
+        @endforeach
+      </div>
+    @endunless
   </section>
 </body>
 </html>

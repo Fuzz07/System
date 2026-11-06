@@ -226,7 +226,7 @@
                     <ul class="mb-0 ps-3">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
                 </div>
                 @endif
-                <p class="text-muted small mb-3">For students who don't have an account yet. The account is created active, and the student can sign in later by using <strong>Forgot Password</strong> with their school email.</p>
+                <p class="text-muted small mb-3">For students who don't have an account yet. Gmail and Student ID are optional. Students without those details can be added as walk-in payers but cannot claim an online account until their details are added.</p>
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">First Name <span class="text-danger">*</span></label>
@@ -241,12 +241,16 @@
                         <input type="text" name="last_name" class="form-control" value="{{ $fromAddStudent ? old('last_name') : '' }}" maxlength="100" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Student ID <span class="text-danger">*</span></label>
-                        <input type="text" name="student_id" class="form-control" value="{{ $fromAddStudent ? old('student_id') : '' }}" placeholder="2024-0001" pattern="\d{4}-\d{4}" title="Format: YYYY-XXXX" required>
+                        <label class="form-label">Student ID <span class="text-muted">(optional)</span></label>
+                        <input type="text" name="student_id" class="form-control" value="{{ $fromAddStudent ? old('student_id') : '' }}" placeholder="2024-0001" pattern="\d{4}-\d{4}" title="Format: YYYY-XXXX">
                     </div>
                     <div class="col-md-8">
-                        <label class="form-label">Gmail Address <span class="text-danger">*</span></label>
-                        <input type="email" name="email" class="form-control" value="{{ $fromAddStudent ? old('email') : '' }}" placeholder="name@gmail.com" required>
+                        <label class="form-label">Gmail Address <span class="text-muted">(optional)</span></label>
+                        <input type="email" name="email" class="form-control" value="{{ $fromAddStudent ? old('email') : '' }}" placeholder="name@gmail.com">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Section <span class="text-muted">(optional)</span></label>
+                        <input type="text" name="section" class="form-control" value="{{ $fromAddStudent ? old('section') : '' }}" maxlength="100" placeholder="e.g. 3-P5">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Department <span class="text-danger">*</span></label>
