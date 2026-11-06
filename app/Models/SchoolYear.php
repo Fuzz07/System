@@ -133,10 +133,26 @@ class SchoolYear extends Model
         $keys = [$this->academic_term];
 
         if (($this->semester ?: self::SEMESTER_FIRST) === self::SEMESTER_FIRST) {
-            $keys[] = $this->label;
-            $keys[] = $this->label . ' - 1st Semester';
+            $keys = array_merge($keys, [
+                $this->label,
+                $this->label . ' - 1st Semester',
+                $this->label . ' 1st Semester',
+                $this->label . ' First Semester',
+                $this->label . ' - 1st Sem',
+                $this->label . ' 1st Sem',
+                $this->label . ' - First Sem',
+                $this->label . ' First Sem',
+            ]);
         } else {
-            $keys[] = $this->label . ' - 2nd Semester';
+            $keys = array_merge($keys, [
+                $this->label . ' - 2nd Semester',
+                $this->label . ' 2nd Semester',
+                $this->label . ' Second Semester',
+                $this->label . ' - 2nd Sem',
+                $this->label . ' 2nd Sem',
+                $this->label . ' - Second Sem',
+                $this->label . ' Second Sem',
+            ]);
         }
 
         return array_values(array_unique($keys));

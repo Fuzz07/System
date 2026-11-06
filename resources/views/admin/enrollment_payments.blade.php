@@ -108,7 +108,7 @@
             <form class="row g-2 mb-3" method="GET" data-auto-filter>
                 <div class="col-md-4">
                     <input type="search" name="search" value="{{ $search ?? '' }}" class="form-control"
-                           placeholder="Search by name or student id" data-auto-filter-search>
+                           placeholder="Search by name or student id">
                 </div>
                 <div class="col-md-3">
                     <select name="department" class="form-select" data-auto-filter-control>

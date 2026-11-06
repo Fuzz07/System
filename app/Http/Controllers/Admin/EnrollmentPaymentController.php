@@ -158,8 +158,11 @@ class EnrollmentPaymentController extends Controller
 
         $payments = $term
             ? EnrollmentPayment::with('user')
-                ->whereIn('semester', $term->enrollmentTermKeys())
-                ->where('status', 'paid')
+                ->whereIn(
+                    \Illuminate\Support\Facades\DB::raw('LOWER(TRIM(semester))'),
+                    array_map('mb_strtolower', $term->enrollmentTermKeys())
+                )
+                ->whereRaw('LOWER(TRIM(status)) = ?', ['paid'])
                 ->whereHas('user', function ($query) use ($department, $yearLevel, $section) {
                     $query->where('role', 'student')
                         ->when($department !== '', fn ($query) => $query->where('department', $department))

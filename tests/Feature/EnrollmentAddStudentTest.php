@@ -117,6 +117,7 @@ class EnrollmentAddStudentTest extends TestCase
             ->assertSee(route('treasurer.enrollment.payments'), false)
             ->assertSee(route('treasurer.cashbook'), false)
             ->assertSee('action="' . route('treasurer.enrollment.payments.students.store') . '"', false)
+            ->assertSee('Search by name or student id')
             ->assertDontSee('Open Budgets');
     }
 

@@ -307,6 +307,25 @@ class SemesterReportTest extends TestCase
             ->assertSee('100.00');
     }
 
+    public function test_contribution_report_matches_legacy_abbreviated_term_label_and_paid_case(): void
+    {
+        $term = SchoolYear::create([
+            'label' => '2026-2027',
+            'semester' => SchoolYear::SEMESTER_FIRST,
+            'is_active' => true,
+        ]);
+        $student = $this->user('student', 'Abbreviated Term Student', 'abbreviated-term@example.com');
+        $student->update(['department' => 'BSIT', 'year_level' => '1st Year']);
+        $payment = $this->payment($student, $term, 75, 'PAID');
+        $payment->update(['semester' => '2026-2027 1st Sem']);
+
+        $this->actingAs($this->user('admin', 'Admin', 'abbreviated-report-admin@example.com'))
+            ->get(route('admin.enrollment.payments.reports', ['term' => $term->id]))
+            ->assertOk()
+            ->assertSee('Abbreviated Term Student')
+            ->assertSee('75.00');
+    }
+
     public function test_the_printable_sheet_lists_the_terms_totals(): void
     {
         [$first] = $this->seedTwoTerms();
